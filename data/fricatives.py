@@ -177,7 +177,8 @@ FRICATIVES = {
 		'pf3': 2530,
 		'pf4': 3300,
 		'pf5': 3750,
-		'pf6': 4900,
+		# KLSYN88: High F6 for alveolar sibilant (like [s])
+		'pf6': 5250,
 		'pb1': 70,
 		'pb2': 60,
 		'pb3': 180,
@@ -225,7 +226,8 @@ FRICATIVES = {
 		'pf3': 2750,
 		'pf4': 3300,
 		'pf5': 3750,
-		'pf6': 4900,
+		# KLSYN88: Lower F6 for postalveolar (Klatt: ~3-4kHz peak)
+		'pf6': 3800,
 		'pb1': 200,
 		'pb2': 100,
 		'pb3': 300,
@@ -234,10 +236,12 @@ FRICATIVES = {
 		'pb6': 1000,
 		'pa1': 0,
 		'pa2': 0,
-		'pa3': 0.466666666667,
-		'pa4': 0.4,
-		'pa5': 0.4,
-		'pa6': 0.383333333333,
+		# KLSYN88: Klatt Table III - postalveolar has distributed energy F3-F6
+		# A3=57dB (strongest), A4=48dB, A5=48dB, A6=46dB
+		'pa3': 0.95,
+		'pa4': 0.8,
+		'pa5': 0.8,
+		'pa6': 0.77,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
 	},
@@ -271,7 +275,8 @@ FRICATIVES = {
 		'pf3': 2750,
 		'pf4': 3300,
 		'pf5': 3750,
-		'pf6': 4900,
+		# KLSYN88: Lower F6 for postalveolar (Klatt: ~3-4kHz peak)
+		'pf6': 3800,
 		'pb1': 70,
 		'pb2': 60,
 		'pb3': 280,
@@ -280,10 +285,12 @@ FRICATIVES = {
 		'pb6': 1000,
 		'pa1': 0,
 		'pa2': 0,
-		'pa3': 0.466666666667,
-		'pa4': 0.4,
-		'pa5': 0.4,
-		'pa6': 0.383333333333,
+		# KLSYN88: Klatt Table III - postalveolar has distributed energy F3-F6
+		# A3=57dB (strongest), A4=48dB, A5=48dB, A6=46dB
+		'pa3': 0.95,
+		'pa4': 0.8,
+		'pa5': 0.8,
+		'pa6': 0.77,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
@@ -331,8 +338,10 @@ FRICATIVES = {
 		'pa3': 0,
 		'pa4': 0,
 		'pa5': 0,
-		'pa6': 0.466666666667,
-		'parallelBypass': 0.633333333333,
+		# KLSYN88: Klatt Table III - dental has weak high + bypass
+		# A6=28dB (weak), AB=48dB (strong bypass)
+		'pa6': 0.47,
+		'parallelBypass': 0.8,
 		'fricationAmplitude': 1,
 	},
 	'ð': {
@@ -377,8 +386,10 @@ FRICATIVES = {
 		'pa3': 0,
 		'pa4': 0,
 		'pa5': 0,
-		'pa6': 0.466666666667,
-		'parallelBypass': 0.633333333333,
+		# KLSYN88: Klatt Table III - dental has weak high + bypass
+		# A6=28dB (weak), AB=48dB (strong bypass)
+		'pa6': 0.47,
+		'parallelBypass': 0.8,
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
