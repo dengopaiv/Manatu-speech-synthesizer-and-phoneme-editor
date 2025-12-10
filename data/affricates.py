@@ -52,7 +52,9 @@ AFFRICATES = {
 		'pa5': 0.4,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'd͡ʒ': {
 		'_isNasal': False,
@@ -99,6 +101,8 @@ AFFRICATES = {
 		'pa5': 0.4,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 }
