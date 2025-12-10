@@ -15,11 +15,12 @@
 import os
 import itertools
 import codecs
-from . import speechPlayer
-
-dataPath=os.path.join(os.path.dirname(__file__),'data.py')
-
-data=eval(codecs.open(dataPath,'r','utf8').read(),None,None)
+try:
+	from . import speechPlayer
+	from .data import data
+except ImportError:
+	import speechPlayer
+	from data import data
 
 def iterPhonemes(**kwargs):
 	for k,v in data.items():
@@ -36,11 +37,72 @@ def applyPhonemeToFrame(frame,phoneme):
 		if not k.startswith('_'):
 			setattr(frame,k,v)
 
+# Tone diacritics (combining characters)
+TONE_DIACRITICS = {
+	'\u0301': 'high',      # combining acute accent (á)
+	'\u0300': 'low',       # combining grave accent (à)
+	'\u0304': 'mid',       # combining macron (ā)
+	'\u030C': 'rising',    # combining caron (ǎ)
+	'\u0302': 'falling',   # combining circumflex (â)
+	'\u030B': 'extra_high', # combining double acute (a̋)
+	'\u030F': 'extra_low',  # combining double grave (ȁ)
+}
+
+# IPA tone letters (placed after syllable)
+TONE_LETTERS = {
+	'˥': 5,  # extra high
+	'˦': 4,  # high
+	'˧': 3,  # mid
+	'˨': 2,  # low
+	'˩': 1,  # extra low
+}
+
+# Map tone names to pitch multipliers (relative to base pitch)
+TONE_PITCH_MULTIPLIERS = {
+	'extra_high': 1.4,
+	'high': 1.2,
+	'mid': 1.0,
+	'low': 0.85,
+	'extra_low': 0.7,
+	'rising': (0.85, 1.2),   # start low, end high
+	'falling': (1.2, 0.85),  # start high, end low
+}
+
+def _parseToneLetters(text, index):
+	"""Parse a sequence of tone letters starting at index. Returns (tone_value, chars_consumed)."""
+	tones = []
+	consumed = 0
+	while index + consumed < len(text):
+		char = text[index + consumed]
+		if char in TONE_LETTERS:
+			tones.append(TONE_LETTERS[char])
+			consumed += 1
+		else:
+			break
+	if not tones:
+		return None, 0
+	# Convert tone sequence to a value (e.g., ˥˩ = falling from 5 to 1)
+	if len(tones) == 1:
+		level = tones[0]
+		if level >= 4:
+			return 'high', consumed
+		elif level == 3:
+			return 'mid', consumed
+		else:
+			return 'low', consumed
+	else:
+		# Contour tone
+		if tones[-1] > tones[0]:
+			return 'rising', consumed
+		else:
+			return 'falling', consumed
+
 def _IPAToPhonemesHelper(text):
 	textLen=len(text)
 	index=0
 	offset=0
 	curStress=0
+	lastPhonemeRef = [None]  # Use list to allow modification in nested scope
 	for index in range(textLen):
 		index=index+offset
 		if index>=textLen:
@@ -51,6 +113,19 @@ def _IPAToPhonemesHelper(text):
 			continue
 		elif char=='ˌ':
 			curStress=2
+			continue
+		# Check for tone diacritics (combining characters following a letter)
+		# These apply to the PREVIOUS phoneme since they come after the vowel
+		elif char in TONE_DIACRITICS:
+			if lastPhonemeRef[0] is not None:
+				lastPhonemeRef[0]['_tone'] = TONE_DIACRITICS[char]
+			continue
+		# Check for tone letters (these also apply to previous syllable)
+		elif char in TONE_LETTERS:
+			tone, consumed = _parseToneLetters(text, index)
+			if tone and lastPhonemeRef[0] is not None:
+				lastPhonemeRef[0]['_tone'] = tone
+			offset += consumed - 1  # -1 because the loop will advance by 1
 			continue
 		isLengthened=(text[index+1:index+2]=='ː')
 		isTiedTo=(text[index+1:index+2]=='͡')
@@ -78,6 +153,7 @@ def _IPAToPhonemesHelper(text):
 		if isLengthened:
 			phoneme['_lengthened']=True
 		phoneme['_char']=char
+		lastPhonemeRef[0] = phoneme  # Track last phoneme for tone diacritics
 		yield char,phoneme
 
 def IPAToPhonemes(ipaText):
@@ -112,6 +188,13 @@ def IPAToPhonemes(ipaText):
 			if stress:
 				syllableStartPhoneme['_stress']=stress
 			elif phoneme.get('_isStop') or phoneme.get('_isAfricate'):
+				# Add fade-out frame before gap to avoid clicks
+				if lastPhoneme and lastPhoneme.get('_isVoiced'):
+					fadeOut = lastPhoneme.copy()
+					fadeOut['_fadeOutToSilence'] = True
+					fadeOut['_char'] = None
+					phonemeList.append(fadeOut)
+				# Then add the silence gap
 				gap=dict(_silence=True,_preStopGap=True)
 				phonemeList.append(gap)
 			phonemeList.append(phoneme)
@@ -147,16 +230,20 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 				speed=baseSpeed
 		phonemeDuration=60.0/speed
 		phonemeFadeDuration=10.0/speed
-		if phoneme.get('_preStopGap'):
-			phonemeDuration=41.0/speed
+		if phoneme.get('_fadeOutToSilence'):
+			# Fade-out frame before gap - smooth transition to silence
+			phonemeDuration=10.0/speed
+			phonemeFadeDuration=10.0/speed
+		elif phoneme.get('_preStopGap'):
+			phonemeDuration=20.0/speed  # Was 41ms - reduced to minimize click window
 		elif phoneme.get('_postStopAspiration'):
 			phonemeDuration=20.0/speed
 		elif phoneme.get('_isStop'):
 			phonemeDuration=min(6.0/speed,6.0)
-			phonemeFadeDuration=0.001
+			phonemeFadeDuration=3.0/speed  # Was 0.001 - caused clicks
 		elif phoneme.get('_isAfricate'):
 			phonemeDuration=24.0/speed
-			phonemeFadeDuration=0.001
+			phonemeFadeDuration=5.0/speed  # Was 0.001 - caused clicks
 		elif not phoneme.get('_isVoiced'):
 			phonemeDuration=45.0/speed
 		else: # is voiced
@@ -333,6 +420,31 @@ def calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType):
 				elif lastHeadUnstressedRunStart is None: 
 					lastHeadUnstressedRunStart=index
 
+def applyToneMarks(phonemeList, basePitch):
+	"""Apply tone-based pitch modifications to phonemes that have tone marks."""
+	for phoneme in phonemeList:
+		tone = phoneme.get('_tone')
+		if not tone:
+			continue
+
+		multiplier = TONE_PITCH_MULTIPLIERS.get(tone)
+		if not multiplier:
+			continue
+
+		currentPitch = phoneme.get('voicePitch', basePitch)
+		currentEndPitch = phoneme.get('endVoicePitch', currentPitch)
+
+		if isinstance(multiplier, tuple):
+			# Contour tone (rising or falling)
+			startMult, endMult = multiplier
+			phoneme['voicePitch'] = basePitch * startMult
+			phoneme['endVoicePitch'] = basePitch * endMult
+		else:
+			# Level tone
+			newPitch = basePitch * multiplier
+			phoneme['voicePitch'] = newPitch
+			phoneme['endVoicePitch'] = newPitch
+
 def generateFramesAndTiming(ipaText,speed=1,basePitch=100,inflection=0.5,clauseType=None):
 	phonemeList=IPAToPhonemes(ipaText)
 	if len(phonemeList)==0:
@@ -340,6 +452,7 @@ def generateFramesAndTiming(ipaText,speed=1,basePitch=100,inflection=0.5,clauseT
 	correctHPhonemes(phonemeList)
 	calculatePhonemeTimes(phonemeList,speed)
 	calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType)
+	applyToneMarks(phonemeList, basePitch)  # Apply tone marks after standard intonation
 	for phoneme in phonemeList:
 		frameDuration=phoneme.pop('_duration')
 		fadeDuration=phoneme.pop('_fadeDuration')
