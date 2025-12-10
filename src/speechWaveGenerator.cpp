@@ -43,6 +43,38 @@ class NoiseGenerator {
 
 };
 
+// KLSYN88 Spectral Tilt Filter
+// First-order lowpass that attenuates high frequencies to create breathy voice quality
+// tiltDB: 0 = no filtering (modal voice), up to 41 dB attenuation at 3kHz (very breathy)
+class SpectralTiltFilter {
+	private:
+	int sampleRate;
+	double lastOutput;
+
+	public:
+	SpectralTiltFilter(int sr): sampleRate(sr), lastOutput(0.0) {}
+
+	double filter(double input, double tiltDB) {
+		if (tiltDB <= 0) return input;  // No filtering when tilt is 0
+
+		// Calculate cutoff frequency for desired attenuation at 3kHz
+		// For first-order filter: |H(f)| = 1/sqrt(1+(f/fc)^2)
+		// Given target attenuation at 3kHz, solve for fc
+		double targetFreq = 3000.0;
+		double attenLinear = pow(10.0, -tiltDB / 20.0);
+		// Clamp to avoid division issues at extreme values
+		if (attenLinear >= 0.999) return input;
+		if (attenLinear <= 0.001) attenLinear = 0.001;
+
+		double fc = targetFreq * attenLinear / sqrt(1.0 - attenLinear * attenLinear);
+		double alpha = exp(-2.0 * M_PI * fc / sampleRate);
+
+		double output = (1.0 - alpha) * input + alpha * lastOutput;
+		lastOutput = output;
+		return output;
+	}
+};
+
 class FrequencyGenerator {
 	private:
 	int sampleRate;
@@ -185,13 +217,14 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	private:
 	int sampleRate;
 	VoiceGenerator voiceGenerator;
+	SpectralTiltFilter tiltFilter;  // KLSYN88: spectral tilt for breathy voice
 	NoiseGenerator fricGenerator;
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), fricGenerator(), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), fricGenerator(), cascade(sr), parallel(sr), frameManager(NULL) {
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
@@ -201,6 +234,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 			const speechPlayer_frame_t* frame=frameManager->getCurrentFrame();
 			if(frame) {
 				double voice=voiceGenerator.getNext(frame);
+				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
 				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
 				double fric=fricGenerator.getNext()*0.3*frame->fricationAmplitude;
 				double parallelOut=parallel.getNext(frame,fric*frame->preFormantGain);
