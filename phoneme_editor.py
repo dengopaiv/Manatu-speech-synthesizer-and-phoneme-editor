@@ -393,7 +393,7 @@ class PhonemeEditorFrame(wx.Frame):
             size=(900, 700)
         )
 
-        self.sample_rate = 22050
+        self.sample_rate = 44100
         self.is_playing = False
         self.play_thread = None
         self.preset_manager = PresetManager()

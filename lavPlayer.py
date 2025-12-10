@@ -5,7 +5,7 @@ class LavPlayer(object):
 	def __init__(self,speechPlayer,sampleRate):
 		self.speechPlayer=speechPlayer
 		libaudioverse.initialize()
-		self.lavServer=libaudioverse.Server(22050,64)
+		self.lavServer=libaudioverse.Server(sampleRate,64)
 		self.lavServer.set_output_device("default")
 		self.lavPullNode=libaudioverse.PullNode(self.lavServer,sampleRate,1)
 		self.lavPullNode.connect(0,self.lavServer)
