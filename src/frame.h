@@ -34,6 +34,7 @@ typedef struct {
 	speechPlayer_frameParam_t openQuotientShape; // OQ shape: glottal closing curve 0-1 (0=linear, 1=exponential decay)
 	speechPlayer_frameParam_t speedQuotient; // SQ: opening/closing time asymmetry 0.5-2.0 (1.0=symmetric)
 	speechPlayer_frameParam_t diplophonia; // DI: period alternation for creaky voice 0-1 (0=none)
+	speechPlayer_frameParam_t lfRd; // Rd: LF model voice quality 0.3-2.7 (0=use legacy, <1=tense, 1=modal, >1=lax/breathy)
 	// Tracheal/subglottal resonances (for breathy voice)
 	speechPlayer_frameParam_t ftpFreq1; // FTP1: first tracheal pole frequency in Hz (0=disabled, ~600 typical)
 	speechPlayer_frameParam_t ftpBw1; // BTP1: first tracheal pole bandwidth in Hz

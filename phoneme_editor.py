@@ -113,6 +113,7 @@ PARAM_GROUPS = {
         ('openQuotientShape', 0, 100, 50, '%', 'Glottal closing curve'),
         ('speedQuotient', 50, 200, 100, '%', 'Opening/closing asymmetry'),
         ('diplophonia', 0, 100, 0, '%', 'Period alternation (creaky)'),
+        ('lfRd', 0, 27, 0, 'x0.1', 'LF model Rd (0=legacy, 3-27=tense-breathy)'),
     ],
     'Tracheal Resonances': [
         ('ftpFreq1', 0, 1000, 0, 'Hz', 'Tracheal pole 1 (0=off)'),
@@ -142,7 +143,7 @@ PERCENT_PARAMS = {
 GAIN_PARAMS = {'preFormantGain', 'outputGain'}
 
 # Parameters that need /10 scaling
-TENTH_PARAMS = {'vibratoSpeed', 'parallelBypass'}
+TENTH_PARAMS = {'vibratoSpeed', 'parallelBypass', 'lfRd'}
 
 # KLSYN88 default values (applied before loading presets for backward compatibility)
 # These match the defaults in ipa.py KLSYN88_DEFAULTS
@@ -152,6 +153,7 @@ KLSYN88_DEFAULTS = {
     'openQuotientShape': 0.5, # 0-1 (percentage)
     'speedQuotient': 1.0,     # 0.5-2.0 (percentage, slider 50-200)
     'diplophonia': 0,         # 0-1 (percentage)
+    'lfRd': 0,                # 0=legacy, 0.3-2.7 LF model (0.1 units, slider 0-27)
     'ftpFreq1': 0,            # Hz (direct)
     'ftpBw1': 100,            # Hz (direct)
     'ftzFreq1': 0,            # Hz (direct)

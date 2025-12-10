@@ -32,6 +32,7 @@ class Frame(Structure):
 		'openQuotientShape', # OQ shape: glottal closing curve 0-1
 		'speedQuotient',     # SQ: opening/closing asymmetry 0.5-2.0
 		'diplophonia',       # DI: period alternation 0-1
+		'lfRd',              # Rd: LF model voice quality 0.3-2.7 (0=use legacy)
 		# Tracheal resonances
 		'ftpFreq1',          # FTP1: first tracheal pole Hz
 		'ftpBw1',            # BTP1: first tracheal pole bandwidth

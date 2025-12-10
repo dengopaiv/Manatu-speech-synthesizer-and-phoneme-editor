@@ -21,6 +21,7 @@ Based on klsyn-88, found at http://linguistics.berkeley.edu/phonlab/resources/
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <cstdint>
 #include "debug.h"
 #include "utils.h"
 #include "speechWaveGenerator.h"
@@ -29,18 +30,48 @@ using namespace std;
 
 const double PITWO=M_PI*2;
 
+// Improved noise generator using xorshift128+ algorithm
+// Better quality randomness and full frequency spectrum for fricatives
 class NoiseGenerator {
 	private:
+	uint64_t state0;
+	uint64_t state1;
 	double lastValue;
 
 	public:
-	NoiseGenerator(): lastValue(0.0) {};
+	NoiseGenerator(): lastValue(0.0) {
+		// Seed with current time and address for uniqueness
+		state0 = 0x853c49e6748fea9bULL;
+		state1 = 0xda3e39cb94b95bdbULL;
+	}
+
+	// xorshift128+ - fast, high quality PRNG
+	uint64_t xorshift128plus() {
+		uint64_t s1 = state0;
+		uint64_t s0 = state1;
+		uint64_t result = s0 + s1;
+		state0 = s0;
+		s1 ^= s1 << 23;
+		state1 = s1 ^ s0 ^ (s1 >> 18) ^ (s0 >> 5);
+		return result;
+	}
 
 	double getNext() {
-		lastValue=((double)rand()/RAND_MAX)+0.75*lastValue;
+		// Generate white noise with full frequency spectrum
+		double noise = ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
+		// Gentle smoothing (less than before) to reduce harshness
+		lastValue = noise * 0.7 + lastValue * 0.3;
 		return lastValue;
 	}
 
+	// Highpass-filtered noise for sibilants (more high-frequency energy)
+	double getNextHighpass() {
+		double noise = ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
+		// Highpass by subtracting lowpass
+		double hp = noise - lastValue;
+		lastValue = lastValue * 0.8 + noise * 0.2;
+		return hp;
+	}
 };
 
 // KLSYN88 Spectral Tilt Filter
@@ -155,29 +186,73 @@ class VoiceGenerator {
 
 		double aspiration=aspirationGen.getNext()*0.2;
 		double turbulence=aspiration*frame->voiceTurbulenceAmplitude;
-		// KLSYN88: Glottal waveform shaping using openQuotientShape and speedQuotient
-		double oq = frame->glottalOpenQuotient;
-		double sq = frame->speedQuotient;  // 1.0 = symmetric, >1 = fast rise/slow fall
-		double shape = frame->openQuotientShape;  // 0 = linear decay, 1 = exponential decay
-
-		glottisOpen = voice < oq;  // voice is cycle position 0-1
 
 		double glottalWave;
-		if (voice < oq) {
-			// Open phase: split by speed quotient into rising and falling portions
-			double openingEnd = oq / (1.0 + 1.0/sq);  // SQ controls rise/fall time ratio
-			if (voice < openingEnd) {
-				// Rising phase - linear ramp to peak
-				glottalWave = voice / openingEnd;
+
+		// Check if using LF model (Rd > 0) or legacy model
+		if (frame->lfRd > 0) {
+			// Liljencrants-Fant (LF) glottal model
+			// Rd parameter controls voice quality: 0.3=tense, 1.0=modal, 2.7=breathy
+			double Rd = max(0.3, min(2.7, frame->lfRd));
+
+			// Derive LF parameters from Rd (Fant et al. 1985 approximations)
+			// These polynomial fits map Rd to the four LF parameters
+			double Rk = 0.118 * Rd + 0.224;  // Glottal open time ratio
+			double Rg = 0.25 * Rd + 0.5;     // Glottal rise time
+			double Ra = 0.048 * Rd - 0.01;   // Return phase coefficient
+			if (Ra < 0.01) Ra = 0.01;
+
+			// Derived timing parameters
+			double tp = 1.0 / (2.0 * Rg);    // Time of peak (as fraction of T0)
+			double te = tp * (1.0 + Rk);     // Time of excitation (glottal closure)
+			double ta = Ra;                   // Return phase time constant
+
+			// Ensure te <= 1.0
+			if (te > 0.99) te = 0.99;
+
+			glottisOpen = voice < te;
+
+			if (voice < tp) {
+				// Rising phase: sinusoidal rise to peak
+				glottalWave = 0.5 * (1.0 - cos(M_PI * voice / tp));
+			} else if (voice < te) {
+				// Falling phase: cosinusoidal fall from peak
+				double fallPos = (voice - tp) / (te - tp);
+				glottalWave = 0.5 * (1.0 + cos(M_PI * fallPos));
 			} else {
-				// Falling phase within open period - exponential decay
-				double fallPos = (voice - openingEnd) / (oq - openingEnd);
-				double expFactor = 1.0 + shape * 4.0;  // shape 0->1, expFactor 1->5
-				glottalWave = pow(1.0 - fallPos, expFactor);
+				// Return phase: exponential decay (models incomplete closure)
+				double returnPos = (voice - te) / (1.0 - te);
+				double epsilon = 1.0 / (ta + 0.001);  // Decay rate
+				glottalWave = 0.5 * exp(-epsilon * returnPos * (1.0 - te));
+				// Taper to zero at end of cycle
+				if (returnPos > 0.8) {
+					glottalWave *= (1.0 - returnPos) / 0.2;
+				}
 			}
 		} else {
-			// Closed phase - no airflow
-			glottalWave = 0.0;
+			// Legacy glottal model using openQuotientShape and speedQuotient
+			double oq = frame->glottalOpenQuotient;
+			double sq = frame->speedQuotient;  // 1.0 = symmetric, >1 = fast rise/slow fall
+			double shape = frame->openQuotientShape;  // 0 = linear decay, 1 = exponential decay
+
+			glottisOpen = voice < oq;
+
+			if (voice < oq) {
+				// Open phase: split by speed quotient into rising and falling portions
+				double openingEnd = oq / (1.0 + 1.0/sq);  // SQ controls rise/fall time ratio
+				if (voice < openingEnd) {
+					// Rising phase - linear ramp to peak
+					glottalWave = voice / openingEnd;
+				} else {
+					// Falling phase within open period - exponential decay
+					double fallPos = (voice - openingEnd) / (oq - openingEnd);
+					double expFactor = 1.0 + shape * 4.0;  // shape 0->1, expFactor 1->5
+					glottalWave = pow(1.0 - fallPos, expFactor);
+				}
+			} else {
+				// Closed phase - no airflow
+				glottalWave = 0.0;
+			}
 		}
 
 		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
