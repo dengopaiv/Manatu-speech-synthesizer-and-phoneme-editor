@@ -51,7 +51,10 @@ STOPS = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 1.1,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'b': {
 		'_isNasal': False,
@@ -97,7 +100,10 @@ STOPS = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 1.05,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	't': {
 		'_isNasal': False,
@@ -143,7 +149,10 @@ STOPS = {
 		'pa5': 0,
 		'pa6': 1,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'd': {
 		'_isNasal': False,
@@ -189,7 +198,10 @@ STOPS = {
 		'pa5': 0,
 		'pa6': 0.833333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'k': {
 		'_isNasal': False,
@@ -235,7 +247,10 @@ STOPS = {
 		'pa5': 0.383333333333,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'g': {
 		'_isNasal': False,
@@ -281,7 +296,10 @@ STOPS = {
 		'pa5': 0.383333333333,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'ɡ': {
 		'_isNasal': False,
@@ -327,7 +345,10 @@ STOPS = {
 		'pa5': 0.383333333333,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,
+		# KLSYN88: Stop burst for plosive release
+		'burstAmplitude': 0.8,
+		'burstDuration': 0.3,
 	},
 	'ʔ': {
 		'_isNasal': False,
@@ -374,5 +395,9 @@ STOPS = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# KLSYN88: Creaky/laryngealized voice quality for glottal stop
+		'diplophonia': 0.4,
+		'openQuotientShape': 0.3,
+		'glottalOpenQuotient': 0.3,
 	},
 }

@@ -98,6 +98,8 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0.95,
 		'fricationAmplitude': 1,
+		# KLSYN88: Slight breathiness for voiced fricative
+		'spectralTilt': 7,
 	},
 	's': {
 		'_isNasal': False,
@@ -190,6 +192,8 @@ FRICATIVES = {
 		'pa6': 0.866666666667,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
+		# KLSYN88: Slight breathiness for voiced fricative
+		'spectralTilt': 7,
 	},
 	'ʃ': {
 		'_isNasal': False,
@@ -282,6 +286,8 @@ FRICATIVES = {
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
+		# KLSYN88: Slight breathiness for voiced fricative
+		'spectralTilt': 7,
 	},
 	'θ': {
 		'_isNasal': False,
@@ -374,6 +380,8 @@ FRICATIVES = {
 		'pa6': 0.466666666667,
 		'parallelBypass': 0.633333333333,
 		'fricationAmplitude': 1,
+		# KLSYN88: Slight breathiness for voiced fricative
+		'spectralTilt': 7,
 	},
 	'h': {
 		'_isVowel': False,
@@ -383,6 +391,9 @@ FRICATIVES = {
 		'_copyAdjacent': True,
 		'aspirationAmplitude': 1,
 		'voiceAmplitude': 0,
+		# KLSYN88: Breathy voice quality
+		'spectralTilt': 18,
+		'openQuotientShape': 0.7,
 	},
 	'ʍ': {
 		'_isNasal': False,
