@@ -75,6 +75,35 @@ class SpectralTiltFilter {
 	}
 };
 
+// KLSYN88 Flutter Generator
+// Adds natural pitch micro-variations using sum of low-frequency oscillators
+// Creates more natural-sounding voice by avoiding perfectly steady pitch
+class FlutterGenerator {
+	private:
+	int sampleRate;
+	double phase1, phase2, phase3;
+
+	public:
+	FlutterGenerator(int sr): sampleRate(sr), phase1(0), phase2(0), phase3(0) {}
+
+	double getNext(double flutterAmount) {
+		if (flutterAmount <= 0) return 1.0;  // No modulation
+
+		// Three low-frequency components per KLSYN88 (~12.7, 7.1, 4.7 Hz)
+		const double freq1 = 12.7, freq2 = 7.1, freq3 = 4.7;
+		double flutter = 0.5 * sin(PITWO * phase1)
+		               + 0.3 * sin(PITWO * phase2)
+		               + 0.2 * sin(PITWO * phase3);
+
+		phase1 = fmod(phase1 + freq1 / sampleRate, 1.0);
+		phase2 = fmod(phase2 + freq2 / sampleRate, 1.0);
+		phase3 = fmod(phase3 + freq3 / sampleRate, 1.0);
+
+		// Return pitch multiplier centered at 1.0, ±2% at full flutter
+		return 1.0 + flutter * flutterAmount * 0.02;
+	}
+};
+
 class FrequencyGenerator {
 	private:
 	int sampleRate;
@@ -96,14 +125,16 @@ class VoiceGenerator {
 	FrequencyGenerator pitchGen;
 	FrequencyGenerator vibratoGen;
 	NoiseGenerator aspirationGen;
+	FlutterGenerator flutterGen;  // KLSYN88: natural pitch jitter
 
 	public:
 	bool glottisOpen;
-	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), aspirationGen(), glottisOpen(false) {};
+	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), aspirationGen(), flutterGen(sr), glottisOpen(false) {};
 
 	double getNext(const speechPlayer_frame_t* frame) {
 		double vibrato=(sin(vibratoGen.getNext(frame->vibratoSpeed)*PITWO)*0.06*frame->vibratoPitchOffset)+1;
-		double voice=pitchGen.getNext(frame->voicePitch*vibrato);
+		double flutter=flutterGen.getNext(frame->flutter);  // KLSYN88: apply flutter
+		double voice=pitchGen.getNext(frame->voicePitch*vibrato*flutter);
 		double aspiration=aspirationGen.getNext()*0.2;
 		double turbulence=aspiration*frame->voiceTurbulenceAmplitude;
 		glottisOpen=voice>=frame->glottalOpenQuotient;
