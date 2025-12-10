@@ -339,6 +339,27 @@ class PresetManager:
                 pass
         return presets
 
+    def find_preset_by_ipa(self, ipa_char):
+        """Find a preset by IPA character.
+
+        Returns the parameters dict if found, None otherwise.
+        This searches all JSON preset files for matching IPA symbol.
+        """
+        for filepath in self.presets_dir.glob('*.json'):
+            try:
+                data = self.load_preset(filepath)
+                if data.get('ipa') == ipa_char:
+                    # Return params with metadata
+                    params = dict(data.get('parameters', {}))
+                    params['_isVowel'] = data.get('isVowel', False)
+                    params['_isVoiced'] = data.get('isVoiced', False)
+                    params['_isStop'] = (data.get('category') == 'stop')
+                    params['_isNasal'] = (data.get('category') == 'nasal')
+                    return params
+            except Exception:
+                pass
+        return None
+
     def export_to_data_py(self, preset_data):
         """Generate Python dict string for phoneme data format."""
         ipa = preset_data.get('ipa', 'x')
@@ -1051,7 +1072,11 @@ class PhonemeEditorFrame(wx.Frame):
                 current_params['_isStop'] = (category == 'stop')
                 current_params['_isNasal'] = (category == 'nasal')
                 phonemes.append(('*', current_params))
+            elif preset_params := self.preset_manager.find_preset_by_ipa(phoneme_key):
+                # Use saved preset (for phonemes being developed)
+                phonemes.append((phoneme_key, preset_params))
             elif phoneme_key in PHONEME_DATA:
+                # Fall back to phoneme database
                 phonemes.append((phoneme_key, PHONEME_DATA[phoneme_key]))
             else:
                 # Unknown phoneme
