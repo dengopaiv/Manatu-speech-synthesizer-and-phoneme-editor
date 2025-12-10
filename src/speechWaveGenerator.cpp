@@ -137,11 +137,36 @@ class VoiceGenerator {
 		double voice=pitchGen.getNext(frame->voicePitch*vibrato*flutter);
 		double aspiration=aspirationGen.getNext()*0.2;
 		double turbulence=aspiration*frame->voiceTurbulenceAmplitude;
-		glottisOpen=voice>=frame->glottalOpenQuotient;
+		// KLSYN88: Glottal waveform shaping using openQuotientShape and speedQuotient
+		double oq = frame->glottalOpenQuotient;
+		double sq = frame->speedQuotient;  // 1.0 = symmetric, >1 = fast rise/slow fall
+		double shape = frame->openQuotientShape;  // 0 = linear decay, 1 = exponential decay
+
+		glottisOpen = voice < oq;  // voice is cycle position 0-1
+
+		double glottalWave;
+		if (voice < oq) {
+			// Open phase: split by speed quotient into rising and falling portions
+			double openingEnd = oq / (1.0 + 1.0/sq);  // SQ controls rise/fall time ratio
+			if (voice < openingEnd) {
+				// Rising phase - linear ramp to peak
+				glottalWave = voice / openingEnd;
+			} else {
+				// Falling phase within open period - exponential decay
+				double fallPos = (voice - openingEnd) / (oq - openingEnd);
+				double expFactor = 1.0 + shape * 4.0;  // shape 0->1, expFactor 1->5
+				glottalWave = pow(1.0 - fallPos, expFactor);
+			}
+		} else {
+			// Closed phase - no airflow
+			glottalWave = 0.0;
+		}
+
+		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
+
 		if(!glottisOpen) {
 			turbulence*=0.01;
 		}
-		voice=(voice*2)-1;
 		voice+=turbulence;
 		voice*=frame->voiceAmplitude;
 		aspiration*=frame->aspirationAmplitude;
