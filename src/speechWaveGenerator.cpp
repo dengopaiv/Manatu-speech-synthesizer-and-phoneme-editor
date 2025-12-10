@@ -126,15 +126,33 @@ class VoiceGenerator {
 	FrequencyGenerator vibratoGen;
 	NoiseGenerator aspirationGen;
 	FlutterGenerator flutterGen;  // KLSYN88: natural pitch jitter
+	double lastCyclePos;  // KLSYN88: track cycle for diplophonia
+	bool periodAlternate;  // KLSYN88: alternating period flag
 
 	public:
 	bool glottisOpen;
-	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), aspirationGen(), flutterGen(sr), glottisOpen(false) {};
+	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), aspirationGen(), flutterGen(sr), lastCyclePos(0), periodAlternate(false), glottisOpen(false) {};
 
 	double getNext(const speechPlayer_frame_t* frame) {
 		double vibrato=(sin(vibratoGen.getNext(frame->vibratoSpeed)*PITWO)*0.06*frame->vibratoPitchOffset)+1;
 		double flutter=flutterGen.getNext(frame->flutter);  // KLSYN88: apply flutter
-		double voice=pitchGen.getNext(frame->voicePitch*vibrato*flutter);
+
+		// KLSYN88: Diplophonia - alternating pitch periods for creaky voice
+		double diplophoniaMod = 1.0;
+		if (frame->diplophonia > 0) {
+			// Alternating periods: one slightly longer, one slightly shorter
+			// ±10% pitch variation at full diplophonia
+			diplophoniaMod = periodAlternate ? (1.0 + frame->diplophonia * 0.10) : (1.0 - frame->diplophonia * 0.10);
+		}
+
+		double voice=pitchGen.getNext(frame->voicePitch*vibrato*flutter*diplophoniaMod);
+
+		// Detect new pitch period (cycle wrapped) to toggle alternation
+		if (voice < lastCyclePos - 0.5) {  // Wrapped from ~1 back to ~0
+			periodAlternate = !periodAlternate;
+		}
+		lastCyclePos = voice;
+
 		double aspiration=aspirationGen.getNext()*0.2;
 		double turbulence=aspiration*frame->voiceTurbulenceAmplitude;
 		// KLSYN88: Glottal waveform shaping using openQuotientShape and speedQuotient
