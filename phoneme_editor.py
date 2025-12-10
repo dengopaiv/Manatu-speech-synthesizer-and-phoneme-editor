@@ -1070,7 +1070,13 @@ class PhonemeEditorFrame(wx.Frame):
         frame.preFormantGain = 1.0
         frame.outputGain = 1.0
 
-        # Apply phoneme parameters
+        # Apply KLSYN88 defaults first for backward compatibility
+        # This ensures phonemes without KLSYN88 params get sensible defaults
+        for name, value in KLSYN88_DEFAULTS.items():
+            if hasattr(frame, name):
+                setattr(frame, name, value)
+
+        # Apply phoneme parameters (overrides defaults)
         for name, value in params.items():
             if name.startswith('_'):
                 continue  # Skip metadata
