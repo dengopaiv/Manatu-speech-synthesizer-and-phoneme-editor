@@ -74,6 +74,66 @@ class NoiseGenerator {
 	}
 };
 
+// Colored Noise Generator with configurable bandpass filtering
+// For place-specific fricative spectra: /s/ high-freq, /ʃ/ mid-freq, /f/ flat
+class ColoredNoiseGenerator {
+	private:
+	int sampleRate;
+	NoiseGenerator white;
+	// Simple 2nd-order bandpass state variables
+	double bp1, bp2;
+	double lastFreq, lastBw;
+	double a0, a1, a2, b1, b2;
+
+	void updateCoeffs(double freq, double bw) {
+		if (freq == lastFreq && bw == lastBw) return;
+		lastFreq = freq;
+		lastBw = bw;
+
+		// Compute 2nd-order bandpass coefficients
+		double omega = PITWO * freq / sampleRate;
+		double alpha = sin(omega) * sinh(log(2.0) / 2.0 * bw / freq * omega / sin(omega));
+
+		double b0 = alpha;
+		double b1_raw = 0.0;
+		double b2_raw = -alpha;
+		double a0_raw = 1.0 + alpha;
+		double a1_raw = -2.0 * cos(omega);
+		double a2_raw = 1.0 - alpha;
+
+		// Normalize coefficients
+		a0 = b0 / a0_raw;
+		a1 = b1_raw / a0_raw;
+		a2 = b2_raw / a0_raw;
+		b1 = a1_raw / a0_raw;
+		b2 = a2_raw / a0_raw;
+	}
+
+	public:
+	ColoredNoiseGenerator(int sr): sampleRate(sr), white(), bp1(0), bp2(0), lastFreq(0), lastBw(0) {}
+
+	double getNext(double filterFreq, double filterBw) {
+		double noise = white.getNext();
+
+		// If filterFreq is 0, return white noise (no filtering)
+		if (filterFreq <= 0) return noise;
+
+		// Clamp bandwidth to reasonable values
+		if (filterBw < 100) filterBw = 100;
+
+		// Update coefficients if needed
+		updateCoeffs(filterFreq, filterBw);
+
+		// Apply bandpass filter (direct form II transposed)
+		double out = a0 * noise + a1 * bp1 + a2 * bp2 - b1 * bp1 - b2 * bp2;
+		bp2 = bp1;
+		bp1 = out;
+
+		// Boost output to compensate for narrow bandpass attenuation
+		return out * 3.0;
+	}
+};
+
 // KLSYN88 Spectral Tilt Filter
 // First-order lowpass that attenuates high frequencies to create breathy voice quality
 // tiltDB: 0 = no filtering (modal voice), up to 41 dB attenuation at 3kHz (very breathy)
@@ -315,6 +375,37 @@ class Resonator {
 		return out;
 	}
 
+	void setSampleRate(int sr) { sampleRate = sr; }
+};
+
+// 4th-order resonator (cascade of two 2nd-order sections)
+// Provides sharper formants with 24 dB/octave rolloff vs 12 dB/octave for 2nd-order
+// Better vowel clarity and more focused formant peaks
+class Resonator4thOrder {
+	private:
+	int sampleRate;
+	Resonator stage1, stage2;
+
+	public:
+	Resonator4thOrder(int sr): sampleRate(sr), stage1(sr), stage2(sr) {}
+
+	double resonate(double in, double frequency, double bandwidth) {
+		if (frequency <= 0) return in;  // Bypass if frequency is 0
+
+		// Adjust bandwidth for equivalent Q when cascading
+		// For Butterworth-like response, each stage gets bw * 0.64 (~1/sqrt(2))
+		double bwAdjusted = bandwidth * 0.64;
+
+		// Cascade two 2nd-order sections at same frequency
+		double out = stage1.resonate(in, frequency, bwAdjusted);
+		return stage2.resonate(out, frequency, bwAdjusted);
+	}
+
+	void setSampleRate(int sr) {
+		sampleRate = sr;
+		stage1.setSampleRate(sr);
+		stage2.setSampleRate(sr);
+	}
 };
 
 // KLSYN88: Tracheal (subglottal) resonator for breathy voice realism
@@ -352,7 +443,10 @@ class TrachealResonator {
 class CascadeFormantGenerator {
 	private:
 	int sampleRate;
-	Resonator r1, r2, r3, r4, r5, r6, rN0, rNP;
+	// F1-F3: 4th-order resonators for sharper, more focused formants
+	Resonator4thOrder r1, r2, r3;
+	// F4-F6: 2nd-order resonators (wider bandwidths, less benefit from 4th-order)
+	Resonator r4, r5, r6, rN0, rNP;
 
 	public:
 	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), rN0(sr,true), rNP(sr) {};
@@ -364,6 +458,7 @@ class CascadeFormantGenerator {
 		output=r6.resonate(output,frame->cf6,frame->cb6);
 		output=r5.resonate(output,frame->cf5,frame->cb5);
 		output=r4.resonate(output,frame->cf4,frame->cb4);
+		// F1-F3 use 4th-order for sharper resonance (24 dB/octave rolloff)
 		output=r3.resonate(output,frame->cf3,frame->cb3);
 		output=r2.resonate(output,frame->cf2,frame->cb2);
 		output=r1.resonate(output,frame->cf1,frame->cb1);
@@ -446,14 +541,14 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	VoiceGenerator voiceGenerator;
 	SpectralTiltFilter tiltFilter;  // KLSYN88: spectral tilt for breathy voice
 	TrachealResonator trachealRes;  // KLSYN88: subglottal resonances
-	NoiseGenerator fricGenerator;
+	ColoredNoiseGenerator fricGenerator;  // Bandpass-filtered noise for fricatives
 	BurstGenerator burstGen;  // KLSYN88: stop burst envelopes
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
@@ -466,7 +561,8 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
 				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
 				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
-				double fric=fricGenerator.getNext()*0.3*frame->fricationAmplitude;
+				// Colored noise for fricatives (bandpass filtered based on place of articulation)
+				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
 				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
 				double parallelOut=parallel.getNext(frame,(fric+burst)*frame->preFormantGain);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;

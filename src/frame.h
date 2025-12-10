@@ -51,6 +51,8 @@ typedef struct {
 	speechPlayer_frameParam_t caNP; // amplitude from 0 to 1 of cascade nasal pole formant
 	// fricatives and parallel
 	speechPlayer_frameParam_t fricationAmplitude; // amplitude of frication noise from 0 to 1.
+	speechPlayer_frameParam_t noiseFilterFreq; // center freq for noise bandpass filter (0=white noise, >0=bandpass)
+	speechPlayer_frameParam_t noiseFilterBw; // bandwidth of noise bandpass filter in Hz
 	speechPlayer_frameParam_t pf1, pf2, pf3, pf4, pf5, pf6; // parallel formants in hz
 	speechPlayer_frameParam_t pb1, pb2, pb3, pb4, pb5, pb6; // parallel formant bandwidths in hz
 	speechPlayer_frameParam_t pa1, pa2, pa3, pa4, pa5, pa6; // amplitude of parallel formants between 0 and 1

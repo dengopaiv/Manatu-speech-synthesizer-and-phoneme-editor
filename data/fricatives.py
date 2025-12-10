@@ -52,6 +52,9 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0.95,
 		'fricationAmplitude': 1,
+		# Labiodental: flat/diffuse spectrum (white noise)
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 	'v': {
 		'_isNasal': False,
@@ -100,6 +103,9 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		# Labiodental: flat/diffuse spectrum (white noise)
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 	's': {
 		'_isNasal': False,
@@ -146,6 +152,9 @@ FRICATIVES = {
 		'pa6': 0.866666666667,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
+		# Alveolar sibilant: high-frequency emphasis (4-8 kHz)
+		'noiseFilterFreq': 5500,
+		'noiseFilterBw': 2000,
 	},
 	'z': {
 		'_isNasal': False,
@@ -195,6 +204,9 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		# Alveolar sibilant: high-frequency emphasis (4-8 kHz)
+		'noiseFilterFreq': 5500,
+		'noiseFilterBw': 2000,
 	},
 	'ʃ': {
 		'_isNasal': False,
@@ -244,6 +256,9 @@ FRICATIVES = {
 		'pa6': 0.77,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
+		# Postalveolar: mid-high frequency (2.5-4 kHz)
+		'noiseFilterFreq': 3500,
+		'noiseFilterBw': 1500,
 	},
 	'ʒ': {
 		'_isNasal': False,
@@ -295,6 +310,9 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		# Postalveolar: mid-high frequency (2.5-4 kHz)
+		'noiseFilterFreq': 3500,
+		'noiseFilterBw': 1500,
 	},
 	'θ': {
 		'_isNasal': False,
@@ -343,6 +361,9 @@ FRICATIVES = {
 		'pa6': 0.47,
 		'parallelBypass': 0.8,
 		'fricationAmplitude': 1,
+		# Dental: diffuse/weak spectrum (white noise)
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 	'ð': {
 		'_isNasal': False,
@@ -393,6 +414,9 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		# Dental: diffuse/weak spectrum (white noise)
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 	'h': {
 		'_isVowel': False,
@@ -405,6 +429,9 @@ FRICATIVES = {
 		# KLSYN88: Breathy voice quality
 		'spectralTilt': 18,
 		'openQuotientShape': 0.7,
+		# Glottal: uses aspiration not frication, but include for completeness
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 	'ʍ': {
 		'_isNasal': False,
@@ -451,5 +478,8 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Labial-velar approximant: uses aspiration mainly
+		'noiseFilterFreq': 0,
+		'noiseFilterBw': 1000,
 	},
 }

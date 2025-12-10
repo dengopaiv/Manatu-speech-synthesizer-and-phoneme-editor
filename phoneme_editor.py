@@ -57,6 +57,8 @@ PARAM_GROUPS = {
         ('voiceTurbulenceAmplitude', 0, 100, 0, '%', 'Breathiness'),
         ('aspirationAmplitude', 0, 100, 0, '%', 'Aspiration noise'),
         ('fricationAmplitude', 0, 100, 0, '%', 'Frication noise'),
+        ('noiseFilterFreq', 0, 8000, 0, 'Hz', 'Noise bandpass center (0=white)'),
+        ('noiseFilterBw', 100, 4000, 1000, 'Hz', 'Noise bandpass width'),
         ('preFormantGain', 0, 200, 100, '%', 'Pre-resonator gain'),
         ('outputGain', 0, 200, 100, '%', 'Master volume'),
     ],
@@ -163,6 +165,8 @@ KLSYN88_DEFAULTS = {
     'ftpBw2': 100,            # Hz (direct)
     'burstAmplitude': 0,      # 0-1 (percentage)
     'burstDuration': 0.25,    # 0-1 (percentage)
+    'noiseFilterFreq': 0,     # Hz (0=white noise, >0=bandpass center)
+    'noiseFilterBw': 1000,    # Hz (bandwidth of noise bandpass)
 }
 
 # IPA descriptions from the International Phonetic Alphabet chart

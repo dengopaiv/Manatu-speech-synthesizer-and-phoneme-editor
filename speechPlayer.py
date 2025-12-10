@@ -48,6 +48,8 @@ class Frame(Structure):
 		'cb1','cb2','cb3','cb4','cb5','cb6','cbN0','cbNP',
 		'caNP',
 		'fricationAmplitude',
+		'noiseFilterFreq',    # Center freq for noise bandpass (0=white, >0=bandpass)
+		'noiseFilterBw',      # Bandwidth of noise bandpass filter
 		'pf1','pf2','pf3','pf4','pf5','pf6',
 		'pb1','pb2','pb3','pb4','pb5','pb6',
 		'pa1','pa2','pa3','pa4','pa5','pa6',
