@@ -13,8 +13,8 @@
     "glottalOpenQuotient": 0.1,
     "voiceAmplitude": 0.0,
     "voiceTurbulenceAmplitude": 0.0,
-    "aspirationAmplitude": 0.0,
-    "fricationAmplitude": 0.3,
+    "aspirationAmplitude": 0.5,
+    "fricationAmplitude": 0,
     "preFormantGain": 1.0,
     "outputGain": 1.0,
     "cf1": 400.0,
@@ -64,7 +64,7 @@
     "ftzBw1": 100,
     "ftpFreq2": 0,
     "ftpBw2": 100,
-    "burstAmplitude": 0.8,
+    "burstAmplitude": 0.85,
     "burstDuration": 0.3
   }
 }
