@@ -144,6 +144,24 @@ GAIN_PARAMS = {'preFormantGain', 'outputGain'}
 # Parameters that need /10 scaling
 TENTH_PARAMS = {'vibratoSpeed', 'parallelBypass'}
 
+# KLSYN88 default values (applied before loading presets for backward compatibility)
+# These match the defaults in ipa.py KLSYN88_DEFAULTS
+KLSYN88_DEFAULTS = {
+    'spectralTilt': 0,        # 0-41 dB (direct value)
+    'flutter': 0.25,          # 0-1 (percentage)
+    'openQuotientShape': 0.5, # 0-1 (percentage)
+    'speedQuotient': 1.0,     # 0.5-2.0 (percentage, slider 50-200)
+    'diplophonia': 0,         # 0-1 (percentage)
+    'ftpFreq1': 0,            # Hz (direct)
+    'ftpBw1': 100,            # Hz (direct)
+    'ftzFreq1': 0,            # Hz (direct)
+    'ftzBw1': 100,            # Hz (direct)
+    'ftpFreq2': 0,            # Hz (direct)
+    'ftpBw2': 100,            # Hz (direct)
+    'burstAmplitude': 0,      # 0-1 (percentage)
+    'burstDuration': 0.25,    # 0-1 (percentage)
+}
+
 # IPA descriptions from the International Phonetic Alphabet chart
 IPA_DESCRIPTIONS = {
     # Vowels - Close
@@ -827,9 +845,23 @@ class PhonemeEditorFrame(wx.Frame):
 
         return params
 
-    def set_frame_params(self, params):
-        """Set slider values from a parameter dictionary."""
-        for name, value in params.items():
+    def set_frame_params(self, params, apply_klsyn88_defaults=True):
+        """Set slider values from a parameter dictionary.
+
+        Args:
+            params: Dictionary of parameter values
+            apply_klsyn88_defaults: If True, apply KLSYN88 defaults first for
+                backward compatibility with presets that don't have these params.
+        """
+        # Apply KLSYN88 defaults first, then overlay with preset params
+        # This ensures old presets don't inherit KLSYN88 values from previous loads
+        if apply_klsyn88_defaults:
+            all_params = dict(KLSYN88_DEFAULTS)
+            all_params.update(params)
+        else:
+            all_params = params
+
+        for name, value in all_params.items():
             if name not in self.sliders:
                 continue
 
