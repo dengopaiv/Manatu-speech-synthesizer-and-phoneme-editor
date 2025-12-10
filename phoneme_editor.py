@@ -107,13 +107,35 @@ PARAM_GROUPS = {
     'Parallel Bypass': [
         ('parallelBypass', 0, 105, 0, '%', 'Unfiltered noise bypass'),
     ],
+    'Voice Quality (KLSYN88)': [
+        ('spectralTilt', 0, 41, 0, 'dB', 'High-freq attenuation (breathy)'),
+        ('flutter', 0, 100, 25, '%', 'Natural pitch jitter'),
+        ('openQuotientShape', 0, 100, 50, '%', 'Glottal closing curve'),
+        ('speedQuotient', 50, 200, 100, '%', 'Opening/closing asymmetry'),
+        ('diplophonia', 0, 100, 0, '%', 'Period alternation (creaky)'),
+    ],
+    'Tracheal Resonances': [
+        ('ftpFreq1', 0, 1000, 0, 'Hz', 'Tracheal pole 1 (0=off)'),
+        ('ftpBw1', 50, 200, 100, 'Hz', 'Tracheal pole 1 bandwidth'),
+        ('ftzFreq1', 0, 1000, 0, 'Hz', 'Tracheal zero 1 (0=off)'),
+        ('ftzBw1', 50, 200, 100, 'Hz', 'Tracheal zero 1 bandwidth'),
+        ('ftpFreq2', 0, 2000, 0, 'Hz', 'Tracheal pole 2 (0=off)'),
+        ('ftpBw2', 50, 200, 100, 'Hz', 'Tracheal pole 2 bandwidth'),
+    ],
+    'Stop Burst': [
+        ('burstAmplitude', 0, 100, 0, '%', 'Burst transient intensity'),
+        ('burstDuration', 0, 100, 25, '%', 'Burst length (5-20ms)'),
+    ],
 }
 
 # Parameters that use percentage scaling (0-100 maps to 0.0-1.0)
 PERCENT_PARAMS = {
     'voiceAmplitude', 'voiceTurbulenceAmplitude', 'aspirationAmplitude',
     'fricationAmplitude', 'caNP', 'pa1', 'pa2', 'pa3', 'pa4', 'pa5', 'pa6',
-    'glottalOpenQuotient', 'vibratoPitchOffset'
+    'glottalOpenQuotient', 'vibratoPitchOffset',
+    # KLSYN88 parameters
+    'flutter', 'openQuotientShape', 'speedQuotient', 'diplophonia',
+    'burstAmplitude', 'burstDuration',
 }
 
 # Parameters that use percentage scaling (0-200 maps to 0.0-2.0)
