@@ -224,7 +224,39 @@ class Resonator {
 
 };
 
-class CascadeFormantGenerator { 
+// KLSYN88: Tracheal (subglottal) resonator for breathy voice realism
+// Adds coupling to tracheal cavity below the glottis
+class TrachealResonator {
+	private:
+	int sampleRate;
+	Resonator pole1, zero1, pole2;  // First pole-zero pair + second pole
+
+	public:
+	TrachealResonator(int sr): sampleRate(sr), pole1(sr), zero1(sr, true), pole2(sr) {}
+
+	double resonate(double input, const speechPlayer_frame_t* frame) {
+		double output = input;
+
+		// First tracheal pole (adds resonance around 600 Hz)
+		if (frame->ftpFreq1 > 0) {
+			output = pole1.resonate(output, frame->ftpFreq1, frame->ftpBw1);
+		}
+
+		// First tracheal zero (anti-resonator, adds notch)
+		if (frame->ftzFreq1 > 0) {
+			output = zero1.resonate(output, frame->ftzFreq1, frame->ftzBw1);
+		}
+
+		// Second tracheal pole (adds resonance around 1400 Hz)
+		if (frame->ftpFreq2 > 0) {
+			output = pole2.resonate(output, frame->ftpFreq2, frame->ftpBw2);
+		}
+
+		return output;
+	}
+};
+
+class CascadeFormantGenerator {
 	private:
 	int sampleRate;
 	Resonator r1, r2, r3, r4, r5, r6, rN0, rNP;
@@ -274,13 +306,14 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	int sampleRate;
 	VoiceGenerator voiceGenerator;
 	SpectralTiltFilter tiltFilter;  // KLSYN88: spectral tilt for breathy voice
+	TrachealResonator trachealRes;  // KLSYN88: subglottal resonances
 	NoiseGenerator fricGenerator;
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), fricGenerator(), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(), cascade(sr), parallel(sr), frameManager(NULL) {
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
@@ -291,6 +324,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 			if(frame) {
 				double voice=voiceGenerator.getNext(frame);
 				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
+				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
 				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
 				double fric=fricGenerator.getNext()*0.3*frame->fricationAmplitude;
 				double parallelOut=parallel.getNext(frame,fric*frame->preFormantGain);
