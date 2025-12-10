@@ -297,7 +297,53 @@ class CascadeFormantGenerator {
 
 };
 
-class ParallelFormantGenerator { 
+// KLSYN88: Stop burst envelope generator for plosive transients
+class BurstGenerator {
+	private:
+	int sampleRate;
+	NoiseGenerator noiseGen;
+	double burstPhase;  // 0 = burst start, 1 = burst end
+	double lastBurstAmp;  // Track amplitude to detect burst start
+
+	public:
+	BurstGenerator(int sr): sampleRate(sr), noiseGen(), burstPhase(1.0), lastBurstAmp(0) {}
+
+	double getNext(double burstAmplitude, double burstDuration) {
+		if (burstAmplitude <= 0) {
+			lastBurstAmp = 0;
+			burstPhase = 1.0;
+			return 0;
+		}
+
+		// Detect new burst (amplitude just became non-zero)
+		if (lastBurstAmp <= 0 && burstAmplitude > 0) {
+			burstPhase = 0;  // Reset burst to start
+		}
+		lastBurstAmp = burstAmplitude;
+
+		if (burstPhase >= 1.0) {
+			return 0;  // Burst complete
+		}
+
+		// Calculate envelope: exponential decay from 1 to 0 over burst duration
+		// burstDuration 0-1 maps to ~5-20ms (normalized)
+		double maxDurationMs = 20.0;
+		double minDurationMs = 5.0;
+		double durationMs = minDurationMs + burstDuration * (maxDurationMs - minDurationMs);
+		double durationSamples = (durationMs / 1000.0) * sampleRate;
+
+		double envelope = pow(1.0 - burstPhase, 2.0);  // Quadratic decay
+
+		// Advance phase
+		burstPhase += 1.0 / durationSamples;
+		if (burstPhase > 1.0) burstPhase = 1.0;
+
+		// Generate burst: noise * envelope * amplitude
+		return noiseGen.getNext() * envelope * burstAmplitude;
+	}
+};
+
+class ParallelFormantGenerator {
 	private:
 	int sampleRate;
 	Resonator r1, r2, r3, r4, r5, r6;
@@ -326,12 +372,13 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	SpectralTiltFilter tiltFilter;  // KLSYN88: spectral tilt for breathy voice
 	TrachealResonator trachealRes;  // KLSYN88: subglottal resonances
 	NoiseGenerator fricGenerator;
+	BurstGenerator burstGen;  // KLSYN88: stop burst envelopes
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
@@ -345,7 +392,8 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
 				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
 				double fric=fricGenerator.getNext()*0.3*frame->fricationAmplitude;
-				double parallelOut=parallel.getNext(frame,fric*frame->preFormantGain);
+				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
+				double parallelOut=parallel.getNext(frame,(fric+burst)*frame->preFormantGain);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;
 				sampleBuf[i].value=(int)max(min(out*4000,32000),-32000);
 			} else {
