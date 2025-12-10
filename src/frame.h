@@ -28,6 +28,23 @@ typedef struct {
 	speechPlayer_frameParam_t glottalOpenQuotient; // fraction between 0 and 1 of a voice cycle that the glottis is open (allows voice turbulance, alters f1...)
 	speechPlayer_frameParam_t voiceAmplitude; // amplitude of voice (phonation) source between 0 and 1.
 	speechPlayer_frameParam_t aspirationAmplitude; // amplitude of aspiration (voiceless h, whisper) source between 0 and 1.
+	// KLSYN88 voice quality parameters
+	speechPlayer_frameParam_t spectralTilt; // TL: high-frequency attenuation 0-41 dB at 3kHz (0=no tilt, modal voice)
+	speechPlayer_frameParam_t flutter; // FL: natural F0 jitter 0-1 (0.25 typical for natural speech)
+	speechPlayer_frameParam_t openQuotientShape; // OQ shape: glottal closing curve 0-1 (0=linear, 1=exponential decay)
+	speechPlayer_frameParam_t speedQuotient; // SQ: opening/closing time asymmetry 0.5-2.0 (1.0=symmetric)
+	speechPlayer_frameParam_t diplophonia; // DI: period alternation for creaky voice 0-1 (0=none)
+	// Tracheal/subglottal resonances (for breathy voice)
+	speechPlayer_frameParam_t ftpFreq1; // FTP1: first tracheal pole frequency in Hz (0=disabled, ~600 typical)
+	speechPlayer_frameParam_t ftpBw1; // BTP1: first tracheal pole bandwidth in Hz
+	speechPlayer_frameParam_t ftzFreq1; // FTZ1: first tracheal zero frequency in Hz
+	speechPlayer_frameParam_t ftzBw1; // BTZ1: first tracheal zero bandwidth in Hz
+	speechPlayer_frameParam_t ftpFreq2; // FTP2: second tracheal pole frequency in Hz (~1400 typical)
+	speechPlayer_frameParam_t ftpBw2; // BTP2: second tracheal pole bandwidth in Hz
+	// Stop burst envelope
+	speechPlayer_frameParam_t burstAmplitude; // AB: stop burst transient amplitude 0-1
+	speechPlayer_frameParam_t burstDuration; // DB: burst duration normalized 0-1 (0.25 = 5ms at 20ms max)
+	// Cascade formants
 	speechPlayer_frameParam_t cf1, cf2, cf3, cf4, cf5, cf6, cfN0, cfNP; // frequencies of standard cascaide formants, nasal (anti) 0 and nasal pole in hz
 	speechPlayer_frameParam_t cb1, cb2, cb3, cb4, cb5, cb6, cbN0, cbNP; // bandwidths of standard cascaide formants, nasal (anti) 0 and nasal pole in hz
 	speechPlayer_frameParam_t caNP; // amplitude from 0 to 1 of cascade nasal pole formant

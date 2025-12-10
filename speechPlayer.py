@@ -26,6 +26,23 @@ class Frame(Structure):
 		'glottalOpenQuotient',
 		'voiceAmplitude',
 		'aspirationAmplitude',
+		# KLSYN88 voice quality parameters
+		'spectralTilt',      # TL: high-frequency attenuation 0-41 dB
+		'flutter',           # FL: natural F0 jitter 0-1
+		'openQuotientShape', # OQ shape: glottal closing curve 0-1
+		'speedQuotient',     # SQ: opening/closing asymmetry 0.5-2.0
+		'diplophonia',       # DI: period alternation 0-1
+		# Tracheal resonances
+		'ftpFreq1',          # FTP1: first tracheal pole Hz
+		'ftpBw1',            # BTP1: first tracheal pole bandwidth
+		'ftzFreq1',          # FTZ1: first tracheal zero Hz
+		'ftzBw1',            # BTZ1: first tracheal zero bandwidth
+		'ftpFreq2',          # FTP2: second tracheal pole Hz
+		'ftpBw2',            # BTP2: second tracheal pole bandwidth
+		# Stop burst envelope
+		'burstAmplitude',    # AB: burst transient 0-1
+		'burstDuration',     # DB: burst duration normalized 0-1
+		# Cascade formants
 		'cf1','cf2','cf3','cf4','cf5','cf6','cfN0','cfNP',
 		'cb1','cb2','cb3','cb4','cb5','cb6','cbN0','cbNP',
 		'caNP',
@@ -41,11 +58,34 @@ class Frame(Structure):
 
 dllPath=os.path.join(os.path.dirname(__file__),'speechPlayer.dll')
 
+# Define function prototypes for 64-bit compatibility
+def _setupDllFunctions(dll):
+	# speechPlayer_handle_t speechPlayer_initialize(int sampleRate)
+	dll.speechPlayer_initialize.argtypes = [c_int]
+	dll.speechPlayer_initialize.restype = c_void_p
+
+	# void speechPlayer_queueFrame(handle, frame*, minDuration, fadeDuration, userIndex, purgeQueue)
+	dll.speechPlayer_queueFrame.argtypes = [c_void_p, POINTER(Frame), c_uint, c_uint, c_int, c_bool]
+	dll.speechPlayer_queueFrame.restype = None
+
+	# int speechPlayer_synthesize(handle, sampleCount, sampleBuf)
+	dll.speechPlayer_synthesize.argtypes = [c_void_p, c_uint, POINTER(c_short)]
+	dll.speechPlayer_synthesize.restype = c_int
+
+	# int speechPlayer_getLastIndex(handle)
+	dll.speechPlayer_getLastIndex.argtypes = [c_void_p]
+	dll.speechPlayer_getLastIndex.restype = c_int
+
+	# void speechPlayer_terminate(handle)
+	dll.speechPlayer_terminate.argtypes = [c_void_p]
+	dll.speechPlayer_terminate.restype = None
+
 class SpeechPlayer(object):
 
 	def __init__(self,sampleRate):
 		self.sampleRate=sampleRate
 		self._dll=cdll.LoadLibrary(dllPath)
+		_setupDllFunctions(self._dll)
 		self._speechHandle=self._dll.speechPlayer_initialize(sampleRate)
 
 	def queueFrame(self,frame,minFrameDuration,fadeDuration,userIndex=-1,purgeQueue=False):

@@ -32,7 +32,29 @@ def setFrame(frame,phoneme):
 	for k,v in values.items():
 		setattr(frame,k,v)
 
+# KLSYN88 voice quality parameter defaults (neutral/modal voice)
+# These ensure backward compatibility - existing phoneme data works unchanged
+KLSYN88_DEFAULTS = {
+	'spectralTilt': 0,        # No tilt (modal voice)
+	'flutter': 0.25,          # Slight natural jitter
+	'openQuotientShape': 0.5, # Moderate exponential
+	'speedQuotient': 1.0,     # Symmetric opening/closing
+	'diplophonia': 0,         # No period alternation
+	'ftpFreq1': 0,            # Tracheal disabled by default
+	'ftpBw1': 100,
+	'ftzFreq1': 0,
+	'ftzBw1': 100,
+	'ftpFreq2': 0,
+	'ftpBw2': 100,
+	'burstAmplitude': 0,      # No burst by default
+	'burstDuration': 0.25,    # 5ms at 20ms max
+}
+
 def applyPhonemeToFrame(frame,phoneme):
+	# Apply KLSYN88 defaults first for backward compatibility
+	for k,v in KLSYN88_DEFAULTS.items():
+		setattr(frame,k,v)
+	# Then apply phoneme-specific values (override defaults)
 	for k,v in phoneme.items():
 		if not k.startswith('_'):
 			setattr(frame,k,v)

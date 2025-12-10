@@ -4,9 +4,20 @@ Import([
 	'env',
 ])
 
-for filePath in ("#data.py","#ipa.py","#speechPlayer.py","#speechPlayer.dll"):
+# Copy individual files
+for filePath in ("#ipa.py","#speechPlayer.py","#speechPlayer.dll"):
 	f=File(filePath)
 	env.Command("synthDrivers/nvSpeechPlayer/%s"%os.path.basename(f.abspath),f,Copy("$TARGET","$SOURCE"))
+
+# Copy data module directory
+dataDir = Dir("#data")
+dataDest = Dir("synthDrivers/nvSpeechPlayer/data")
+def copyDataDir(target, source, env):
+	import shutil
+	if os.path.exists(dataDest.abspath):
+		shutil.rmtree(dataDest.abspath)
+	shutil.copytree(dataDir.abspath, dataDest.abspath)
+env.Command(dataDest, dataDir, copyDataDir)
 env.Textfile("manifest.ini",File("manifest.ini.in"),SUBST_DICT={'_version_':env['version'],'_author_':env['author']})
 
 addonRelPath=Dir('.')
