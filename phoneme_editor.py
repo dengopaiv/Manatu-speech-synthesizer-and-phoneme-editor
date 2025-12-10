@@ -46,6 +46,7 @@ PlayDoneEvent, EVT_PLAY_DONE = wx.lib.newevent.NewEvent()
 PARAM_GROUPS = {
     'Pitch & Voicing': [
         ('voicePitch', 25, 300, 100, 'Hz', 'Fundamental frequency'),
+        ('midVoicePitch', 0, 300, 0, 'Hz', 'Mid pitch (0=linear, >0=contour tone)'),
         ('endVoicePitch', 25, 300, 100, 'Hz', 'End pitch (for contours)'),
         ('vibratoPitchOffset', 0, 100, 12, '%', 'Vibrato depth (0-100%)'),
         ('vibratoSpeed', 0, 100, 55, 'x0.1Hz', 'Vibrato rate'),
@@ -948,6 +949,7 @@ class PhonemeEditorFrame(wx.Frame):
                 frame.voicePitch = 100
             if frame.endVoicePitch < 25:
                 frame.endVoicePitch = frame.voicePitch
+            # midVoicePitch = 0 means linear interpolation, don't force minimum
             if frame.preFormantGain <= 0:
                 frame.preFormantGain = 1.0
             if frame.outputGain <= 0:
@@ -1093,6 +1095,7 @@ class PhonemeEditorFrame(wx.Frame):
 
         # Set default pitch values
         frame.voicePitch = 100
+        frame.midVoicePitch = 0  # 0 = linear interpolation (no contour)
         frame.endVoicePitch = 100
         frame.preFormantGain = 1.0
         frame.outputGain = 1.0

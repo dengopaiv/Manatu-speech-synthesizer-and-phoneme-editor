@@ -55,6 +55,7 @@ class Frame(Structure):
 		'preFormantGain',
 		'outputGain',
 		'endVoicePitch',
+		'midVoicePitch',      # Pitch at midpoint for contour tones (0=linear, >0=3-point)
 	]]
 
 dllPath=os.path.join(os.path.dirname(__file__),'speechPlayer.dll')

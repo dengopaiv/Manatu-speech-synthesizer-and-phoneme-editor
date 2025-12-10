@@ -23,7 +23,9 @@ struct frameRequest_t {
 	unsigned int numFadeSamples;
 	bool NULLFrame;
 	speechPlayer_frame_t frame;
-	double voicePitchInc; 
+	double voicePitchInc;      // pitch increment for first half (or full frame if no midpoint)
+	double voicePitchInc2;     // pitch increment for second half (contour tones)
+	bool hasContour;           // true if using 3-point pitch contour
 	int userIndex;
 };
 
@@ -74,8 +76,15 @@ class FrameManagerImpl: public FrameManager {
 				curFrameIsNULL=true;
 			}
 		} else {
-			curFrame.voicePitch+=oldFrameRequest->voicePitchInc;
-			oldFrameRequest->frame.voicePitch=curFrame.voicePitch;
+			// Apply pitch increment - handle 3-point contour tones
+			if (oldFrameRequest->hasContour && sampleCounter > oldFrameRequest->minNumSamples / 2) {
+				// Second half of frame: use voicePitchInc2
+				curFrame.voicePitch += oldFrameRequest->voicePitchInc2;
+			} else {
+				// First half (or linear): use voicePitchInc
+				curFrame.voicePitch += oldFrameRequest->voicePitchInc;
+			}
+			oldFrameRequest->frame.voicePitch = curFrame.voicePitch;
 		}
 	}
 
@@ -95,9 +104,27 @@ class FrameManagerImpl: public FrameManager {
 		if(frame) {
 			frameRequest->NULLFrame=false;
 			memcpy(&(frameRequest->frame),frame,sizeof(speechPlayer_frame_t));
-			frameRequest->voicePitchInc=(frame->endVoicePitch-frame->voicePitch)/frameRequest->minNumSamples;
+			// Check for 3-point contour tone (midVoicePitch > 0)
+			if (frame->midVoicePitch > 0) {
+				// Contour tone: split into two halves
+				frameRequest->hasContour = true;
+				unsigned int halfSamples = frameRequest->minNumSamples / 2;
+				if (halfSamples > 0) {
+					frameRequest->voicePitchInc = (frame->midVoicePitch - frame->voicePitch) / halfSamples;
+					frameRequest->voicePitchInc2 = (frame->endVoicePitch - frame->midVoicePitch) / (frameRequest->minNumSamples - halfSamples);
+				} else {
+					frameRequest->voicePitchInc = 0;
+					frameRequest->voicePitchInc2 = 0;
+				}
+			} else {
+				// Linear interpolation (original behavior)
+				frameRequest->hasContour = false;
+				frameRequest->voicePitchInc = (frame->endVoicePitch - frame->voicePitch) / frameRequest->minNumSamples;
+				frameRequest->voicePitchInc2 = 0;
+			}
 		} else {
 			frameRequest->NULLFrame=true;
+			frameRequest->hasContour = false;
 		}
 		frameRequest->userIndex=userIndex;
 		if(purgeQueue) {
