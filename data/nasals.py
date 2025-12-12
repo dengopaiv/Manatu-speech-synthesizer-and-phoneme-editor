@@ -7,7 +7,7 @@ Auto-generated from data.py split.
 """
 
 NASALS = {
-	'm': {
+	'm': {  # Bilabial nasal
 		'_isNasal': True,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -21,17 +21,19 @@ NASALS = {
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
-		'cfNP': 216,
-		'cfN0': 450,
+		'cfNP': 270,  # Nasal pole ~270 Hz (Stevens)
+		'cfN0': 750,  # Bilabial nasal zero ~750 Hz (Stevens Ch.9)
 		'cb1': 44,
 		'cb2': 150,
 		'cb3': 150,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 100,
+		'cbN0': 80,   # Narrower bandwidth for bilabial
 		'caNP': 1,
+		'spectralTilt': 4,  # Modal voice naturalness
+		'flutter': 0.15,    # Natural F0 jitter
 		'pf1': 480,
 		'pf2': 1270,
 		'pf3': 2130,
@@ -41,9 +43,9 @@ NASALS = {
 		'pb1': 40,
 		'pb2': 200,
 		'pb3': 200,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -52,8 +54,21 @@ NASALS = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'n': {
+	'n': {  # Alveolar nasal
 		'_isNasal': True,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -67,17 +82,19 @@ NASALS = {
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
-		'cfNP': 216,
-		'cfN0': 450,
+		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
+		'cfN0': 1450,  # Alveolar nasal zero ~1450 Hz (Stevens Ch.9)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 100,
+		'cbN0': 120,   # Slightly wider bandwidth for alveolar
 		'caNP': 1,
+		'spectralTilt': 4,  # Modal voice naturalness
+		'flutter': 0.15,    # Natural F0 jitter
 		'pf1': 480,
 		'pf2': 1340,
 		'pf3': 2470,
@@ -87,9 +104,9 @@ NASALS = {
 		'pb1': 40,
 		'pb2': 300,
 		'pb3': 300,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -98,8 +115,21 @@ NASALS = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ŋ': {
+	'ŋ': {  # Velar nasal
 		'_isNasal': True,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -113,17 +143,19 @@ NASALS = {
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
-		'cfNP': 216,
-		'cfN0': 450,
+		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
+		'cfN0': 3000,  # Velar nasal zero ~3000 Hz (Stevens Ch.9)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 100,
+		'cbN0': 200,   # Wider bandwidth for velar
 		'caNP': 1,
+		'spectralTilt': 4,  # Modal voice naturalness
+		'flutter': 0.15,    # Natural F0 jitter
 		'pf1': 480,
 		'pf2': 2000,
 		'pf3': 2900,
@@ -133,9 +165,9 @@ NASALS = {
 		'pb1': 40,
 		'pb2': 300,
 		'pb3': 300,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -144,5 +176,18 @@ NASALS = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
 }

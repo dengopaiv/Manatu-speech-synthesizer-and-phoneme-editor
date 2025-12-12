@@ -80,18 +80,34 @@ TONE_LETTERS = {
 }
 
 # Map tone names to pitch multipliers (relative to base pitch)
+# Level tones: single float
+# 2-point contours: (start, end) tuple
+# 3-point contours: (start, mid, end) tuple - uses midVoicePitch
 TONE_PITCH_MULTIPLIERS = {
+	# Level tones
 	'extra_high': 1.4,
 	'high': 1.2,
 	'mid': 1.0,
 	'low': 0.85,
 	'extra_low': 0.7,
+	# 2-point contours
 	'rising': (0.85, 1.2),   # start low, end high
 	'falling': (1.2, 0.85),  # start high, end low
+	# 3-point contours (for complex tones like Mandarin tone 3)
+	'dipping': (0.9, 0.7, 0.95),     # ˨˩˦ Mandarin tone 3: mid-low→extra-low→mid
+	'peaking': (0.85, 1.2, 0.9),    # Low→high→mid (rise-fall)
+	'low_rising': (0.7, 0.8, 1.0),  # ˨˧ Cantonese tone 5: low→mid→high
+	'high_falling': (1.3, 1.0, 0.7), # ˥˧˩ High→mid→low (gradual fall)
 }
 
 def _parseToneLetters(text, index):
-	"""Parse a sequence of tone letters starting at index. Returns (tone_value, chars_consumed)."""
+	"""Parse a sequence of tone letters starting at index. Returns (tone_value, chars_consumed).
+
+	Handles:
+	- Single level tones: ˥ (high), ˧ (mid), ˩ (low)
+	- 2-point contours: ˧˥ (rising), ˥˩ (falling)
+	- 3-point contours: ˨˩˦ (dipping), ˧˥˧ (peaking)
+	"""
 	tones = []
 	consumed = 0
 	while index + consumed < len(text):
@@ -103,18 +119,45 @@ def _parseToneLetters(text, index):
 			break
 	if not tones:
 		return None, 0
-	# Convert tone sequence to a value (e.g., ˥˩ = falling from 5 to 1)
+
+	# Single level tone
 	if len(tones) == 1:
 		level = tones[0]
-		if level >= 4:
+		if level == 5:
+			return 'extra_high', consumed
+		elif level >= 4:
 			return 'high', consumed
 		elif level == 3:
 			return 'mid', consumed
-		else:
+		elif level == 2:
 			return 'low', consumed
+		else:
+			return 'extra_low', consumed
+
+	# 2-point contour tone
+	elif len(tones) == 2:
+		if tones[1] > tones[0]:
+			return 'rising', consumed
+		else:
+			return 'falling', consumed
+
+	# 3+ point contour tone - detect shape
 	else:
-		# Contour tone
-		if tones[-1] > tones[0]:
+		start, mid, end = tones[0], tones[len(tones)//2], tones[-1]
+		# Dipping: starts mid/low, dips lower, rises (e.g., ˨˩˦)
+		if mid < start and end > mid:
+			return 'dipping', consumed
+		# Peaking: starts lower, rises to peak, falls (e.g., ˧˥˧)
+		elif mid > start and mid > end:
+			return 'peaking', consumed
+		# Low rising: gradual rise from low (e.g., ˨˧˥)
+		elif start < mid < end:
+			return 'low_rising', consumed
+		# High falling: gradual fall from high (e.g., ˥˧˩)
+		elif start > mid > end:
+			return 'high_falling', consumed
+		# Fallback to simple rising/falling based on endpoints
+		elif end > start:
 			return 'rising', consumed
 		else:
 			return 'falling', consumed
@@ -442,8 +485,59 @@ def calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType):
 				elif lastHeadUnstressedRunStart is None: 
 					lastHeadUnstressedRunStart=index
 
+def applyFormantScaling(frame, scale_factor):
+	"""
+	Scale all formant frequencies and bandwidths by a factor.
+
+	Used for voice type modification (male/female/child).
+	Female voices typically use scale ~1.17, children ~1.35.
+
+	Args:
+		frame: speechPlayer.Frame object
+		scale_factor: float, 1.0 = no change, >1 = higher formants (smaller vocal tract)
+	"""
+	if scale_factor == 1.0:
+		return  # No scaling needed
+
+	# Scale cascade formant frequencies and bandwidths (cf1-cf6, cb1-cb6)
+	for i in range(1, 7):
+		cf_name = f'cf{i}'
+		cb_name = f'cb{i}'
+		current_freq = getattr(frame, cf_name, 0)
+		if current_freq > 0:
+			setattr(frame, cf_name, current_freq * scale_factor)
+		current_bw = getattr(frame, cb_name, 0)
+		if current_bw > 0:
+			setattr(frame, cb_name, current_bw * scale_factor)
+
+	# Scale nasal formants
+	if getattr(frame, 'cfNP', 0) > 0:
+		frame.cfNP *= scale_factor
+		frame.cbNP *= scale_factor
+	if getattr(frame, 'cfN0', 0) > 0:
+		frame.cfN0 *= scale_factor
+		frame.cbN0 *= scale_factor
+
+	# Scale parallel formant frequencies and bandwidths (pf1-pf6, pb1-pb6)
+	for i in range(1, 7):
+		pf_name = f'pf{i}'
+		pb_name = f'pb{i}'
+		current_freq = getattr(frame, pf_name, 0)
+		if current_freq > 0:
+			setattr(frame, pf_name, current_freq * scale_factor)
+		current_bw = getattr(frame, pb_name, 0)
+		if current_bw > 0:
+			setattr(frame, pb_name, current_bw * scale_factor)
+
+
 def applyToneMarks(phonemeList, basePitch):
-	"""Apply tone-based pitch modifications to phonemes that have tone marks."""
+	"""Apply tone-based pitch modifications to phonemes that have tone marks.
+
+	Handles:
+	- Level tones: single multiplier → constant pitch
+	- 2-point contours: (start, end) → linear interpolation (midVoicePitch=0)
+	- 3-point contours: (start, mid, end) → two-phase interpolation via midVoicePitch
+	"""
 	for phoneme in phonemeList:
 		tone = phoneme.get('_tone')
 		if not tone:
@@ -453,21 +547,44 @@ def applyToneMarks(phonemeList, basePitch):
 		if not multiplier:
 			continue
 
-		currentPitch = phoneme.get('voicePitch', basePitch)
-		currentEndPitch = phoneme.get('endVoicePitch', currentPitch)
-
 		if isinstance(multiplier, tuple):
-			# Contour tone (rising or falling)
-			startMult, endMult = multiplier
-			phoneme['voicePitch'] = basePitch * startMult
-			phoneme['endVoicePitch'] = basePitch * endMult
+			if len(multiplier) == 3:
+				# 3-point contour tone (e.g., dipping, peaking)
+				# Uses midVoicePitch for proper contour shape
+				startMult, midMult, endMult = multiplier
+				phoneme['voicePitch'] = basePitch * startMult
+				phoneme['midVoicePitch'] = basePitch * midMult
+				phoneme['endVoicePitch'] = basePitch * endMult
+			else:
+				# 2-point contour tone (rising or falling)
+				# Linear interpolation between start and end
+				startMult, endMult = multiplier
+				phoneme['voicePitch'] = basePitch * startMult
+				phoneme['midVoicePitch'] = 0  # Signal linear interpolation
+				phoneme['endVoicePitch'] = basePitch * endMult
 		else:
-			# Level tone
+			# Level tone - constant pitch throughout
 			newPitch = basePitch * multiplier
 			phoneme['voicePitch'] = newPitch
+			phoneme['midVoicePitch'] = 0
 			phoneme['endVoicePitch'] = newPitch
 
-def generateFramesAndTiming(ipaText,speed=1,basePitch=100,inflection=0.5,clauseType=None):
+def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, clauseType=None,
+                           formantScale=1.0, spectralTilt=None, voiceTurbulence=None, flutter=None):
+	"""
+	Generate synthesis frames from IPA text.
+
+	Args:
+		ipaText: IPA string to synthesize
+		speed: Speech rate multiplier (default 1.0)
+		basePitch: Fundamental frequency in Hz (default 100)
+		inflection: Pitch variation amount 0-1 (default 0.5)
+		clauseType: Punctuation for intonation ('.', ',', '?', '!')
+		formantScale: Factor to multiply formant frequencies (1.0=male, 1.17=female, 1.35=child)
+		spectralTilt: Override spectral tilt in dB (higher=breathier)
+		voiceTurbulence: Override voice turbulence amplitude 0-1
+		flutter: Override flutter amount for pitch jitter
+	"""
 	phonemeList=IPAToPhonemes(ipaText)
 	if len(phonemeList)==0:
 		return
@@ -485,4 +602,16 @@ def generateFramesAndTiming(ipaText,speed=1,basePitch=100,inflection=0.5,clauseT
 			frame.preFormantGain=1.0
 			frame.outputGain=2.0
 			applyPhonemeToFrame(frame,phoneme)
+
+			# Apply voice type modifications
+			applyFormantScaling(frame, formantScale)
+
+			# Override voice quality parameters if specified
+			if spectralTilt is not None:
+				frame.spectralTilt = spectralTilt
+			if voiceTurbulence is not None:
+				frame.voiceTurbulenceAmplitude = voiceTurbulence
+			if flutter is not None:
+				frame.flutter = flutter
+
 			yield frame,frameDuration,fadeDuration

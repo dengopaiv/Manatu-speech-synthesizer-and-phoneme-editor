@@ -7,7 +7,7 @@ Auto-generated from data.py split.
 """
 
 VOWELS_RCOLORED = {
-	'ɝ': {
+	'ɝ': {  # Stressed r-colored schwa (Stevens Table 9.2 - lowered F4)
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -15,10 +15,12 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1350,
 		'cf3': 1650,
-		'cf4': 3300,
+		'cf4': 2900,  # Lowered F4 for r-coloring (Stevens)
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
@@ -52,8 +54,21 @@ VOWELS_RCOLORED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ɚ': {
+	'ɚ': {  # Unstressed r-colored schwa (Stevens Table 9.2 - lowered F4)
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -61,10 +76,12 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1400,
 		'cf3': 1600,
-		'cf4': 3300,
+		'cf4': 2900,  # Lowered F4 for r-coloring (Stevens)
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
@@ -98,5 +115,18 @@ VOWELS_RCOLORED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
 }

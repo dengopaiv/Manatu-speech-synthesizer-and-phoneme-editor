@@ -27,7 +27,10 @@ typedef struct {
 	speechPlayer_frameParam_t voiceTurbulenceAmplitude; // amplitude of voice breathiness from 0 to 1 
 	speechPlayer_frameParam_t glottalOpenQuotient; // fraction between 0 and 1 of a voice cycle that the glottis is open (allows voice turbulance, alters f1...)
 	speechPlayer_frameParam_t voiceAmplitude; // amplitude of voice (phonation) source between 0 and 1.
+	speechPlayer_frameParam_t sinusoidalVoicingAmplitude; // AVS: pure sine wave at F0 for voicebars/voiced fricatives (0-1)
 	speechPlayer_frameParam_t aspirationAmplitude; // amplitude of aspiration (voiceless h, whisper) source between 0 and 1.
+	speechPlayer_frameParam_t aspirationFilterFreq; // center freq for aspiration bandpass filter (0=white noise)
+	speechPlayer_frameParam_t aspirationFilterBw; // bandwidth of aspiration bandpass filter in Hz
 	// KLSYN88 voice quality parameters
 	speechPlayer_frameParam_t spectralTilt; // TL: high-frequency attenuation 0-41 dB at 3kHz (0=no tilt, modal voice)
 	speechPlayer_frameParam_t flutter; // FL: natural F0 jitter 0-1 (0.25 typical for natural speech)
@@ -42,6 +45,11 @@ typedef struct {
 	speechPlayer_frameParam_t ftzBw1; // BTZ1: first tracheal zero bandwidth in Hz
 	speechPlayer_frameParam_t ftpFreq2; // FTP2: second tracheal pole frequency in Hz (~1400 typical)
 	speechPlayer_frameParam_t ftpBw2; // BTP2: second tracheal pole bandwidth in Hz
+	speechPlayer_frameParam_t ftzFreq2; // FTZ2: second tracheal zero frequency in Hz (0=disabled, ~1500 typical)
+	speechPlayer_frameParam_t ftzBw2; // BTZ2: second tracheal zero bandwidth in Hz
+	// Glottal-open formant modulation (pitch-synchronous F1 variation)
+	speechPlayer_frameParam_t deltaF1; // DF1: F1 frequency increase during glottal open phase (0-100 Hz)
+	speechPlayer_frameParam_t deltaB1; // DB1: B1 bandwidth increase during glottal open phase (0-400 Hz)
 	// Stop burst envelope
 	speechPlayer_frameParam_t burstAmplitude; // AB: stop burst transient amplitude 0-1
 	speechPlayer_frameParam_t burstDuration; // DB: burst duration normalized 0-1 (0.25 = 5ms at 20ms max)

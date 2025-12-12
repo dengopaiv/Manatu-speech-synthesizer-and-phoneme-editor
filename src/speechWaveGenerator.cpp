@@ -136,7 +136,8 @@ class ColoredNoiseGenerator {
 
 // KLSYN88 Spectral Tilt Filter
 // First-order lowpass that attenuates high frequencies to create breathy voice quality
-// tiltDB: 0 = no filtering (modal voice), up to 41 dB attenuation at 3kHz (very breathy)
+// tiltDB: 0 = no filtering (modal voice), up to 41 dB attenuation at 5kHz (very breathy)
+// Target raised from 3kHz to 5kHz to preserve brightness in 3-5kHz speech range
 class SpectralTiltFilter {
 	private:
 	int sampleRate;
@@ -146,12 +147,14 @@ class SpectralTiltFilter {
 	SpectralTiltFilter(int sr): sampleRate(sr), lastOutput(0.0) {}
 
 	double filter(double input, double tiltDB) {
-		if (tiltDB <= 0) return input;  // No filtering when tilt is 0
+		// Bypass for small values - avoids unnecessary filtering
+		if (tiltDB < 1.5) return input;
 
-		// Calculate cutoff frequency for desired attenuation at 3kHz
+		// Calculate cutoff frequency for desired attenuation at 5kHz
 		// For first-order filter: |H(f)| = 1/sqrt(1+(f/fc)^2)
-		// Given target attenuation at 3kHz, solve for fc
-		double targetFreq = 3000.0;
+		// Given target attenuation at 5kHz, solve for fc
+		// Raised from 3kHz to preserve brightness in critical 3-5kHz region
+		double targetFreq = 5000.0;
 		double attenLinear = pow(10.0, -tiltDB / 20.0);
 		// Clamp to avoid division issues at extreme values
 		if (attenLinear >= 0.999) return input;
@@ -215,14 +218,15 @@ class VoiceGenerator {
 	private:
 	FrequencyGenerator pitchGen;
 	FrequencyGenerator vibratoGen;
-	NoiseGenerator aspirationGen;
+	FrequencyGenerator sinusoidalGen;  // AVS: pure sinusoidal voicing source
+	ColoredNoiseGenerator aspirationGen;  // Filtered aspiration noise source
 	FlutterGenerator flutterGen;  // KLSYN88: natural pitch jitter
 	double lastCyclePos;  // KLSYN88: track cycle for diplophonia
 	bool periodAlternate;  // KLSYN88: alternating period flag
 
 	public:
 	bool glottisOpen;
-	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), aspirationGen(), flutterGen(sr), lastCyclePos(0), periodAlternate(false), glottisOpen(false) {};
+	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), sinusoidalGen(sr), aspirationGen(sr), flutterGen(sr), lastCyclePos(0), periodAlternate(false), glottisOpen(false) {};
 
 	double getNext(const speechPlayer_frame_t* frame) {
 		double vibrato=(sin(vibratoGen.getNext(frame->vibratoSpeed)*PITWO)*0.06*frame->vibratoPitchOffset)+1;
@@ -244,7 +248,13 @@ class VoiceGenerator {
 		}
 		lastCyclePos = voice;
 
-		double aspiration=aspirationGen.getNext()*0.2;
+		// Aspiration noise with optional bandpass filtering
+		double aspiration;
+		if (frame->aspirationFilterFreq > 0) {
+			aspiration = aspirationGen.getNext(frame->aspirationFilterFreq, frame->aspirationFilterBw) * 0.2;
+		} else {
+			aspiration = aspirationGen.getNext(0, 1000) * 0.2;  // White noise fallback
+		}
 		double turbulence=aspiration*frame->voiceTurbulenceAmplitude;
 
 		double glottalWave;
@@ -322,6 +332,15 @@ class VoiceGenerator {
 		}
 		voice+=turbulence;
 		voice*=frame->voiceAmplitude;
+
+		// AVS: Sinusoidal voicing - pure sine wave at F0 for voicebars and voiced fricatives
+		// This bypasses the complex glottal model for simpler periodic energy
+		if (frame->sinusoidalVoicingAmplitude > 0) {
+			double sinPhase = sinusoidalGen.getNext(frame->voicePitch * vibrato);
+			double sinVoice = sin(sinPhase * PITWO) * frame->sinusoidalVoicingAmplitude;
+			voice += sinVoice;
+		}
+
 		aspiration*=frame->aspirationAmplitude;
 		return aspiration+voice;
 	}
@@ -393,8 +412,8 @@ class Resonator4thOrder {
 		if (frequency <= 0) return in;  // Bypass if frequency is 0
 
 		// Adjust bandwidth for equivalent Q when cascading
-		// For Butterworth-like response, each stage gets bw * 0.64 (~1/sqrt(2))
-		double bwAdjusted = bandwidth * 0.64;
+		// Using 0.72 factor for natural formant width (less aggressive than 0.64)
+		double bwAdjusted = bandwidth * 0.72;
 
 		// Cascade two 2nd-order sections at same frequency
 		double out = stage1.resonate(in, frequency, bwAdjusted);
@@ -413,10 +432,10 @@ class Resonator4thOrder {
 class TrachealResonator {
 	private:
 	int sampleRate;
-	Resonator pole1, zero1, pole2;  // First pole-zero pair + second pole
+	Resonator pole1, zero1, pole2, zero2;  // Two pole-zero pairs for tracheal coupling
 
 	public:
-	TrachealResonator(int sr): sampleRate(sr), pole1(sr), zero1(sr, true), pole2(sr) {}
+	TrachealResonator(int sr): sampleRate(sr), pole1(sr), zero1(sr, true), pole2(sr), zero2(sr, true) {}
 
 	double resonate(double input, const speechPlayer_frame_t* frame) {
 		double output = input;
@@ -434,6 +453,11 @@ class TrachealResonator {
 		// Second tracheal pole (adds resonance around 1400 Hz)
 		if (frame->ftpFreq2 > 0) {
 			output = pole2.resonate(output, frame->ftpFreq2, frame->ftpBw2);
+		}
+
+		// Second tracheal zero (anti-resonator around 1500 Hz typical)
+		if (frame->ftzFreq2 > 0) {
+			output = zero2.resonate(output, frame->ftzFreq2, frame->ftzBw2);
 		}
 
 		return output;
@@ -461,7 +485,15 @@ class CascadeFormantGenerator {
 		// F1-F3 use 4th-order for sharper resonance (24 dB/octave rolloff)
 		output=r3.resonate(output,frame->cf3,frame->cb3);
 		output=r2.resonate(output,frame->cf2,frame->cb2);
-		output=r1.resonate(output,frame->cf1,frame->cb1);
+		// Pitch-synchronous F1 modulation: during glottal open phase,
+		// F1 rises and B1 widens due to subglottal coupling (Klatt 1990)
+		double f1 = frame->cf1;
+		double b1 = frame->cb1;
+		if (glottisOpen) {
+			f1 += frame->deltaF1;
+			b1 += frame->deltaB1;
+		}
+		output=r1.resonate(output, f1, b1);
 		return output;
 	}
 
@@ -486,6 +518,8 @@ class BurstGenerator {
 		}
 
 		// Detect new burst (amplitude just became non-zero)
+		// Note: burstAmplitude is NOT interpolated during frame fade (handled in frame.cpp)
+		// so this triggers immediately at full amplitude
 		if (lastBurstAmp <= 0 && burstAmplitude > 0) {
 			burstPhase = 0;  // Reset burst to start
 		}
@@ -495,7 +529,7 @@ class BurstGenerator {
 			return 0;  // Burst complete
 		}
 
-		// Calculate envelope: exponential decay from 1 to 0 over burst duration
+		// Calculate envelope: quadratic decay from 1 to 0 over burst duration
 		// burstDuration 0-1 maps to ~5-20ms (normalized)
 		double maxDurationMs = 20.0;
 		double minDurationMs = 5.0;

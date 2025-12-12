@@ -49,5 +49,43 @@ data.update(NASALS)
 data.update(LIQUIDS_GLIDES)
 data.update(SPECIAL)
 
+# Apply automatic parameter calculations for new synthesis features
+# This adds deltaF1, deltaB1, ftzFreq2, ftzBw2, sinusoidalVoicingAmplitude,
+# aspirationFilterFreq, aspirationFilterBw based on Klatt acoustic formulas
+from .calculations import update_all_phonemes
+update_all_phonemes(data)
+
+# Category mappings for organized menu display
+PHONEME_CATEGORIES = {
+    'Vowels - Front': VOWELS_FRONT,
+    'Vowels - Central': VOWELS_CENTRAL,
+    'Vowels - Back': VOWELS_BACK,
+    'Vowels - R-colored': VOWELS_RCOLORED,
+    'Vowels - Nasalized': VOWELS_NASALIZED,
+    'Diphthongs': DIPHTHONGS,
+    'Stops': STOPS,
+    'Fricatives': FRICATIVES,
+    'Affricates': AFFRICATES,
+    'Nasals': NASALS,
+    'Liquids & Glides': LIQUIDS_GLIDES,
+    'Special': SPECIAL,
+}
+
+# Ordered list for menu display
+CATEGORY_ORDER = [
+    'Vowels - Front',
+    'Vowels - Central',
+    'Vowels - Back',
+    'Vowels - R-colored',
+    'Vowels - Nasalized',
+    'Diphthongs',
+    'Stops',
+    'Fricatives',
+    'Affricates',
+    'Nasals',
+    'Liquids & Glides',
+    'Special',
+]
+
 # For backwards compatibility
-__all__ = ["data"]
+__all__ = ["data", "PHONEME_CATEGORIES", "CATEGORY_ORDER"]

@@ -25,7 +25,10 @@ class Frame(Structure):
 		'voiceTurbulenceAmplitude',
 		'glottalOpenQuotient',
 		'voiceAmplitude',
+		'sinusoidalVoicingAmplitude',  # AVS: pure sine at F0 for voicebars (0-1)
 		'aspirationAmplitude',
+		'aspirationFilterFreq',   # Center freq for aspiration bandpass (0=white)
+		'aspirationFilterBw',     # Bandwidth of aspiration bandpass filter
 		# KLSYN88 voice quality parameters
 		'spectralTilt',      # TL: high-frequency attenuation 0-41 dB
 		'flutter',           # FL: natural F0 jitter 0-1
@@ -40,6 +43,11 @@ class Frame(Structure):
 		'ftzBw1',            # BTZ1: first tracheal zero bandwidth
 		'ftpFreq2',          # FTP2: second tracheal pole Hz
 		'ftpBw2',            # BTP2: second tracheal pole bandwidth
+		'ftzFreq2',          # FTZ2: second tracheal zero Hz
+		'ftzBw2',            # BTZ2: second tracheal zero bandwidth
+		# Glottal modulation (pitch-synchronous F1 variation)
+		'deltaF1',           # DF1: F1 increase during glottal open (0-100 Hz)
+		'deltaB1',           # DB1: B1 increase during glottal open (0-400 Hz)
 		# Stop burst envelope
 		'burstAmplitude',    # AB: burst transient 0-1
 		'burstDuration',     # DB: burst duration normalized 0-1

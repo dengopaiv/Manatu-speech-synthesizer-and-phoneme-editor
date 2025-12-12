@@ -7,7 +7,7 @@ Auto-generated from data.py split.
 """
 
 VOWELS_NASALIZED = {
-	'ã': {
+	'ã': {  # Nasalized low central
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -15,10 +15,12 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 650,
 		'cf2': 1430,
 		'cf3': 2500,
-		'cf4': 3300,
+		'cf4': 3000,  # Lower F4 for low vowels
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,
@@ -52,8 +54,21 @@ VOWELS_NASALIZED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ɛ̃': {
+	'ɛ̃': {  # Nasalized low-mid front
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -61,10 +76,12 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 530,
 		'cf2': 1680,
 		'cf3': 2500,
-		'cf4': 3300,
+		'cf4': 3100,  # Lower F4 for low vowels
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,
@@ -98,8 +115,21 @@ VOWELS_NASALIZED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ɔ̃': {
+	'ɔ̃': {  # Nasalized low-mid back
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -107,17 +137,19 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 450,
 		'cf2': 870,
 		'cf3': 2570,
-		'cf4': 3300,
+		'cf4': 3100,  # Lower F4 for low vowels
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,
 		'cfN0': 250,
-		'cb1': 50,
-		'cb2': 50,
-		'cb3': 155,
+		'cb1': 70,
+		'cb2': 80,
+		'cb3': 120,
 		'cb4': 250,
 		'cb5': 200,
 		'cb6': 1000,
@@ -127,12 +159,12 @@ VOWELS_NASALIZED = {
 		'pf1': 450,
 		'pf2': 870,
 		'pf3': 2570,
-		'pf4': 3300,
+		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 50,
-		'pb2': 50,
-		'pb3': 155,
+		'pb1': 70,
+		'pb2': 80,
+		'pb3': 120,
 		'pb4': 250,
 		'pb5': 200,
 		'pb6': 1000,
@@ -144,8 +176,21 @@ VOWELS_NASALIZED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'œ̃': {
+	'œ̃': {  # Nasalized low-mid front rounded
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -153,10 +198,12 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
+		'spectralTilt': 4,   # Modal voice naturalness
+		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 530,
 		'cf2': 1500,
 		'cf3': 2500,
-		'cf4': 3300,
+		'cf4': 3100,  # Lower F4 for low vowels
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,
@@ -190,5 +237,18 @@ VOWELS_NASALIZED = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
 }

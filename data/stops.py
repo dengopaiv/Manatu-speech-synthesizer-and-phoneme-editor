@@ -7,14 +7,14 @@ Auto-generated from data.py split.
 """
 
 STOPS = {
-	'p': {
+	'p': {  # Voiceless bilabial stop
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
 		'voiceAmplitude': 0,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0.35,  # Aspiration for voiceless (Stevens Ch.8)
 		'cf1': 400,
 		'cf2': 1100,
 		'cf3': 2150,
@@ -26,9 +26,9 @@ STOPS = {
 		'cb1': 330,
 		'cb2': 112.5,
 		'cb3': 165,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -41,29 +41,44 @@ STOPS = {
 		'pb1': 300,
 		'pb2': 150,
 		'pb3': 220,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
-		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
+		'pa1': 0.25,  # Labials: diffuse flat spectrum (Klatt Table III)
+		'pa2': 0.25,
+		'pa3': 0.25,
+		'pa4': 0.25,
+		'pa5': 0.25,
+		'pa6': 0.25,
 		'parallelBypass': 1.1,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - labial weakest (Stevens Ch.7)
+		'burstAmplitude': 0.6,
+		'burstDuration': 0.4,  # Voiceless longer release
+		# Voice quality
+		'glottalOpenQuotient': 0.1,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'b': {
+	'b': {  # Voiced bilabial stop
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
 		'cf2': 1100,
 		'cf3': 2150,
@@ -75,9 +90,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 75,
 		'cb3': 97.5,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -90,29 +105,44 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 100,
 		'pb3': 130,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
-		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
+		'pa1': 0.2,  # Labials: diffuse flat spectrum (Klatt Table III)
+		'pa2': 0.2,
+		'pa3': 0.2,
+		'pa4': 0.2,
+		'pa5': 0.2,
+		'pa6': 0.2,
 		'parallelBypass': 1.05,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - labial weakest, voiced shorter
+		'burstAmplitude': 0.6,
+		'burstDuration': 0.2,  # Voiced shorter release
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	't': {
+	't': {  # Voiceless alveolar stop - updated from JSON preset
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
 		'voiceAmplitude': 0,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0.5,  # Updated from JSON
 		'cf1': 400,
 		'cf2': 1600,
 		'cf3': 2600,
@@ -121,12 +151,12 @@ STOPS = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 330,
+		'cb1': 300,  # Updated from JSON
 		'cb2': 90,
-		'cb3': 187.5,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb3': 187,  # Updated from JSON
+		'cb4': 250,  # Updated from JSON
+		'cb5': 200,  # Updated from JSON
+		'cb6': 1000,  # Updated from JSON
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -138,23 +168,38 @@ STOPS = {
 		'pf6': 4900,
 		'pb1': 300,
 		'pb2': 120,
-		'pb3': 250,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb3': 250,  # Updated from JSON
+		'pb4': 250,  # Updated from JSON
+		'pb5': 200,  # Updated from JSON
+		'pb6': 1000,  # Updated from JSON
 		'pa1': 0,
-		'pa2': 0.416666666667,
-		'pa3': 0.416666666667,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 1,
+		'pa2': 0.41,  # Alveolar: energy in F2-F5 region (Klatt Table III)
+		'pa3': 0.41,
+		'pa4': 0.5,   # F4-F5 prominent for alveolars
+		'pa5': 0.6,
+		'pa6': 0.4,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - alveolar medium (Stevens Ch.7)
+		'burstAmplitude': 0.85,  # Updated from JSON
+		'burstDuration': 0.3,  # Updated from JSON
+		# Voice quality
+		'glottalOpenQuotient': 0.1,  # From JSON
+		'openQuotientShape': 0.5,  # From JSON
+		'speedQuotient': 1.0,  # From JSON
+		'spectralTilt': 0,  # From JSON
+		'flutter': 0.25,  # From JSON
+		'lfRd': 0,
+		'diplophonia': 0,  # From JSON
+		# Tracheal formants
+		'ftpFreq1': 0,  # From JSON
+		'ftpBw1': 100,  # From JSON
+		'ftzFreq1': 0,  # From JSON
+		'ftzBw1': 100,  # From JSON
+		'ftpFreq2': 0,  # From JSON
+		'ftpBw2': 100,  # From JSON
 	},
-	'd': {
+	'd': {  # Voiced alveolar stop
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
@@ -173,9 +218,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 75,
 		'cb3': 127.5,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -188,29 +233,44 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 100,
 		'pb3': 170,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.333333333333,
-		'pa3': 0.333333333333,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0.833333333333,
+		'pa2': 0.33,  # Alveolar: energy in F2-F5 region (Klatt Table III)
+		'pa3': 0.33,
+		'pa4': 0.4,   # F4-F5 prominent for alveolars
+		'pa5': 0.5,
+		'pa6': 0.35,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
+		# KLSYN88: Stop burst - alveolar medium, voiced shorter
 		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		'burstDuration': 0.2,  # Voiced shorter release
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'k': {
+	'k': {  # Voiceless velar stop
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
 		'voiceAmplitude': 0,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0.4,  # Aspiration for voiceless (Stevens Ch.8)
 		'cf1': 300,
 		'cf2': 1990,
 		'cf3': 2850,
@@ -222,9 +282,9 @@ STOPS = {
 		'cb1': 275,
 		'cb2': 120,
 		'cb3': 247.5,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -237,9 +297,9 @@ STOPS = {
 		'pb1': 250,
 		'pb2': 130,
 		'pb3': 200,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0.8,
 		'pa3': 0.633333333333,
@@ -248,18 +308,33 @@ STOPS = {
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - velar strongest (Stevens Ch.7)
+		'burstAmplitude': 0.9,
+		'burstDuration': 0.4,  # Voiceless longer release
+		# Voice quality
+		'glottalOpenQuotient': 0.1,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'g': {
+	'g': {  # Voiced velar stop
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
 		'cf2': 1990,
 		'cf3': 2850,
@@ -271,9 +346,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 112.5,
 		'cb3': 210,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -286,9 +361,9 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 150,
 		'pb3': 200,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0.8,
 		'pa3': 0.65,
@@ -297,18 +372,33 @@ STOPS = {
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - velar strongest, voiced shorter
+		'burstAmplitude': 0.9,
+		'burstDuration': 0.2,  # Voiced shorter release
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ɡ': {
+	'ɡ': {  # Voiced velar stop (alternate IPA glyph, unified with 'g')
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
-		'aspirationAmplitude': 0,
+		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
 		'cf2': 1990,
 		'cf3': 2850,
@@ -320,37 +410,52 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 112.5,
 		'cb3': 210,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 200,
 		'pf2': 1990,
-		'pf3': 2850,
+		'pf3': 2650,  # Unified with 'g'
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
 		'pb1': 60,
 		'pb2': 150,
-		'pb3': 280,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb3': 200,   # Unified with 'g'
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.5,
-		'pa3': 0.45,
+		'pa2': 0.8,   # Unified with 'g'
+		'pa3': 0.65,  # Unified with 'g'
 		'pa4': 0.366666666667,
 		'pa5': 0.383333333333,
 		'pa6': 0.383333333333,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		# KLSYN88: Stop burst for plosive release
-		'burstAmplitude': 0.8,
-		'burstDuration': 0.3,
+		# KLSYN88: Stop burst - velar strongest, voiced shorter
+		'burstAmplitude': 0.9,
+		'burstDuration': 0.2,  # Voiced shorter release
+		# Voice quality
+		'glottalOpenQuotient': 0.5,
+		'openQuotientShape': 0.5,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
-	'ʔ': {
+	'ʔ': {  # Glottal stop - uses neutral schwa-like formants
 		'_isNasal': False,
 		'_isStop': True,
 		'_isLiquid': False,
@@ -358,35 +463,35 @@ STOPS = {
 		'_isVoiced': False,
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.75,
-		'cf1': 100,
-		'cf2': 150,
-		'cf3': 200,
+		'cf1': 500,   # Neutral formants (schwa-like, will transition from vowel)
+		'cf2': 1500,
+		'cf3': 2500,
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 66,
-		'cb2': 67.5,
-		'cb3': 90,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb1': 80,    # Wider bandwidths for breathy/glottal quality
+		'cb2': 100,
+		'cb3': 150,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		'pf1': 100,
-		'pf2': 150,
-		'pf3': 200,
+		'pf1': 500,   # Match cascade formants
+		'pf2': 1500,
+		'pf3': 2500,
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
 		'pb1': 60,
 		'pb2': 90,
 		'pb3': 120,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -396,8 +501,22 @@ STOPS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Creaky/laryngealized voice quality for glottal stop
-		'diplophonia': 0.4,
-		'openQuotientShape': 0.3,
+		'burstAmplitude': 0.3,
+		'burstDuration': 0.1,
+		# Voice quality - glottal stop has special creaky quality
 		'glottalOpenQuotient': 0.3,
+		'openQuotientShape': 0.3,
+		'speedQuotient': 1.0,
+		'spectralTilt': 0,
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0.4,  # Higher jitter for creaky voice
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
 	},
 }
