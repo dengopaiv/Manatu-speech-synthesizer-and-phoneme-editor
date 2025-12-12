@@ -126,7 +126,8 @@
       "Bash(powershell -Command \"cd ''C:\\git\\NVSpeechPlayer''; scons; python test_burst.py\")",
       "Bash(powershell -Command \"Get-Item ''C:\\git\\NVSpeechPlayer\\speechPlayer.dll'', ''C:\\git\\NVSpeechPlayer\\build\\speechPlayerLib\\speechPlayer.dll'' | Select Name, LastWriteTime, Length\")",
       "Bash(powershell -Command \"cd ''C:\\git\\NVSpeechPlayer''; scons -c; scons\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

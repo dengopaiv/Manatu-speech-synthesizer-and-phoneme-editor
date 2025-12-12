@@ -7,3 +7,26 @@ vowelcharts/
 *.pyc
 *.pyo
 build/
+
+# Build artifacts
+dist/
+*.nvda-addon
+*.spec
+
+# Test outputs
+test_output/
+*.wav
+
+# Backups
+*.bak
+presets/backup/
+
+# Samples (large files)
+samples/
+
+# Windows artifacts
+nul
+
+# IDE
+.vscode/
+__pycache__/
