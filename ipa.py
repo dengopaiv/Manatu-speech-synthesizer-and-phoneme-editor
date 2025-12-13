@@ -383,9 +383,20 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 			phonemeDuration=45.0/speed
 		else: # is voiced
 			if phoneme.get('_isVowel'):
-				if lastPhoneme and (lastPhoneme.get('_isLiquid') or lastPhoneme.get('_isSemivowel')): 
+				if lastPhoneme and (lastPhoneme.get('_isLiquid') or lastPhoneme.get('_isSemivowel')):
 					phonemeFadeDuration=25.0/speed
-				if phoneme.get('_tiedTo'):
+				# Special handling for diphthong/triphthong components
+				if phoneme.get('_inDiphthong'):
+					# Check if this is first component or subsequent
+					if lastPhoneme and lastPhoneme.get('_inDiphthong') and lastPhoneme.get('_diphthongChar') == phoneme.get('_diphthongChar'):
+						# Subsequent component: short duration, long glide fade
+						phonemeDuration=30.0/speed
+						phonemeFadeDuration=45.0/speed  # Long fade for smooth glide
+					else:
+						# First component of diphthong: normal-ish duration
+						phonemeDuration=40.0/speed
+						phonemeFadeDuration=15.0/speed
+				elif phoneme.get('_tiedTo'):
 					phonemeDuration=40.0/speed
 				elif phoneme.get('_tiedFrom'):
 					phonemeDuration=20.0/speed
