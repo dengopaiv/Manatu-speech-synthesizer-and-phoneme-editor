@@ -255,19 +255,41 @@ def _IPAToPhonemesHelper(text):
 		if not phoneme:
 			yield char,None
 			continue
-		phoneme=phoneme.copy()
-		if curStress:
-			phoneme['_stress']=curStress
-			curStress=0
-		if isTiedFrom:
-			phoneme['_tiedFrom']=True
-		elif isTiedTo:
-			phoneme['_tiedTo']=True
-		if isLengthened:
-			phoneme['_lengthened']=True
-		phoneme['_char']=matchedChars  # Use matched string (may be diphthong/triphthong)
-		lastPhonemeRef[0] = phoneme  # Track last phoneme for tone diacritics
-		yield matchedChars,phoneme
+
+		# Check if this is a diphthong/triphthong that needs expansion
+		components = phoneme.get('_components')
+		if components:
+			# Expand diphthong into component vowels
+			for i, component_char in enumerate(components):
+				component_phoneme = data.get(component_char)
+				if not component_phoneme:
+					continue
+				component_phoneme = component_phoneme.copy()
+				# Apply stress only to first component
+				if i == 0 and curStress:
+					component_phoneme['_stress'] = curStress
+					curStress = 0
+				# Mark as part of diphthong for potential special handling
+				component_phoneme['_inDiphthong'] = True
+				component_phoneme['_diphthongChar'] = matchedChars
+				component_phoneme['_char'] = component_char
+				lastPhonemeRef[0] = component_phoneme
+				yield component_char, component_phoneme
+		else:
+			# Regular phoneme (not a diphthong)
+			phoneme=phoneme.copy()
+			if curStress:
+				phoneme['_stress']=curStress
+				curStress=0
+			if isTiedFrom:
+				phoneme['_tiedFrom']=True
+			elif isTiedTo:
+				phoneme['_tiedTo']=True
+			if isLengthened:
+				phoneme['_lengthened']=True
+			phoneme['_char']=matchedChars  # Use matched string (may be diphthong/triphthong)
+			lastPhonemeRef[0] = phoneme  # Track last phoneme for tone diacritics
+			yield matchedChars,phoneme
 
 def IPAToPhonemes(ipaText):
 	phonemeList=[]
