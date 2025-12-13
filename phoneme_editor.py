@@ -31,6 +31,7 @@ from pathlib import Path
 
 # Import synthesis modules
 import speechPlayer
+import ipa
 import ipa_keyboard
 import voice_profiles
 
