@@ -164,6 +164,34 @@ def _parseToneLetters(text, index):
 		else:
 			return 'falling', consumed
 
+# Characters that should not be included in multi-char phoneme lookups
+_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys())
+
+def _findLongestPhoneme(text, index, maxLen=4):
+	"""Try to match the longest phoneme starting at index.
+
+	This enables diphthongs (2 chars) and triphthongs (3 chars) to be
+	looked up directly without requiring tie-bars.
+
+	Args:
+		text: The IPA text string
+		index: Starting position in text
+		maxLen: Maximum phoneme length to try (default 4 for triphthongs + length mark)
+
+	Returns:
+		tuple: (matched_string, phoneme_data, length) or (None, None, 0) if no match
+	"""
+	remaining = len(text) - index
+	for length in range(min(maxLen, remaining), 1, -1):  # Try longest first, down to 2
+		candidate = text[index:index + length]
+		# Skip if candidate contains special characters
+		if any(c in _SKIP_IN_MULTICHAR for c in candidate):
+			continue
+		phoneme = data.get(candidate)
+		if phoneme:
+			return candidate, phoneme, length
+	return None, None, 0
+
 def _IPAToPhonemesHelper(text):
 	textLen=len(text)
 	index=0
@@ -198,12 +226,30 @@ def _IPAToPhonemesHelper(text):
 		isTiedTo=(text[index+1:index+2]=='͡')
 		isTiedFrom=(text[index-1:index]=='͡') if index>0 else False
 		phoneme=None
-		if isTiedTo:
+		matchedChars=char  # Track what was actually matched for _char field
+
+		# Try longest-match first for diphthongs/triphthongs
+		if not isTiedTo and not isLengthened:
+			matchedStr, phoneme, matchLen = _findLongestPhoneme(text, index)
+			if phoneme:
+				matchedChars = matchedStr
+				offset += matchLen - 1  # -1 because loop advances by 1
+
+		# Fall back to tie-bar handling
+		if not phoneme and isTiedTo:
 			phoneme=data.get(text[index:index+3])
+			if phoneme:
+				matchedChars = text[index:index+3]
 			offset+=2 if phoneme else 1
-		elif isLengthened:
+
+		# Fall back to lengthened vowel
+		if not phoneme and isLengthened:
 			phoneme=data.get(text[index:index+2])
+			if phoneme:
+				matchedChars = text[index:index+2]
 			offset+=1
+
+		# Fall back to single character
 		if not phoneme:
 			phoneme=data.get(char)
 		if not phoneme:
@@ -219,9 +265,9 @@ def _IPAToPhonemesHelper(text):
 			phoneme['_tiedTo']=True
 		if isLengthened:
 			phoneme['_lengthened']=True
-		phoneme['_char']=char
+		phoneme['_char']=matchedChars  # Use matched string (may be diphthong/triphthong)
 		lastPhonemeRef[0] = phoneme  # Track last phoneme for tone diacritics
-		yield char,phoneme
+		yield matchedChars,phoneme
 
 def IPAToPhonemes(ipaText):
 	phonemeList=[]
