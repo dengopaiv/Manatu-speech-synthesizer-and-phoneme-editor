@@ -8,8 +8,21 @@ Diphthongs are defined as sequences of component vowels.
 The IPA parser expands these into separate phonemes, allowing
 the synthesizer's existing interpolation to create smooth transitions.
 
-Format: 'diphthong': ('vowel1', 'vowel2', ...)
+Each diphthong entry contains:
+- Full formant data from the first component (for editor/preview)
+- _components tuple for parser expansion
 """
+
+# Import vowel data to get formant values
+from .vowels_front import VOWELS_FRONT
+from .vowels_central import VOWELS_CENTRAL
+from .vowels_back import VOWELS_BACK
+
+# Merge all vowels for lookup
+_ALL_VOWELS = {}
+_ALL_VOWELS.update(VOWELS_FRONT)
+_ALL_VOWELS.update(VOWELS_CENTRAL)
+_ALL_VOWELS.update(VOWELS_BACK)
 
 # Diphthong definitions: maps IPA diphthong to component vowels
 DIPHTHONG_COMPONENTS = {
@@ -56,11 +69,24 @@ DIPHTHONG_COMPONENTS = {
 	'uoi': ('u', 'o', 'i'),   # kuoig (fish)
 }
 
-# For backwards compatibility, also expose as DIPHTHONGS dict
-# with basic vowel properties (used by data.py merge)
-DIPHTHONGS = {key: {
-	'_isVowel': True,
-	'_isVoiced': True,
-	'_isDiphthong': True,
-	'_components': value,
-} for key, value in DIPHTHONG_COMPONENTS.items()}
+def _build_diphthong_entry(diphthong_ipa, components):
+	"""Build a full diphthong entry with formant data from first component."""
+	first_vowel = components[0]
+	vowel_data = _ALL_VOWELS.get(first_vowel, {})
+
+	# Start with a copy of the first vowel's data
+	entry = vowel_data.copy()
+
+	# Override/add diphthong-specific properties
+	entry['_isVowel'] = True
+	entry['_isVoiced'] = True
+	entry['_isDiphthong'] = True
+	entry['_components'] = components
+
+	return entry
+
+# Build DIPHTHONGS dict with full formant data
+DIPHTHONGS = {
+	diphthong: _build_diphthong_entry(diphthong, components)
+	for diphthong, components in DIPHTHONG_COMPONENTS.items()
+}
