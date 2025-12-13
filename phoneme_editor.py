@@ -934,6 +934,9 @@ class PhonemeEditorFrame(wx.Frame):
         self.play_thread = None
         self.preset_manager = PresetManager()
 
+        # Diphthong components (if current phoneme is a diphthong)
+        self._diphthong_components = None
+
         # IPA keyboard state
         self._last_ipa_key = None
         self._last_ipa_time = 0
@@ -1170,8 +1173,13 @@ class PhonemeEditorFrame(wx.Frame):
         self.is_voiced_cb.SetValue(params.get('_isVoiced', False))
         self.desc_input.SetValue(IPA_DESCRIPTIONS.get(ipa, ''))
 
+        # Store diphthong components for glide playback
+        self._diphthong_components = params.get('_components')
+
         # Determine category
-        if params.get('_isVowel'):
+        if params.get('_isDiphthong'):
+            cat = 'vowel'  # Diphthongs are vowel-like
+        elif params.get('_isVowel'):
             cat = 'vowel'
         elif params.get('_isStop'):
             cat = 'stop'
@@ -1192,7 +1200,8 @@ class PhonemeEditorFrame(wx.Frame):
         self.set_frame_params(clean_params)
 
         desc = IPA_DESCRIPTIONS.get(ipa, '')
-        self.set_status(f"Loaded: {ipa}" + (f" - {desc}" if desc else ""))
+        diph_info = " (diphthong)" if self._diphthong_components else ""
+        self.set_status(f"Loaded: {ipa}{diph_info}" + (f" - {desc}" if desc else ""))
 
     def load_to_current(self, params):
         """Load only parameters, preserve current metadata.
@@ -1201,10 +1210,14 @@ class PhonemeEditorFrame(wx.Frame):
         - Internal flags (starting with '_')
         - Prosody params (pitch, vibrato, gain) - these are speaker/intonation properties
         """
+        # Update diphthong components if present
+        self._diphthong_components = params.get('_components')
+
         clean_params = {k: v for k, v in params.items()
                        if not k.startswith('_') and k not in PROSODY_PARAMS}
         self.set_frame_params(clean_params)
-        self.set_status("Parameters loaded (metadata preserved)")
+        diph_info = " (diphthong)" if self._diphthong_components else ""
+        self.set_status(f"Parameters loaded{diph_info} (metadata preserved)")
 
     def load_preset_file(self, filepath, update_metadata=True):
         """Load a preset from JSON file.
@@ -1381,6 +1394,87 @@ class PhonemeEditorFrame(wx.Frame):
         finally:
             wx.PostEvent(self, PlayDoneEvent())
 
+    def _play_diphthong_thread(self, components, duration_ms, formant_scale=1.0):
+        """Play diphthong as gliding sequence of component vowels."""
+        try:
+            component_names = ', '.join(components)
+            self.set_status(f"Playing diphthong: {component_names}")
+
+            sp = speechPlayer.SpeechPlayer(self.sample_rate)
+
+            # Get formant data for each component vowel
+            frames = []
+            for vowel_char in components:
+                vowel_data = PHONEME_DATA.get(vowel_char, {})
+                if not vowel_data:
+                    continue
+                frame = speechPlayer.Frame()
+                frame.preFormantGain = 1.0
+                frame.outputGain = 2.0
+                frame.voicePitch = 120
+                frame.endVoicePitch = 120
+                frame.voiceAmplitude = 1.0
+                ipa.applyPhonemeToFrame(frame, vowel_data)
+                self.apply_formant_scaling(frame, formant_scale)
+                frames.append(frame)
+
+            if not frames:
+                self.set_status("Error: No valid component vowels found")
+                return
+
+            # Calculate timing for glide
+            # First component: 40% of duration, 15ms fade
+            # Subsequent: remaining time split, with long fade for glide
+            first_duration = int(duration_ms * 0.4)
+            remaining_duration = duration_ms - first_duration
+            subsequent_duration = remaining_duration // max(1, len(frames) - 1) if len(frames) > 1 else remaining_duration
+
+            for i, frame in enumerate(frames):
+                if i == 0:
+                    # First component: quick onset
+                    sp.queueFrame(frame, first_duration, 15)
+                else:
+                    # Subsequent components: long glide fade
+                    glide_fade = min(subsequent_duration - 5, 50)  # Up to 50ms fade
+                    sp.queueFrame(frame, subsequent_duration, glide_fade)
+
+            sp.queueFrame(None, 50, 20)  # Fade out
+
+            all_samples = []
+            while self.is_playing:
+                samples = sp.synthesize(8192)
+                if samples and hasattr(samples, 'length') and samples.length > 0:
+                    all_samples.extend(samples[:samples.length])
+                elif samples:
+                    all_samples.extend(samples[:])
+                    if len(samples) < 8192:
+                        break
+                else:
+                    break
+
+            if not self.is_playing or not all_samples:
+                return
+
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+                tmp_path = tmp.name
+            with wave.open(tmp_path, 'wb') as wav:
+                wav.setnchannels(1)
+                wav.setsampwidth(2)
+                wav.setframerate(self.sample_rate)
+                wav.writeframes(struct.pack('<%dh' % len(all_samples), *all_samples))
+
+            if self.is_playing and HAS_WINSOUND:
+                winsound.PlaySound(tmp_path, winsound.SND_FILENAME)
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            self.set_status("Done.")
+        except Exception as e:
+            self.set_status(f"Error: {e}")
+        finally:
+            wx.PostEvent(self, PlayDoneEvent())
+
     def on_play(self, event):
         if self.is_playing:
             return
@@ -1388,15 +1482,23 @@ class PhonemeEditorFrame(wx.Frame):
         self.header_panel.play_btn.Enable(False)
         self.header_panel.stop_btn.Enable(True)
 
-        frame = self.create_frame()
         duration = self.header_panel.duration_slider.GetValue()
         formant_scale = self.header_panel.formant_slider.GetValue() / 100.0
 
-        self.play_thread = threading.Thread(
-            target=self._play_thread,
-            args=(frame, duration, formant_scale),
-            daemon=True
-        )
+        # Check if this is a diphthong with components
+        if self._diphthong_components:
+            self.play_thread = threading.Thread(
+                target=self._play_diphthong_thread,
+                args=(self._diphthong_components, duration, formant_scale),
+                daemon=True
+            )
+        else:
+            frame = self.create_frame()
+            self.play_thread = threading.Thread(
+                target=self._play_thread,
+                args=(frame, duration, formant_scale),
+                daemon=True
+            )
         self.play_thread.start()
 
     def on_stop(self, event):
@@ -1594,6 +1696,7 @@ class PhonemeEditorFrame(wx.Frame):
 
     def on_new(self, event):
         self.on_reset(event)
+        self._diphthong_components = None  # Clear diphthong state
         self.ipa_input.SetValue('ə')
         self.desc_input.SetValue('mid central (schwa)')
         idx = self.category_choice.FindString('vowel')
@@ -1604,6 +1707,7 @@ class PhonemeEditorFrame(wx.Frame):
         self.set_status("New preset - reset to schwa (ə)")
 
     def on_reset(self, event):
+        self._diphthong_components = None  # Clear diphthong state
         for name, (slider, min_val, max_val, default, unit) in self.sliders.items():
             value = SCHWA_DEFAULTS.get(name, default)
             value = max(min_val, min(max_val, int(value)))
