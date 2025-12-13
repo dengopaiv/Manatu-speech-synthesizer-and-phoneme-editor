@@ -18,9 +18,11 @@ import codecs
 try:
 	from . import speechPlayer
 	from .data import data
+	from .data import transitions
 except ImportError:
 	import speechPlayer
 	from data import data
+	from data import transitions
 
 def iterPhonemes(**kwargs):
 	for k,v in data.items():
@@ -590,6 +592,7 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 		return
 	correctHPhonemes(phonemeList)
 	calculatePhonemeTimes(phonemeList,speed)
+	transitions.apply_coarticulation(phonemeList, speed)  # Apply CV coarticulation
 	calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType)
 	applyToneMarks(phonemeList, basePitch)  # Apply tone marks after standard intonation
 	for phoneme in phonemeList:

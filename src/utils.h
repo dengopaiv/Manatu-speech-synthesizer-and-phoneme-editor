@@ -17,9 +17,17 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 #include <float.h>
 
+// Hermite smoothstep: S-curve for gentler transitions
+// Maps linear t [0,1] to smooth curve with zero derivatives at endpoints
+inline double smoothstep(double t) {
+	return t * t * (3.0 - 2.0 * t);
+}
+
 inline double calculateValueAtFadePosition(double oldVal, double newVal, double curFadeRatio) {
 	if(_isnan(newVal)) return oldVal;
-	return oldVal+((newVal-oldVal)*curFadeRatio);
+	// Apply smoothstep for gentler start/end of transitions
+	double smoothRatio = smoothstep(curFadeRatio);
+	return oldVal + ((newVal - oldVal) * smoothRatio);
 }
 
 #endif
