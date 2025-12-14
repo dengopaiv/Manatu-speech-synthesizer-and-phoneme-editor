@@ -208,14 +208,16 @@ def update_phoneme_with_new_params(phoneme_data):
     # Calculate deltaF1 first (deltaB1 depends on it)
     deltaF1 = calc_deltaF1(phoneme_data)
 
-    # Add all new parameters
-    phoneme_data['deltaF1'] = deltaF1
-    phoneme_data['deltaB1'] = calc_deltaB1(phoneme_data, deltaF1)
-    phoneme_data['ftzFreq2'] = calc_ftzFreq2(phoneme_data)
-    phoneme_data['ftzBw2'] = calc_ftzBw2(phoneme_data)
-    phoneme_data['sinusoidalVoicingAmplitude'] = calc_sinusoidalVoicing(phoneme_data)
-    phoneme_data['aspirationFilterFreq'] = calc_aspirationFilterFreq(phoneme_data)
-    phoneme_data['aspirationFilterBw'] = calc_aspirationFilterBw(phoneme_data)
+    # Add new parameters, preserving manually set values (non-zero)
+    phoneme_data.setdefault('deltaF1', deltaF1)
+    # Preserve deltaB1 if manually set to a significant value (> 50 Hz)
+    if phoneme_data.get('deltaB1', 0) <= 50:
+        phoneme_data['deltaB1'] = calc_deltaB1(phoneme_data, deltaF1)
+    phoneme_data.setdefault('ftzFreq2', calc_ftzFreq2(phoneme_data))
+    phoneme_data.setdefault('ftzBw2', calc_ftzBw2(phoneme_data))
+    phoneme_data.setdefault('sinusoidalVoicingAmplitude', calc_sinusoidalVoicing(phoneme_data))
+    phoneme_data.setdefault('aspirationFilterFreq', calc_aspirationFilterFreq(phoneme_data))
+    phoneme_data.setdefault('aspirationFilterBw', calc_aspirationFilterBw(phoneme_data))
 
     return phoneme_data
 
