@@ -208,8 +208,8 @@ VOWELS_BACK = {
 		# Voice quality - optimized with LF model for open vowel
 		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
 		'openQuotientShape': 0.5,
-		'speedQuotient': 0.5,
-		'spectralTilt': 6,
+		'speedQuotient': 0.8,  # Increased from 0.5 to reduce distortion
+		'spectralTilt': 8,  # Increased from 6 to smooth harshness
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
@@ -224,7 +224,7 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 75,   # Narrowed for sharper F1 peak
+		'cb1': 85,   # Widened from 75 to reduce ringing/distortion
 		'cb2': 100,  # Narrowed for sharper F2 peak
 		'cb3': 150,
 		'cb4': 180,
@@ -240,7 +240,7 @@ VOWELS_BACK = {
 		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 75,   # Match cb1
+		'pb1': 85,   # Match cb1
 		'pb2': 100,  # Match cb2
 		'pb3': 150,
 		'pb4': 180,
@@ -270,17 +270,18 @@ VOWELS_BACK = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
-		# Voice quality - optimized with LF model for open vowel
+		# Voice quality - tuned to reduce distortion at low pitch
 		'glottalOpenQuotient': 0.40,  # Higher for open vowel
 		'openQuotientShape': 0.5,
 		'speedQuotient': 0.7,
-		'spectralTilt': 10,  # Higher tilt for open back vowel warmth
+		'spectralTilt': 0,  # No tilt - brighter, matches user tuning
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
-		'deltaB1': 350,  # Dynamic F1 bandwidth modulation for natural voice
-		# Cascade formants - narrower bandwidths for colour
+		'deltaB1': 240,  # Matched to user preset
+		'sinusoidalVoicingAmplitude': 0.3,  # Voicebar for richer low end
+		# Cascade formants - wider bandwidths to reduce distortion/ringing
 		'cf1': 740,  # Standard open back ~710-770
 		'cf2': 1150,  # Standard ~1090-1220
 		'cf3': 2550,  # Standard ~2440-2640
@@ -289,8 +290,8 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 85,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
+		'cb1': 131,  # Wider per user tuning - reduces resonance distortion
+		'cb2': 192,  # Wider per user tuning
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 200,
@@ -305,8 +306,8 @@ VOWELS_BACK = {
 		'pf4': 3000,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 85,   # Match cb1
-		'pb2': 100,  # Match cb2
+		'pb1': 85,
+		'pb2': 100,
 		'pb3': 150,
 		'pb4': 180,
 		'pb5': 200,
@@ -318,13 +319,15 @@ VOWELS_BACK = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
-		# Tracheal formants
-		'ftpFreq1': 0,
+		# Tracheal formants - adds subglottal coupling for natural resonance
+		'ftpFreq1': 1050,  # Tracheal pole - user tuned
 		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
-		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftzFreq1': 600,   # Tracheal zero - user tuned
+		'ftzBw1': 360,
+		'ftpFreq2': 448,
+		'ftpBw2': 408,
+		'ftzFreq2': 1000,
+		'ftzBw2': 178,
 	},
 	'ɒ': {  # Open back rounded
 		'_isNasal': False,
