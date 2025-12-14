@@ -308,7 +308,7 @@ def generate_vowel_wav(vowel, output_path, duration_ms=500, start_pitch=120, end
             ipa.applyPhonemeToFrame(frame, phoneme_data)
 
             # Set the pitch
-            frame.pitch = current_pitch
+            frame.voicePitch = current_pitch
 
             # Queue the frame
             sp.queueFrame(frame, frame_duration_ms, 0)
