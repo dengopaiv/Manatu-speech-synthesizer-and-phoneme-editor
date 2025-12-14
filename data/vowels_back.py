@@ -205,17 +205,18 @@ VOWELS_BACK = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
-		# Voice quality - optimized with LF model for open vowel
+		# Voice quality - tuned to reduce distortion (similar to ɑ tuning)
 		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
 		'openQuotientShape': 0.5,
 		'speedQuotient': 0.8,  # Increased from 0.5 to reduce distortion
-		'spectralTilt': 8,  # Increased from 6 to smooth harshness
+		'spectralTilt': 4,  # Slight tilt for rounded vowel stability
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
-		'deltaB1': 300,  # Dynamic F1 bandwidth modulation for natural voice
-		# Cascade formants - narrower bandwidths for colour
+		'deltaB1': 240,  # Matched to ɑ tuning
+		'sinusoidalVoicingAmplitude': 0.3,  # Voicebar for richer low end
+		# Cascade formants - wider bandwidths to reduce distortion/ringing
 		'cf1': 600,  # Standard open-mid ~570-640
 		'cf2': 880,  # Standard ~840-920
 		'cf3': 2550,  # Standard ~2410-2680
@@ -224,8 +225,8 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 85,   # Widened from 75 to reduce ringing/distortion
-		'cb2': 100,  # Narrowed for sharper F2 peak
+		'cb1': 100,  # Wider to reduce resonance distortion
+		'cb2': 140,  # Wider to reduce resonance distortion
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 150,
@@ -240,8 +241,8 @@ VOWELS_BACK = {
 		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 85,   # Match cb1
-		'pb2': 100,  # Match cb2
+		'pb1': 85,
+		'pb2': 100,
 		'pb3': 150,
 		'pb4': 180,
 		'pb5': 150,
@@ -253,13 +254,15 @@ VOWELS_BACK = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
-		# Tracheal formants
-		'ftpFreq1': 0,
+		# Tracheal formants - adds subglottal coupling for natural resonance
+		'ftpFreq1': 1050,  # Tracheal pole
 		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
-		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftzFreq1': 600,   # Tracheal zero
+		'ftzBw1': 360,
+		'ftpFreq2': 448,
+		'ftpBw2': 408,
+		'ftzFreq2': 1000,
+		'ftzBw2': 178,
 	},
 	'ɑ': {  # Open back unrounded
 		'_isNasal': False,
