@@ -341,17 +341,18 @@ VOWELS_BACK = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
-		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
+		# Voice quality - tuned to reduce distortion (similar to ɔ)
+		'glottalOpenQuotient': 0.38,
 		'openQuotientShape': 0.5,
-		'speedQuotient': 0.6,
-		'spectralTilt': 8,
+		'speedQuotient': 0.8,  # Increased from 0.6 to reduce distortion
+		'spectralTilt': 4,  # Reduced for stability
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 2.7,
 		'diplophonia': 0,
 		'deltaF1': 0,
-		'deltaB1': 320,  # Dynamic F1 bandwidth modulation for natural voice
-		# Cascade formants - narrower bandwidths for colour
+		'deltaB1': 240,
+		'sinusoidalVoicingAmplitude': 0.3,  # Voicebar for richer low end
+		# Cascade formants - wider bandwidths to reduce distortion
 		'cf1': 620,
 		'cf2': 1100,
 		'cf3': 2520,
@@ -360,8 +361,8 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 80,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
+		'cb1': 110,  # Wider to reduce resonance distortion
+		'cb2': 150,  # Wider to reduce resonance distortion
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 150,
@@ -369,15 +370,15 @@ VOWELS_BACK = {
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		# Parallel formants - matched to cascade
+		# Parallel formants
 		'pf1': 620,
 		'pf2': 1100,
 		'pf3': 2520,
 		'pf4': 3000,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 80,   # Match cb1
-		'pb2': 100,  # Match cb2
+		'pb1': 85,
+		'pb2': 100,
 		'pb3': 150,
 		'pb4': 180,
 		'pb5': 150,
@@ -389,13 +390,15 @@ VOWELS_BACK = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
-		# Tracheal formants
-		'ftpFreq1': 0,
+		# Tracheal formants - subglottal coupling
+		'ftpFreq1': 1050,
 		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
-		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftzFreq1': 600,
+		'ftzBw1': 360,
+		'ftpFreq2': 448,
+		'ftpBw2': 408,
+		'ftzFreq2': 1000,
+		'ftzBw2': 178,
 	},
 	'ɯ': {  # Close back unrounded
 		'_isNasal': False,
@@ -406,15 +409,16 @@ VOWELS_BACK = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
-		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
+		# Voice quality - tuned for stability
+		'glottalOpenQuotient': 0.22,
 		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
-		'spectralTilt': 2,
+		'speedQuotient': 0.8,  # Increased from 0.7 for stability
+		'spectralTilt': 0,  # No tilt - brighter
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 2.7,
 		'diplophonia': 0,
-		# Cascade formants - narrower bandwidths for colour
+		'sinusoidalVoicingAmplitude': 0.2,  # Slight voicebar
+		# Cascade formants - wider bandwidths for close vowel stability
 		'cf1': 300,
 		'cf2': 1200,
 		'cf3': 2100,
@@ -423,8 +427,8 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 50,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
+		'cb1': 70,   # Wider to reduce F1 instability
+		'cb2': 120,  # Wider for stability
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 200,
@@ -432,15 +436,15 @@ VOWELS_BACK = {
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		# Parallel formants - matched to cascade
+		# Parallel formants
 		'pf1': 300,
 		'pf2': 1200,
 		'pf3': 2100,
 		'pf4': 3500,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 50,   # Match cb1
-		'pb2': 100,  # Match cb2
+		'pb1': 50,
+		'pb2': 100,
 		'pb3': 150,
 		'pb4': 180,
 		'pb5': 200,
@@ -452,13 +456,15 @@ VOWELS_BACK = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
-		# Tracheal formants
-		'ftpFreq1': 0,
+		# Tracheal formants - subglottal coupling
+		'ftpFreq1': 1050,
 		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
-		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftzFreq1': 600,
+		'ftzBw1': 360,
+		'ftpFreq2': 448,
+		'ftpBw2': 408,
+		'ftzFreq2': 1000,
+		'ftzBw2': 178,
 	},
 	'ɤ': {  # Close-mid back unrounded
 		'_isNasal': False,
@@ -532,17 +538,18 @@ VOWELS_BACK = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
-		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
+		# Voice quality - tuned to reduce distortion (similar to ɑ)
+		'glottalOpenQuotient': 0.38,
 		'openQuotientShape': 0.5,
-		'speedQuotient': 0.5,
-		'spectralTilt': 7,
+		'speedQuotient': 0.9,  # Increased from 0.5 to reduce distortion
+		'spectralTilt': 3,  # Slight tilt for stability
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 2.7,
 		'diplophonia': 0,
 		'deltaF1': 0,
-		'deltaB1': 280,  # Dynamic F1 bandwidth modulation for natural voice
-		# Cascade formants - narrower bandwidths for colour
+		'deltaB1': 240,
+		'sinusoidalVoicingAmplitude': 0.3,  # Voicebar for richer low end
+		# Cascade formants - wider bandwidths to reduce distortion
 		'cf1': 620,
 		'cf2': 1220,
 		'cf3': 2550,
@@ -551,8 +558,8 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 75,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
+		'cb1': 150,  # Wider to reduce resonance distortion
+		'cb2': 200,  # Wider to reduce resonance distortion
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 150,
@@ -560,15 +567,15 @@ VOWELS_BACK = {
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		# Parallel formants - matched to cascade
+		# Parallel formants
 		'pf1': 620,
 		'pf2': 1220,
 		'pf3': 2550,
 		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 75,   # Match cb1
-		'pb2': 100,  # Match cb2
+		'pb1': 85,
+		'pb2': 100,
 		'pb3': 150,
 		'pb4': 180,
 		'pb5': 150,
@@ -580,12 +587,14 @@ VOWELS_BACK = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
-		# Tracheal formants
-		'ftpFreq1': 0,
+		# Tracheal formants - subglottal coupling
+		'ftpFreq1': 1050,
 		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
-		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftzFreq1': 600,
+		'ftzBw1': 360,
+		'ftpFreq2': 448,
+		'ftpBw2': 408,
+		'ftzFreq2': 1000,
+		'ftzBw2': 178,
 	},
 }
