@@ -5,13 +5,15 @@ Vowel Formant Analysis Tool
 
 Analyzes synthesized vowels and compares against reference values.
 Uses parselmouth (Praat Python bindings) for formant extraction.
+Designed for accessible text-based output (screen reader friendly).
 
 Install: pip install praat-parselmouth
 
 Usage:
-    python analyze_vowels.py              # Analyze all vowels
-    python analyze_vowels.py --vowel a    # Analyze specific vowel
-    python analyze_vowels.py --wav test.wav  # Analyze existing wav file
+    python analyze_vowels.py --vowel a                    # Analyze vowel with default pitch
+    python analyze_vowels.py --vowel ɑ --start-pitch 55 --end-pitch 15  # Falling pitch
+    python analyze_vowels.py --wav test.wav               # Analyze existing wav file
+    python analyze_vowels.py --all                        # Analyze all reference vowels
 """
 
 import os
@@ -28,6 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     import parselmouth
     from parselmouth.praat import call
+    import numpy as np
     HAS_PARSELMOUTH = True
 except ImportError:
     HAS_PARSELMOUTH = False
@@ -90,6 +93,129 @@ def analyze_formants(wav_path, max_formant_hz=5500):
     return results
 
 
+def analyze_stability(wav_path, max_formant_hz=5500):
+    """
+    Analyze formant stability and voice quality over time.
+
+    Returns metrics for:
+    - Formant drift (variation over time)
+    - HNR (harmonics-to-noise ratio, indicates distortion)
+    - Pitch range
+    """
+    if not HAS_PARSELMOUTH:
+        return None
+
+    sound = parselmouth.Sound(wav_path)
+    duration = sound.duration
+
+    results = {
+        'duration_ms': round(duration * 1000),
+    }
+
+    # Pitch analysis
+    pitch = sound.to_pitch(time_step=0.01)
+    pitch_values = [f for f in pitch.selected_array['frequency'] if f > 0]
+    if pitch_values:
+        results['pitch_min'] = round(min(pitch_values))
+        results['pitch_max'] = round(max(pitch_values))
+        results['pitch_start'] = round(pitch_values[0])
+        results['pitch_end'] = round(pitch_values[-1])
+        results['pitch_drift'] = round(pitch_values[-1] - pitch_values[0])
+
+    # Formant stability (sample at multiple time points)
+    formant = sound.to_formant_burg(time_step=0.02, max_number_of_formants=4,
+                                     maximum_formant=max_formant_hz)
+
+    # Sample formants at 5 time points
+    times = [duration * t for t in [0.2, 0.35, 0.5, 0.65, 0.8]]
+    f1_vals, f2_vals, f3_vals = [], [], []
+
+    for t in times:
+        if t < duration:
+            f1 = formant.get_value_at_time(1, t)
+            f2 = formant.get_value_at_time(2, t)
+            f3 = formant.get_value_at_time(3, t)
+            if f1 and f1 == f1: f1_vals.append(f1)
+            if f2 and f2 == f2: f2_vals.append(f2)
+            if f3 and f3 == f3: f3_vals.append(f3)
+
+    # Calculate drift (max - min variation)
+    if f1_vals:
+        results['F1_avg'] = round(np.mean(f1_vals))
+        results['F1_drift'] = round(max(f1_vals) - min(f1_vals))
+    if f2_vals:
+        results['F2_avg'] = round(np.mean(f2_vals))
+        results['F2_drift'] = round(max(f2_vals) - min(f2_vals))
+    if f3_vals:
+        results['F3_avg'] = round(np.mean(f3_vals))
+        results['F3_drift'] = round(max(f3_vals) - min(f3_vals))
+
+    # HNR (Harmonics-to-Noise Ratio) - voice quality/distortion metric
+    try:
+        hnr = sound.to_harmonicity()
+        hnr_values = [h for h in hnr.values.flatten() if h > -200]
+        if hnr_values:
+            results['HNR_mean'] = round(np.mean(hnr_values), 1)
+            results['HNR_min'] = round(min(hnr_values), 1)
+    except:
+        pass
+
+    return results
+
+
+def print_stability_analysis(results, vowel=None):
+    """Print stability analysis in accessible text format."""
+    print("\nVOWEL STABILITY ANALYSIS")
+    print("=" * 55)
+    print(f"Duration: {results.get('duration_ms', 'N/A')} ms")
+
+    # Pitch info
+    print("\nPITCH:")
+    if 'pitch_min' in results:
+        print(f"  Range: {results['pitch_min']} - {results['pitch_max']} Hz")
+        print(f"  Start: {results['pitch_start']} Hz, End: {results['pitch_end']} Hz")
+        print(f"  Drift: {results['pitch_drift']:+d} Hz")
+    else:
+        print("  No pitch detected")
+
+    # Formant stability
+    print("\nFORMANT STABILITY (lower drift = more stable):")
+    for i in range(1, 4):
+        avg = results.get(f'F{i}_avg')
+        drift = results.get(f'F{i}_drift')
+        if avg and drift:
+            stability = "STABLE" if drift < 50 else "UNSTABLE" if drift > 200 else "MODERATE"
+            print(f"  F{i}: avg {avg} Hz, drift {drift} Hz ({stability})")
+
+    # Voice quality
+    print("\nVOICE QUALITY (HNR - higher = cleaner):")
+    hnr_mean = results.get('HNR_mean')
+    if hnr_mean is not None:
+        if hnr_mean > 15:
+            quality = "GOOD"
+        elif hnr_mean > 10:
+            quality = "ACCEPTABLE"
+        elif hnr_mean > 5:
+            quality = "ROUGH"
+        else:
+            quality = "DISTORTED"
+        print(f"  HNR mean: {hnr_mean} dB ({quality})")
+        print(f"  HNR min: {results.get('HNR_min')} dB")
+    else:
+        print("  HNR: N/A")
+
+    # Compare to reference if vowel specified
+    if vowel and vowel in REFERENCE:
+        ref = REFERENCE[vowel]
+        print(f"\nCOMPARISON TO TARGET ({vowel} - {ref['desc']}):")
+        for i in range(1, 4):
+            avg = results.get(f'F{i}_avg')
+            ref_key = f'F{i}'
+            if avg and ref_key in ref:
+                status = check_in_range(avg, ref[ref_key])
+                print(f"  F{i}: {status}")
+
+
 def check_in_range(value, range_tuple):
     """Check if value is within range and return status string."""
     if value is None:
@@ -129,32 +255,65 @@ def print_analysis(results, vowel=None):
                 print(f"  F{i}: {status}")
 
 
-def generate_vowel_wav(vowel, output_path, duration_ms=500):
-    """Generate a vowel WAV file using the NVSpeechPlayer synthesizer."""
+def generate_vowel_wav(vowel, output_path, duration_ms=500, start_pitch=120, end_pitch=None):
+    """Generate a vowel WAV file using the NVSpeechPlayer synthesizer.
+
+    Args:
+        vowel: IPA vowel character to synthesize
+        output_path: Path for output WAV file
+        duration_ms: Duration in milliseconds
+        start_pitch: Starting pitch in Hz (default 120)
+        end_pitch: Ending pitch in Hz (if None, uses start_pitch for steady pitch)
+    """
     try:
-        import ipa
+        from data import data as phoneme_data_dict
         import speechPlayer
         import wave
         import struct
 
         SAMPLE_RATE = 16000
 
+        if end_pitch is None:
+            end_pitch = start_pitch
+
         # Initialize synthesizer
         sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
-        # Queue frames for the vowel
-        frame_count = 0
-        for frame, duration, fade in ipa.generateFramesAndTiming(
-            vowel,
-            speed=0.5,  # Slower for sustained vowel
-            basePitch=120,
-            inflection=0
-        ):
-            if frame:
-                sp.queueFrame(frame, duration, fade)
-            else:
-                sp.queueFrame(None, duration, fade)
-            frame_count += 1
+        # Get the phoneme data for the vowel
+        phoneme_data = phoneme_data_dict.get(vowel)
+        if not phoneme_data:
+            print(f"Error: Vowel '{vowel}' not found in phoneme data")
+            return False
+
+        # Create frames with custom pitch contour
+        # Calculate duration in samples and frames
+        target_samples = int(SAMPLE_RATE * duration_ms / 1000)
+        frame_duration_ms = 10  # 10ms per frame
+        num_frames = max(1, duration_ms // frame_duration_ms)
+
+        # Import the applyPhonemeToFrame function for proper frame setup
+        import ipa
+
+        for i in range(num_frames):
+            # Interpolate pitch linearly
+            t = i / max(1, num_frames - 1)
+            current_pitch = start_pitch + (end_pitch - start_pitch) * t
+
+            # Create frame properly (must set preFormantGain and outputGain)
+            frame = speechPlayer.Frame()
+            frame.preFormantGain = 1.0
+            frame.outputGain = 2.0
+
+            # Apply phoneme data (this also applies KLSYN88 defaults)
+            ipa.applyPhonemeToFrame(frame, phoneme_data)
+
+            # Set the pitch
+            frame.pitch = current_pitch
+
+            # Queue the frame
+            sp.queueFrame(frame, frame_duration_ms, 0)
+
+        frame_count = num_frames
 
         if frame_count == 0:
             print(f"Error: No frames generated for vowel '{vowel}'")
@@ -200,6 +359,14 @@ def main():
     parser.add_argument('--all', action='store_true', help='Analyze all reference vowels')
     parser.add_argument('--max-freq', type=int, default=5500,
                        help='Maximum formant frequency (5500 for male, 5000 for female)')
+    parser.add_argument('--start-pitch', type=float, default=120,
+                       help='Starting pitch in Hz (default 120)')
+    parser.add_argument('--end-pitch', type=float, default=None,
+                       help='Ending pitch in Hz (default: same as start-pitch for steady tone)')
+    parser.add_argument('--duration', type=int, default=500,
+                       help='Duration in milliseconds (default 500)')
+    parser.add_argument('--stability', action='store_true',
+                       help='Run stability analysis (formant drift, HNR)')
     args = parser.parse_args()
 
     if not HAS_PARSELMOUTH:
@@ -221,12 +388,24 @@ def main():
 
     elif args.vowel:
         # Generate and analyze specific vowel
-        temp_wav = f"temp_{args.vowel}.wav"
-        print(f"Generating vowel '{args.vowel}'...")
+        temp_wav = f"temp_{ord(args.vowel):04x}.wav"
+        end_pitch = args.end_pitch if args.end_pitch else args.start_pitch
 
-        if generate_vowel_wav(args.vowel, temp_wav):
+        print(f"Generating vowel '{args.vowel}'...")
+        print(f"  Pitch: {args.start_pitch} -> {end_pitch} Hz")
+        print(f"  Duration: {args.duration} ms")
+
+        if generate_vowel_wav(args.vowel, temp_wav, args.duration, args.start_pitch, args.end_pitch):
+            # Standard formant analysis
             results = analyze_formants(temp_wav, args.max_freq)
             print_analysis(results, args.vowel)
+
+            # Stability analysis (always run when pitch varies, or if requested)
+            if args.stability or (args.end_pitch and args.end_pitch != args.start_pitch):
+                stability = analyze_stability(temp_wav, args.max_freq)
+                if stability:
+                    print_stability_analysis(stability, args.vowel)
+
             os.remove(temp_wav)
         else:
             print("Failed to generate vowel")
@@ -266,6 +445,8 @@ def main():
         print("Examples:")
         print("  python analyze_vowels.py --wav test.wav")
         print("  python analyze_vowels.py --vowel a")
+        print("  python analyze_vowels.py --vowel ɑ --start-pitch 55 --end-pitch 15")
+        print("  python analyze_vowels.py --vowel i --stability")
         print("  python analyze_vowels.py --all")
 
 
