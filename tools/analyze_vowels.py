@@ -14,6 +14,10 @@ Usage:
     python analyze_vowels.py --vowel ɑ --start-pitch 55 --end-pitch 15  # Falling pitch
     python analyze_vowels.py --wav test.wav               # Analyze existing wav file
     python analyze_vowels.py --all                        # Analyze all reference vowels
+    python analyze_vowels.py --wav my.wav --extract-preset  # Extract preset parameters
+    python analyze_vowels.py --wav diphthong.wav --trajectory  # Analyze diphthong trajectory
+    python analyze_vowels.py --transition ø y             # Show parameter transition
+    python analyze_vowels.py --transition ø y --play      # Play transition audio
 """
 
 import os
@@ -35,6 +39,15 @@ try:
 except ImportError:
     HAS_PARSELMOUTH = False
     print("Warning: parselmouth not installed. Install with: pip install praat-parselmouth")
+
+import json
+
+# For audio playback
+try:
+    import winsound
+    HAS_WINSOUND = True
+except ImportError:
+    HAS_WINSOUND = False
 
 # Reference formant values (Adult Male, Hz) from Peterson & Barney / Hillenbrand
 REFERENCE = {
@@ -161,6 +174,409 @@ def analyze_stability(wav_path, max_formant_hz=5500):
         pass
 
     return results
+
+
+def estimate_spectral_tilt(wav_path):
+    """
+    Estimate spectral tilt from WAV file using LTAS (Long-Term Average Spectrum).
+
+    Spectral tilt indicates voice quality:
+    - Steep rolloff (high tilt) = breathy voice
+    - Flat rolloff (low tilt) = pressed/tense voice
+
+    Returns estimated tilt in dB (0-41 range for NVSpeechPlayer).
+    """
+    if not HAS_PARSELMOUTH:
+        return None
+
+    sound = parselmouth.Sound(wav_path)
+
+    # Create LTAS (Long-Term Average Spectrum)
+    ltas = call(sound, "To Ltas", 100)  # 100 Hz bandwidth
+
+    # Measure energy in low (500-1000 Hz) and high (2000-4000 Hz) bands
+    try:
+        low_energy = call(ltas, "Get mean", 500, 1000, "dB")
+        high_energy = call(ltas, "Get mean", 2000, 4000, "dB")
+
+        # Tilt is the difference (positive = more energy in lows)
+        raw_tilt = low_energy - high_energy
+
+        # Map to NVSpeechPlayer range (0-41 dB)
+        # Typical speech tilt: 5-25 dB
+        # Map: 5dB -> 0, 25dB -> 20 (moderate breathy)
+        spectral_tilt = max(0, min(41, (raw_tilt - 5) * 1.0))
+
+        return round(spectral_tilt)
+    except:
+        return None
+
+
+def analyze_diphthong_trajectory(wav_path, num_points=10, max_formant_hz=5500):
+    """
+    Analyze formant trajectory over time for diphthong analysis.
+
+    Returns list of dicts with formant values at each time point.
+    """
+    if not HAS_PARSELMOUTH:
+        return None
+
+    sound = parselmouth.Sound(wav_path)
+    duration = sound.duration
+
+    # Create formant object
+    formant = sound.to_formant_burg(time_step=0.01, max_number_of_formants=5,
+                                     maximum_formant=max_formant_hz)
+
+    # Sample at multiple time points (avoid very start/end)
+    trajectory = []
+    for i in range(num_points):
+        # Map 0->(num_points-1) to 0.1->0.9 of duration
+        t_ratio = 0.1 + (0.8 * i / max(1, num_points - 1))
+        t = duration * t_ratio
+
+        point = {
+            'time_pct': round(t_ratio * 100),
+            'time_ms': round(t * 1000),
+        }
+
+        for fi in range(1, 5):
+            try:
+                f = formant.get_value_at_time(fi, t)
+                b = formant.get_bandwidth_at_time(fi, t)
+                point[f'F{fi}'] = round(f) if f and f == f else None
+                point[f'B{fi}'] = round(b) if b and b == b else None
+            except:
+                point[f'F{fi}'] = None
+                point[f'B{fi}'] = None
+
+        trajectory.append(point)
+
+    return trajectory
+
+
+def extract_preset_params(wav_path, max_formant_hz=5500):
+    """
+    Extract synthesis parameters from WAV file suitable for preset creation.
+
+    Returns dict with cascade and parallel formant parameters plus voice quality estimates.
+    """
+    if not HAS_PARSELMOUTH:
+        return None
+
+    # Get formant analysis at midpoint
+    formants = analyze_formants(wav_path, max_formant_hz)
+    if not formants:
+        return None
+
+    # Get stability analysis for averages
+    stability = analyze_stability(wav_path, max_formant_hz)
+
+    # Get spectral tilt estimate
+    tilt = estimate_spectral_tilt(wav_path)
+
+    # Build preset parameters
+    params = {}
+
+    # Cascade formants (primary synthesis path)
+    for i in range(1, 5):
+        f_key = f'F{i}'
+        b_key = f'B{i}'
+
+        # Use stability average if available, otherwise midpoint
+        f_val = stability.get(f'{f_key}_avg') if stability else None
+        if f_val is None:
+            f_val = formants.get(f_key)
+
+        b_val = formants.get(b_key)
+
+        if f_val:
+            params[f'cf{i}'] = f_val
+        if b_val:
+            params[f'cb{i}'] = b_val
+
+    # Copy cascade to parallel (standard pattern for vowels)
+    for i in range(1, 5):
+        if f'cf{i}' in params:
+            params[f'pf{i}'] = params[f'cf{i}']
+        if f'cb{i}' in params:
+            params[f'pb{i}'] = params[f'cb{i}']
+
+    # Add higher formants with typical defaults
+    if 'cf5' not in params:
+        params['cf5'] = 4500
+        params['cb5'] = 200
+        params['pf5'] = 4500
+        params['pb5'] = 200
+    if 'cf6' not in params:
+        params['cf6'] = 5000
+        params['cb6'] = 500
+        params['pf6'] = 5000
+        params['pb6'] = 500
+
+    # Voice quality estimates
+    if tilt is not None:
+        params['spectralTilt'] = tilt
+
+    # Estimate glottal open quotient from HNR
+    # Higher HNR = cleaner voice = lower open quotient (more closed)
+    if stability and 'HNR_mean' in stability:
+        hnr = stability['HNR_mean']
+        # HNR 5-20 dB maps to OQ 0.6-0.4
+        oq = max(0.35, min(0.65, 0.6 - (hnr - 5) * 0.015))
+        params['glottalOpenQuotient'] = round(oq, 2)
+    else:
+        params['glottalOpenQuotient'] = 0.5  # neutral default
+
+    # Standard vowel settings
+    params['voiceAmplitude'] = 1.0
+    params['_isVowel'] = True
+    params['_isVoiced'] = True
+
+    return params
+
+
+def print_trajectory(trajectory, vowel_label=None):
+    """Print diphthong trajectory in console table format."""
+    if not trajectory:
+        print("No trajectory data")
+        return
+
+    label = f" ({vowel_label})" if vowel_label else ""
+    print(f"\nDIPHTHONG TRAJECTORY{label}")
+    print("=" * 70)
+
+    # Header
+    print(f"{'Time':>6}  {'F1':>6}  {'F2':>6}  {'F3':>6}  {'F4':>6}")
+    print("-" * 70)
+
+    # Data rows
+    for point in trajectory:
+        time_str = f"{point['time_pct']}%"
+        f1 = point.get('F1', '-')
+        f2 = point.get('F2', '-')
+        f3 = point.get('F3', '-')
+        f4 = point.get('F4', '-')
+        print(f"{time_str:>6}  {f1:>6}  {f2:>6}  {f3:>6}  {f4:>6}")
+
+    # Calculate and show movement
+    if len(trajectory) >= 2:
+        start = trajectory[0]
+        end = trajectory[-1]
+        print("-" * 70)
+        print("MOVEMENT (start -> end):")
+        for i in range(1, 4):
+            f_start = start.get(f'F{i}')
+            f_end = end.get(f'F{i}')
+            if f_start and f_end:
+                delta = f_end - f_start
+                direction = "up" if delta > 0 else "down" if delta < 0 else "stable"
+                print(f"  F{i}: {f_start} -> {f_end} Hz ({delta:+d} Hz, {direction})")
+
+
+def print_preset_params(params, vowel_label=None):
+    """Print extracted preset parameters in both console and JSON format."""
+    if not params:
+        print("No parameters extracted")
+        return
+
+    label = f": {vowel_label}" if vowel_label else ""
+    print(f"\nEXTRACTED PRESET PARAMETERS{label}")
+    print("=" * 60)
+
+    # Console format
+    print("\nFORMANTS:")
+    for i in range(1, 5):
+        cf = params.get(f'cf{i}')
+        cb = params.get(f'cb{i}')
+        if cf:
+            print(f"  F{i}: {cf} Hz (bandwidth: {cb} Hz)")
+
+    print("\nVOICE QUALITY:")
+    if 'spectralTilt' in params:
+        print(f"  Spectral tilt: {params['spectralTilt']} dB")
+    if 'glottalOpenQuotient' in params:
+        print(f"  Glottal open quotient: {params['glottalOpenQuotient']}")
+
+    # JSON format for copy/paste
+    print("\nJSON (copy to presets/ folder):")
+    print("-" * 60)
+
+    # Create clean dict for JSON output
+    json_params = {k: v for k, v in params.items() if not k.startswith('_')}
+    print(json.dumps(json_params, indent=2))
+    print("-" * 60)
+
+
+def show_transition_params(vowel1, vowel2, play_audio=False):
+    """
+    Show parameter transition between two vowels.
+    Optionally play audio preview of the transition.
+    """
+    try:
+        from data import data as phoneme_data
+    except ImportError:
+        print("Error: Could not import phoneme data")
+        return
+
+    p1 = phoneme_data.get(vowel1)
+    p2 = phoneme_data.get(vowel2)
+
+    if not p1:
+        print(f"Error: Vowel '{vowel1}' not found in phoneme data")
+        return
+    if not p2:
+        print(f"Error: Vowel '{vowel2}' not found in phoneme data")
+        return
+
+    print(f"\nTRANSITION: {vowel1} -> {vowel2}")
+    print("=" * 75)
+    print("(Interpolated over 60ms fade duration)")
+    print()
+
+    # Parameters to compare
+    formant_params = [
+        ('cf1', 'F1 freq'),
+        ('cb1', 'F1 bw'),
+        ('cf2', 'F2 freq'),
+        ('cb2', 'F2 bw'),
+        ('cf3', 'F3 freq'),
+        ('cb3', 'F3 bw'),
+    ]
+
+    voice_params = [
+        ('spectralTilt', 'Spec tilt'),
+        ('glottalOpenQuotient', 'Glot OQ'),
+        ('voiceTurbulenceAmplitude', 'Breathiness'),
+    ]
+
+    # Header
+    print(f"{'Parameter':<15} {'Start':>8} {'25%':>8} {'50%':>8} {'75%':>8} {'End':>8} {'Jump':>8}  Note")
+    print("-" * 85)
+
+    def interpolate(v1, v2, t):
+        """Linear interpolation (actual uses Hermite smoothstep)."""
+        if v1 is None or v2 is None:
+            return None
+        return v1 + (v2 - v1) * t
+
+    def format_val(v):
+        if v is None:
+            return "-"
+        if isinstance(v, float) and v < 10:
+            return f"{v:.2f}"
+        return str(round(v))
+
+    all_params = formant_params + voice_params
+
+    for param, label in all_params:
+        v1 = p1.get(param)
+        v2 = p2.get(param)
+
+        # Show interpolated values
+        v_25 = interpolate(v1, v2, 0.25)
+        v_50 = interpolate(v1, v2, 0.50)
+        v_75 = interpolate(v1, v2, 0.75)
+
+        # Calculate jump
+        if v1 is not None and v2 is not None:
+            jump = abs(v2 - v1)
+            # Check if large jump (>30% for frequencies, >50% for others)
+            is_large = False
+            if param.startswith('cf') and v1 > 0:
+                is_large = jump / v1 > 0.3
+            elif jump > 0.5 and isinstance(v1, float):
+                is_large = True
+            note = "<-- LARGE" if is_large else ""
+        else:
+            jump = None
+            note = ""
+
+        print(f"{label:<15} {format_val(v1):>8} {format_val(v_25):>8} {format_val(v_50):>8} {format_val(v_75):>8} {format_val(v2):>8} {format_val(jump):>8}  {note}")
+
+    # Play audio if requested
+    if play_audio:
+        print("\nGenerating transition audio...")
+        play_transition(vowel1, vowel2)
+
+
+def play_transition(vowel1, vowel2, fade_ms=60, duration_ms=300):
+    """Generate and play a transition between two vowels."""
+    try:
+        from data import data as phoneme_data
+        import speechPlayer
+        import ipa
+        import wave
+        import struct
+        import tempfile
+    except ImportError as e:
+        print(f"Error importing modules: {e}")
+        return
+
+    SAMPLE_RATE = 16000
+
+    p1 = phoneme_data.get(vowel1)
+    p2 = phoneme_data.get(vowel2)
+
+    if not p1 or not p2:
+        print("Error: Could not load vowel data")
+        return
+
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
+
+    # First vowel (sustained)
+    frame1 = speechPlayer.Frame()
+    frame1.preFormantGain = 1.0
+    frame1.outputGain = 2.0
+    ipa.applyPhonemeToFrame(frame1, p1)
+    frame1.voicePitch = 120
+    sp.queueFrame(frame1, duration_ms, 25)  # 25ms fade in
+
+    # Second vowel (transition)
+    frame2 = speechPlayer.Frame()
+    frame2.preFormantGain = 1.0
+    frame2.outputGain = 2.0
+    ipa.applyPhonemeToFrame(frame2, p2)
+    frame2.voicePitch = 120
+    sp.queueFrame(frame2, duration_ms, fade_ms)  # configurable transition fade
+
+    # Silence at end
+    sp.queueFrame(None, 100, 50)
+
+    # Synthesize
+    all_samples = []
+    BATCH_SIZE = 8192
+    while True:
+        samples = sp.synthesize(BATCH_SIZE)
+        if samples:
+            all_samples.extend(samples[:])
+            if len(samples) < BATCH_SIZE:
+                break
+        else:
+            break
+
+    if not all_samples:
+        print("Error: No audio generated")
+        return
+
+    # Write to temp file and play
+    temp_wav = tempfile.mktemp(suffix='.wav')
+    try:
+        with wave.open(temp_wav, 'w') as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(SAMPLE_RATE)
+            wav.writeframes(struct.pack('<%dh' % len(all_samples), *all_samples))
+
+        if HAS_WINSOUND:
+            print(f"Playing: {vowel1} -> {vowel2} (fade: {fade_ms}ms)")
+            winsound.PlaySound(temp_wav, winsound.SND_FILENAME)
+        else:
+            print(f"Audio saved to: {temp_wav}")
+            print("(winsound not available for playback)")
+    finally:
+        if HAS_WINSOUND and os.path.exists(temp_wav):
+            os.remove(temp_wav)
 
 
 def print_stability_analysis(results, vowel=None):
@@ -353,7 +769,7 @@ def generate_vowel_wav(vowel, output_path, duration_ms=500, start_pitch=120, end
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Analyze vowel formants')
+    parser = argparse.ArgumentParser(description='Analyze vowel formants and extract preset parameters')
     parser.add_argument('--wav', help='Path to existing WAV file to analyze')
     parser.add_argument('--vowel', help='Specific vowel to generate and analyze')
     parser.add_argument('--all', action='store_true', help='Analyze all reference vowels')
@@ -367,7 +783,27 @@ def main():
                        help='Duration in milliseconds (default 500)')
     parser.add_argument('--stability', action='store_true',
                        help='Run stability analysis (formant drift, HNR)')
+
+    # New options for preset extraction and diphthong analysis
+    parser.add_argument('--extract-preset', action='store_true',
+                       help='Extract preset parameters from WAV file (use with --wav)')
+    parser.add_argument('--trajectory', action='store_true',
+                       help='Analyze diphthong trajectory (formants over time)')
+    parser.add_argument('--trajectory-points', type=int, default=10,
+                       help='Number of time points for trajectory analysis (default 10)')
+    parser.add_argument('--transition', nargs=2, metavar=('VOWEL1', 'VOWEL2'),
+                       help='Show parameter transition between two vowels')
+    parser.add_argument('--play', action='store_true',
+                       help='Play audio preview (use with --transition)')
+    parser.add_argument('--output-json', metavar='FILE',
+                       help='Write preset parameters to JSON file')
+
     args = parser.parse_args()
+
+    # --transition doesn't require parselmouth
+    if args.transition:
+        show_transition_params(args.transition[0], args.transition[1], play_audio=args.play)
+        return
 
     if not HAS_PARSELMOUTH:
         print("ERROR: parselmouth is required for formant analysis.")
@@ -383,8 +819,34 @@ def main():
             print(f"Error: File not found: {args.wav}")
             sys.exit(1)
 
+        # Diphthong trajectory analysis
+        if args.trajectory:
+            trajectory = analyze_diphthong_trajectory(args.wav, args.trajectory_points, args.max_freq)
+            print_trajectory(trajectory, args.vowel)
+            return
+
+        # Preset parameter extraction
+        if args.extract_preset:
+            params = extract_preset_params(args.wav, args.max_freq)
+            print_preset_params(params, args.vowel)
+
+            # Optionally write to JSON file
+            if args.output_json and params:
+                json_params = {k: v for k, v in params.items() if not k.startswith('_')}
+                with open(args.output_json, 'w', encoding='utf-8') as f:
+                    json.dump(json_params, f, indent=2)
+                print(f"\nPreset written to: {args.output_json}")
+            return
+
+        # Standard formant analysis
         results = analyze_formants(args.wav, args.max_freq)
         print_analysis(results, args.vowel)
+
+        # Also run stability if requested
+        if args.stability:
+            stability = analyze_stability(args.wav, args.max_freq)
+            if stability:
+                print_stability_analysis(stability, args.vowel)
 
     elif args.vowel:
         # Generate and analyze specific vowel
@@ -443,11 +905,24 @@ def main():
         parser.print_help()
         print()
         print("Examples:")
+        print("  # Basic formant analysis")
         print("  python analyze_vowels.py --wav test.wav")
         print("  python analyze_vowels.py --vowel a")
         print("  python analyze_vowels.py --vowel ɑ --start-pitch 55 --end-pitch 15")
         print("  python analyze_vowels.py --vowel i --stability")
         print("  python analyze_vowels.py --all")
+        print()
+        print("  # Extract preset parameters from recorded vowel")
+        print("  python analyze_vowels.py --wav my_vowel.wav --extract-preset")
+        print("  python analyze_vowels.py --wav my_vowel.wav --extract-preset --output-json presets/new.json")
+        print()
+        print("  # Analyze diphthong trajectory")
+        print("  python analyze_vowels.py --wav diphthong.wav --trajectory")
+        print("  python analyze_vowels.py --wav diphthong.wav --trajectory --trajectory-points 20")
+        print()
+        print("  # Show transition between two vowels")
+        print("  python analyze_vowels.py --transition ø y")
+        print("  python analyze_vowels.py --transition ø y --play")
 
 
 if __name__ == '__main__':

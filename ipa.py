@@ -389,13 +389,13 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 				if phoneme.get('_inDiphthong'):
 					# Check if this is first component or subsequent
 					if lastPhoneme and lastPhoneme.get('_inDiphthong') and lastPhoneme.get('_diphthongChar') == phoneme.get('_diphthongChar'):
-						# Subsequent component: short duration, long glide fade
-						phonemeDuration=30.0/speed
-						phonemeFadeDuration=45.0/speed  # Long fade for smooth glide
+						# Subsequent component: longer glide fade for smooth transitions
+						phonemeDuration=40.0/speed  # Increased from 30
+						phonemeFadeDuration=60.0/speed  # Increased from 45 for smoother KLSYN param glide
 					else:
-						# First component of diphthong: normal-ish duration
-						phonemeDuration=40.0/speed
-						phonemeFadeDuration=15.0/speed
+						# First component of diphthong
+						phonemeDuration=50.0/speed  # Increased from 40
+						phonemeFadeDuration=25.0/speed  # Increased from 15
 				elif phoneme.get('_tiedTo'):
 					phonemeDuration=40.0/speed
 				elif phoneme.get('_tiedFrom'):
@@ -566,6 +566,52 @@ def calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType):
 				elif lastHeadUnstressedRunStart is None: 
 					lastHeadUnstressedRunStart=index
 
+def _blend_diphthong_voice_quality(phonemeList):
+	"""Blend voice quality parameters between diphthong components for smoother glides.
+
+	Since the C++ synthesizer interpolates ALL parameters during fade (including
+	voice quality params like spectralTilt, glottalOpenQuotient, etc.), large
+	differences between diphthong components can cause audible voice quality changes.
+
+	This function averages key voice quality parameters across diphthong components
+	so the interpolation results in smoother, more natural glides.
+	"""
+	# Track which diphthongs we've already processed
+	processed_diphthongs = set()
+
+	for phoneme in phonemeList:
+		if not phoneme.get('_inDiphthong'):
+			continue
+
+		diphthong_char = phoneme.get('_diphthongChar')
+		if diphthong_char in processed_diphthongs:
+			continue
+
+		# Find all components of this diphthong
+		components = [p for p in phonemeList
+		              if p.get('_diphthongChar') == diphthong_char and p.get('_inDiphthong')]
+
+		if len(components) < 2:
+			continue
+
+		processed_diphthongs.add(diphthong_char)
+
+		# Voice quality parameters to blend
+		voice_params = ['glottalOpenQuotient', 'spectralTilt', 'speedQuotient',
+		                'flutter', 'openQuotientShape', 'lfRd']
+
+		for param in voice_params:
+			values = [c.get(param) for c in components if param in c and c.get(param) is not None]
+			if len(values) >= 2:
+				# Use weighted average: first component gets more weight (60/40 split)
+				# This preserves more of the starting vowel's character
+				if len(values) == 2:
+					avg = values[0] * 0.6 + values[1] * 0.4
+				else:
+					avg = sum(values) / len(values)
+				for c in components:
+					c[param] = avg
+
 def applyFormantScaling(frame, scale_factor):
 	"""
 	Scale all formant frequencies and bandwidths by a factor.
@@ -672,6 +718,7 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 	correctHPhonemes(phonemeList)
 	calculatePhonemeTimes(phonemeList,speed)
 	transitions.apply_coarticulation(phonemeList, speed)  # Apply CV coarticulation
+	_blend_diphthong_voice_quality(phonemeList)  # Blend voice quality for smoother diphthong glides
 	calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType)
 	applyToneMarks(phonemeList, basePitch)  # Apply tone marks after standard intonation
 	for phoneme in phonemeList:

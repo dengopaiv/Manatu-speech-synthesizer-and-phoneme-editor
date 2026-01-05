@@ -51,7 +51,8 @@ class FrameManagerImpl: public FrameManager {
 				double curFadeRatio=(double)sampleCounter/(newFrameRequest->numFadeSamples);
 				for(int i=0;i<speechPlayer_frame_numParams;++i) {
 					// Burst parameters (indices 26-27) and preFormantGain (index 67) should step instantly
-					// This ensures stop bursts trigger at full amplitude without gain attenuation
+					// This ensures stop bursts trigger at full amplitude and prevents
+					// preFormantGain from silencing output during transitions
 					if (i == 26 || i == 27 || i == 67) {
 						// Use target value immediately
 						((speechPlayer_frameParam_t*)&curFrame)[i] = ((speechPlayer_frameParam_t*)&(newFrameRequest->frame))[i];

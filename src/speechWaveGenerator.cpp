@@ -115,8 +115,10 @@ class ColoredNoiseGenerator {
 	double getNext(double filterFreq, double filterBw) {
 		double noise = white.getNext();
 
-		// If filterFreq is 0, return white noise (no filtering)
-		if (filterFreq <= 0) return noise;
+		// If filterFreq is too low, return white noise (no filtering)
+		// Threshold of 100 Hz prevents numerical instability from sinh() overflow
+		// during parameter interpolation when transitioning to/from filtered noise
+		if (filterFreq < 100) return noise;
 
 		// Clamp bandwidth to reasonable values
 		if (filterBw < 100) filterBw = 100;
@@ -600,7 +602,10 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
 				double parallelOut=parallel.getNext(frame,(fric+burst)*frame->preFormantGain);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;
-				sampleBuf[i].value=(int)max(min(out*4000,32000),-32000);
+				// Soft limiting using tanh for smoother clipping
+				double scaled = out * 2500;  // Reduced from 4000 to prevent clipping
+				double limited = tanh(scaled / 32000.0) * 32000.0;  // Soft limit
+				sampleBuf[i].value = (int)limited;
 			} else {
 				return i;
 			}
