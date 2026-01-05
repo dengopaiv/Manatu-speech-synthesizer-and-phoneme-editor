@@ -15,7 +15,7 @@ dist/
 
 # Test outputs
 test_output/
-*.wav
+tests/output/
 
 # Backups
 *.bak
