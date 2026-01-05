@@ -53,5 +53,6 @@ SPECIAL = {
 		'pa6': 0.433333333333,
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
+		'lfRd': 0,  # Voiceless
 	},
 }

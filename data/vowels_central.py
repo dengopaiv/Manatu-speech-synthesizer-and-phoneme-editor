@@ -22,7 +22,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 4,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 500,  # Standard mid central ~500-520
@@ -85,7 +85,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 5,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 500,
@@ -148,7 +148,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 4,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 500,
@@ -211,7 +211,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.9,  # Increased from 0.6 for stability
 		'spectralTilt': 3,  # Reduced from 8 for stability
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,
@@ -279,7 +279,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 2,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 300,  # Fixed (standard close central)
@@ -342,7 +342,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.7,  # Normalized from 1.8
 		'spectralTilt': 2,  # Normalized from 15
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 320,
@@ -405,7 +405,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 1.0,  # Increased from 0.5 for stability
 		'spectralTilt': 0,  # Reduced for brightness
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'sinusoidalVoicingAmplitude': 0.25,  # Voicebar
 		# Cascade formants - wider bandwidths for stability
@@ -471,7 +471,7 @@ VOWELS_CENTRAL = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 3,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 400,

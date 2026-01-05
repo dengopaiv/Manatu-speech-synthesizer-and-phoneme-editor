@@ -125,7 +125,7 @@ STOPS = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -253,7 +253,7 @@ STOPS = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -379,7 +379,7 @@ STOPS = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.15,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -506,7 +506,7 @@ STOPS = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -570,7 +570,7 @@ STOPS = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

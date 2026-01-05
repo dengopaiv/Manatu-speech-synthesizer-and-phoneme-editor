@@ -55,6 +55,7 @@ AFFRICATES = {
 		'fricationAmplitude': 0.3,
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.3,
+		'lfRd': 0,  # Voiceless
 	},
 	'd͡ʒ': {
 		'_isNasal': False,
@@ -104,5 +105,6 @@ AFFRICATES = {
 		'fricationAmplitude': 0.3,
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.3,
+		'lfRd': 1.0,  # Voiced
 	},
 }

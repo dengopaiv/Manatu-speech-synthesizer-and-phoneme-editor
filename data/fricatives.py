@@ -126,7 +126,7 @@ FRICATIVES = {
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -256,7 +256,7 @@ FRICATIVES = {
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -391,7 +391,7 @@ FRICATIVES = {
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -517,7 +517,7 @@ FRICATIVES = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 4,
 		'flutter': 0.15,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -649,7 +649,7 @@ FRICATIVES = {
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
 		'flutter': 0.25,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

@@ -22,7 +22,7 @@ VOWELS_BACK = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 0,  # Low tilt for bright close vowel
 		'flutter': 0.10,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 300,  # Standard close back ~300-340
@@ -85,7 +85,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.7,
 		'spectralTilt': 2,
 		'flutter': 0.12,  # Normalized from 0.25
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 450,  # Standard near-close ~440-470
@@ -148,7 +148,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.7,
 		'spectralTilt': 3,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 470,  # Standard close-mid ~450-500
@@ -211,7 +211,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.8,  # Increased from 0.5 to reduce distortion
 		'spectralTilt': 4,  # Slight tilt for rounded vowel stability
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,  # Matched to ɑ tuning
@@ -279,7 +279,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.7,
 		'spectralTilt': 0,  # No tilt - brighter, matches user tuning
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,  # Matched to user preset
@@ -347,7 +347,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.8,  # Increased from 0.6 to reduce distortion
 		'spectralTilt': 4,  # Reduced for stability
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,
@@ -415,7 +415,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.8,  # Increased from 0.7 for stability
 		'spectralTilt': 0,  # No tilt - brighter
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'sinusoidalVoicingAmplitude': 0.2,  # Slight voicebar
 		# Cascade formants - wider bandwidths for close vowel stability
@@ -481,7 +481,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.7,
 		'spectralTilt': 4,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 460,
@@ -544,7 +544,7 @@ VOWELS_BACK = {
 		'speedQuotient': 0.9,  # Increased from 0.5 to reduce distortion
 		'spectralTilt': 3,  # Slight tilt for stability
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,

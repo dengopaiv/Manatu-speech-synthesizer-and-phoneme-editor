@@ -37,6 +37,7 @@ def setFrame(frame,phoneme):
 # KLSYN88 voice quality parameter defaults (neutral/modal voice)
 # These ensure backward compatibility - existing phoneme data works unchanged
 KLSYN88_DEFAULTS = {
+	'lfRd': 1.0,              # Modal voice (LF model enabled)
 	'spectralTilt': 0,        # No tilt (modal voice)
 	'flutter': 0.25,          # Slight natural jitter
 	'openQuotientShape': 0.5, # Moderate exponential

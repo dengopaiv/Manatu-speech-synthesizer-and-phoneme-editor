@@ -58,7 +58,7 @@ LIQUIDS_GLIDES = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -119,7 +119,7 @@ LIQUIDS_GLIDES = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -181,7 +181,7 @@ LIQUIDS_GLIDES = {
 		'speedQuotient': 0.8,
 		'spectralTilt': 2,
 		'flutter': 0.12,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -241,7 +241,7 @@ LIQUIDS_GLIDES = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -303,7 +303,7 @@ LIQUIDS_GLIDES = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -365,7 +365,7 @@ LIQUIDS_GLIDES = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

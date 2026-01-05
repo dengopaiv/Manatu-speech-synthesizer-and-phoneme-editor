@@ -58,7 +58,7 @@ NASALS = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -119,7 +119,7 @@ NASALS = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -181,7 +181,7 @@ NASALS = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -241,7 +241,7 @@ NASALS = {
 		'glottalOpenQuotient': 0.5,
 		'openQuotientShape': 0.5,
 		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

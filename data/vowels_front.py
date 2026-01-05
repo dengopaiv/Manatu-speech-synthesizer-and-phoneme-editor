@@ -25,7 +25,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 1.0,
 		'spectralTilt': 10,  # Higher spectral tilt for open vowel warmth
 		'flutter': 0.15,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 400,  # Dynamic F1 bandwidth modulation for natural voice
@@ -93,7 +93,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.9,  # Increased from 0.5 to reduce distortion
 		'spectralTilt': 0,  # Low tilt for bright close vowel
 		'flutter': 0.12,
-		'lfRd': 2.7,
+		'lfRd': 1.0,
 		'diplophonia': 0,
 		'sinusoidalVoicingAmplitude': 0.2,  # Slight voicebar
 		# Cascade formants - wider bandwidths for stability
@@ -159,7 +159,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 4,
 		'flutter': 0.10,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 530,  # Standard close-mid ~400-480
@@ -222,7 +222,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 2,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 400,  # Standard near-close ~390-400
@@ -285,7 +285,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 5,
 		'flutter': 0.10,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 550,  # Standard open-mid ~530-580
@@ -348,7 +348,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.7,
 		'spectralTilt': 8,  # Moderate tilt for warmth
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 350,  # Dynamic F1 bandwidth modulation for natural voice
@@ -413,7 +413,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 2,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 280,  # Close front ~280
@@ -476,7 +476,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 2,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 360,
@@ -539,7 +539,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 3,
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 400,
@@ -602,7 +602,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 5,
 		'flutter': 0.10,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 530,
@@ -665,7 +665,7 @@ VOWELS_FRONT = {
 		'speedQuotient': 0.5,
 		'spectralTilt': 8,  # Moderate tilt for warmth
 		'flutter': 0.12,
-		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
+		'lfRd': 1.0,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 300,  # Dynamic F1 bandwidth modulation for natural voice
