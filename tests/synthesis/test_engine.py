@@ -25,6 +25,32 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
+def setup_frame(pitch=120, amplitude=1.0, f1=700, f2=1200, f3=2600):
+    """Create a frame with proper KLSYN88 defaults."""
+    frame = speechPlayer.Frame()
+
+    # Voice source
+    frame.voicePitch = pitch
+    frame.voiceAmplitude = amplitude
+    frame.lfRd = 1.0  # Modal voice (required for LF model)
+    frame.glottalOpenQuotient = 0.7
+    frame.flutter = 0.25
+
+    # Formants
+    frame.cf1, frame.cb1 = f1, 80
+    frame.cf2, frame.cb2 = f2, 90
+    frame.cf3, frame.cb3 = f3, 100
+    frame.cf4, frame.cb4 = 3300, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
+
+    # Gains
+    frame.preFormantGain = 1.0
+    frame.outputGain = 2.0
+
+    return frame
+
+
 def save_wav(filename, samples, sample_rate=22050):
     """Save samples to WAV file."""
     filepath = os.path.join(OUTPUT_DIR, filename)
@@ -43,18 +69,7 @@ def test_basic_synthesis():
     print("\n=== Test: Basic Synthesis ===")
 
     sp = speechPlayer.SpeechPlayer(22050)
-    frame = speechPlayer.Frame()
-
-    # Simple vowel parameters
-    frame.voicePitch = 120
-    frame.voiceAmplitude = 1.0
-    frame.cf1, frame.cb1 = 700, 80
-    frame.cf2, frame.cb2 = 1200, 90
-    frame.cf3, frame.cb3 = 2600, 100
-    frame.cf4, frame.cb4 = 3300, 150
-    frame.preFormantGain = 1.0
-    frame.outputGain = 1.0
-
+    frame = setup_frame()
     sp.queueFrame(frame, 200, 50)
 
     samples = []
@@ -74,9 +89,8 @@ def test_basic_synthesis():
     save_wav("basic_synthesis.wav", samples)
 
     assert len(samples) > 0, "No samples generated"
-    assert non_zero > 0, "All samples are zero"
-    # Note: Low peak amplitude may indicate gain settings need tuning
-    print(f"  (Note: Peak of {peak} may indicate gain tuning needed)")
+    assert non_zero > len(samples) * 0.5, "Too many zero samples"
+    assert peak > 1000, "Peak amplitude too low"
 
     print("  PASSED")
     return True
@@ -88,19 +102,11 @@ def test_pitch_variation():
 
     sp = speechPlayer.SpeechPlayer(22050)
 
-    all_samples = []
     for pitch in [80, 120, 200]:
-        frame = speechPlayer.Frame()
-        frame.voicePitch = pitch
-        frame.voiceAmplitude = 1.0
-        frame.cf1, frame.cb1 = 500, 80
-        frame.cf2, frame.cb2 = 1500, 90
-        frame.cf3, frame.cb3 = 2500, 100
-        frame.preFormantGain = 1.0
-        frame.outputGain = 1.0
-
+        frame = setup_frame(pitch=pitch, f1=500, f2=1500, f3=2500)
         sp.queueFrame(frame, 300, 50)
 
+    all_samples = []
     while True:
         chunk = sp.synthesize(1024)
         if not chunk:
@@ -122,36 +128,15 @@ def test_amplitude_envelope():
     sp = speechPlayer.SpeechPlayer(22050)
 
     # Fade in
-    frame1 = speechPlayer.Frame()
-    frame1.voicePitch = 120
-    frame1.voiceAmplitude = 0.0
-    frame1.cf1, frame1.cb1 = 500, 80
-    frame1.cf2, frame1.cb2 = 1500, 90
-    frame1.cf3, frame1.cb3 = 2500, 100
-    frame1.preFormantGain = 1.0
-    frame1.outputGain = 1.0
+    frame1 = setup_frame(amplitude=0.0, f1=500, f2=1500, f3=2500)
     sp.queueFrame(frame1, 100, 50)
 
     # Full amplitude
-    frame2 = speechPlayer.Frame()
-    frame2.voicePitch = 120
-    frame2.voiceAmplitude = 1.0
-    frame2.cf1, frame2.cb1 = 500, 80
-    frame2.cf2, frame2.cb2 = 1500, 90
-    frame2.cf3, frame2.cb3 = 2500, 100
-    frame2.preFormantGain = 1.0
-    frame2.outputGain = 1.0
+    frame2 = setup_frame(amplitude=1.0, f1=500, f2=1500, f3=2500)
     sp.queueFrame(frame2, 200, 50)
 
     # Fade out
-    frame3 = speechPlayer.Frame()
-    frame3.voicePitch = 120
-    frame3.voiceAmplitude = 0.0
-    frame3.cf1, frame3.cb1 = 500, 80
-    frame3.cf2, frame3.cb2 = 1500, 90
-    frame3.cf3, frame3.cb3 = 2500, 100
-    frame3.preFormantGain = 1.0
-    frame3.outputGain = 1.0
+    frame3 = setup_frame(amplitude=0.0, f1=500, f2=1500, f3=2500)
     sp.queueFrame(frame3, 100, 50)
 
     all_samples = []
@@ -175,37 +160,13 @@ def test_formant_transitions():
     sp = speechPlayer.SpeechPlayer(22050)
 
     # /a/ vowel
-    frame1 = speechPlayer.Frame()
-    frame1.voicePitch = 120
-    frame1.voiceAmplitude = 1.0
-    frame1.cf1, frame1.cb1 = 700, 80
-    frame1.cf2, frame1.cb2 = 1200, 90
-    frame1.cf3, frame1.cb3 = 2600, 100
-    frame1.preFormantGain = 1.0
-    frame1.outputGain = 1.0
-    sp.queueFrame(frame1, 200, 50)
+    sp.queueFrame(setup_frame(f1=700, f2=1200, f3=2600), 200, 50)
 
     # /i/ vowel
-    frame2 = speechPlayer.Frame()
-    frame2.voicePitch = 120
-    frame2.voiceAmplitude = 1.0
-    frame2.cf1, frame2.cb1 = 280, 60
-    frame2.cf2, frame2.cb2 = 2250, 90
-    frame2.cf3, frame2.cb3 = 2890, 100
-    frame2.preFormantGain = 1.0
-    frame2.outputGain = 1.0
-    sp.queueFrame(frame2, 200, 50)
+    sp.queueFrame(setup_frame(f1=280, f2=2250, f3=2890), 200, 50)
 
     # /u/ vowel
-    frame3 = speechPlayer.Frame()
-    frame3.voicePitch = 120
-    frame3.voiceAmplitude = 1.0
-    frame3.cf1, frame3.cb1 = 310, 60
-    frame3.cf2, frame3.cb2 = 870, 90
-    frame3.cf3, frame3.cb3 = 2250, 100
-    frame3.preFormantGain = 1.0
-    frame3.outputGain = 1.0
-    sp.queueFrame(frame3, 200, 50)
+    sp.queueFrame(setup_frame(f1=310, f2=870, f3=2250), 200, 50)
 
     all_samples = []
     while True:
@@ -230,14 +191,36 @@ def test_noise_generation():
     frame = speechPlayer.Frame()
     frame.voicePitch = 0
     frame.voiceAmplitude = 0.0
+
+    # Fricative noise source
     frame.fricationAmplitude = 1.0
     frame.noiseFilterFreq = 5500
     frame.noiseFilterBW = 2000
+
+    # Cascade formants
     frame.cf1, frame.cb1 = 500, 80
     frame.cf2, frame.cb2 = 1500, 90
     frame.cf3, frame.cb3 = 2500, 100
-    frame.preFormantGain = 0.5
-    frame.outputGain = 1.0
+    frame.cf4, frame.cb4 = 3500, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
+
+    # Parallel path for fricatives
+    frame.pf1, frame.pb1 = 500, 80
+    frame.pf2, frame.pb2 = 1500, 90
+    frame.pf3, frame.pb3 = 2500, 100
+    frame.pf4, frame.pb4 = 3500, 150
+    frame.pf5, frame.pb5 = 4500, 200
+    frame.pf6, frame.pb6 = 5500, 250
+    frame.pa1 = 0.5
+    frame.pa2 = 0.6
+    frame.pa3 = 0.7
+    frame.pa4 = 0.8
+    frame.pa5 = 0.9
+    frame.pa6 = 1.0
+
+    frame.preFormantGain = 1.0
+    frame.outputGain = 2.0
 
     sp.queueFrame(frame, 300, 50)
 

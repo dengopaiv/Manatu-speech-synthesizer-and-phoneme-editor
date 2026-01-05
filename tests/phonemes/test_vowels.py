@@ -56,11 +56,12 @@ def synthesize_vowel(sp, f1, f2, f3, f4=3300, duration_ms=400, pitch=120):
 
     # Voice quality
     frame.lfRd = 1.0
+    frame.glottalOpenQuotient = 0.7
     frame.spectralTilt = 6
     frame.flutter = 0.2
 
     frame.preFormantGain = 1.0
-    frame.outputGain = 1.0
+    frame.outputGain = 2.0
 
     sp.queueFrame(frame, duration_ms, 50)
 

@@ -45,12 +45,17 @@ def synthesize_vowel_frame(sp, f1=700, f2=1200, f3=2600, duration_ms=200, pitch=
     frame = speechPlayer.Frame()
     frame.voicePitch = pitch
     frame.voiceAmplitude = 1.0
+    frame.lfRd = 1.0
+    frame.glottalOpenQuotient = 0.7
+    frame.flutter = 0.25
     frame.cf1, frame.cb1 = f1, 80
     frame.cf2, frame.cb2 = f2, 90
     frame.cf3, frame.cb3 = f3, 100
     frame.cf4, frame.cb4 = 3300, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
     frame.preFormantGain = 1.0
-    frame.outputGain = 1.0
+    frame.outputGain = 2.0
     sp.queueFrame(frame, duration_ms, 50)
 
 
@@ -61,6 +66,8 @@ def synthesize_stop_burst(sp, burst_freq, voiced=False):
     if voiced:
         frame.voicePitch = 120
         frame.voiceAmplitude = 0.3
+        frame.lfRd = 1.0
+        frame.glottalOpenQuotient = 0.7
     else:
         frame.voicePitch = 0
         frame.voiceAmplitude = 0.0
@@ -72,9 +79,12 @@ def synthesize_stop_burst(sp, burst_freq, voiced=False):
     frame.cf1, frame.cb1 = 400, 80
     frame.cf2, frame.cb2 = burst_freq, 150
     frame.cf3, frame.cb3 = 2500, 100
+    frame.cf4, frame.cb4 = 3500, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
 
     frame.preFormantGain = 0.5
-    frame.outputGain = 1.0
+    frame.outputGain = 2.0
 
     sp.queueFrame(frame, 30, 10)
 
@@ -86,17 +96,37 @@ def synthesize_fricative(sp, noise_freq, noise_bw, voiced=False, duration_ms=150
     if voiced:
         frame.voicePitch = 120
         frame.voiceAmplitude = 0.4
+        frame.lfRd = 1.0
+        frame.glottalOpenQuotient = 0.7
 
     frame.fricationAmplitude = 1.0
     frame.noiseFilterFreq = noise_freq
     frame.noiseFilterBW = noise_bw
 
+    # Cascade formants
     frame.cf1, frame.cb1 = 400, 80
     frame.cf2, frame.cb2 = 1500, 100
     frame.cf3, frame.cb3 = 2500, 100
+    frame.cf4, frame.cb4 = 3500, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
 
-    frame.preFormantGain = 0.4
-    frame.outputGain = 1.0
+    # Parallel path for fricatives
+    frame.pf1, frame.pb1 = 400, 80
+    frame.pf2, frame.pb2 = 1500, 100
+    frame.pf3, frame.pb3 = 2500, 100
+    frame.pf4, frame.pb4 = 3500, 150
+    frame.pf5, frame.pb5 = 4500, 200
+    frame.pf6, frame.pb6 = 5500, 250
+    frame.pa1 = 0.5
+    frame.pa2 = 0.6
+    frame.pa3 = 0.7
+    frame.pa4 = 0.8
+    frame.pa5 = 0.9
+    frame.pa6 = 1.0
+
+    frame.preFormantGain = 1.0
+    frame.outputGain = 2.0
 
     sp.queueFrame(frame, duration_ms, 30)
 
@@ -107,11 +137,17 @@ def synthesize_nasal(sp, f1, f2, f3, duration_ms=150):
 
     frame.voicePitch = 120
     frame.voiceAmplitude = 1.0
+    frame.lfRd = 1.0
+    frame.glottalOpenQuotient = 0.7
+    frame.flutter = 0.25
 
     # Nasal formants with anti-resonance
     frame.cf1, frame.cb1 = f1, 100
     frame.cf2, frame.cb2 = f2, 100
     frame.cf3, frame.cb3 = f3, 100
+    frame.cf4, frame.cb4 = 3500, 150
+    frame.cf5, frame.cb5 = 4500, 200
+    frame.cf6, frame.cb6 = 5500, 250
 
     # Nasal pole and zero
     frame.cfNP = 480
@@ -120,7 +156,7 @@ def synthesize_nasal(sp, f1, f2, f3, duration_ms=150):
     frame.cbN0 = 100
 
     frame.preFormantGain = 0.8
-    frame.outputGain = 1.0
+    frame.outputGain = 2.0
 
     sp.queueFrame(frame, duration_ms, 40)
 
