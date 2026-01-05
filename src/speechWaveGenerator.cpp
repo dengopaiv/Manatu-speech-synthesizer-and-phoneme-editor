@@ -22,11 +22,49 @@ Based on klsyn-88, found at http://linguistics.berkeley.edu/phonlab/resources/
 #include <cmath>
 #include <cstdlib>
 #include <cstdint>
+#include <cfloat>
 #include "debug.h"
 #include "utils.h"
 #include "speechWaveGenerator.h"
 
+// SSE intrinsics for denormal suppression (Windows/MSVC)
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 using namespace std;
+
+// Enable flush-to-zero and denormals-are-zero modes to prevent CPU stalls
+// from subnormal floating-point numbers in resonator feedback paths
+inline void enableDenormalSuppression() {
+#ifdef _MSC_VER
+	// MSVC: Use _controlfp to set FTZ mode
+	unsigned int control_word;
+	_controlfp_s(&control_word, _DN_FLUSH, _MCW_DN);
+#elif defined(__SSE__)
+	// GCC/Clang with SSE: Set MXCSR register bits
+	_mm_setcsr(_mm_getcsr() | 0x8040);  // FTZ (bit 15) + DAZ (bit 6)
+#endif
+}
+
+// PolyBLEP (Polynomial Band-Limited Step) anti-aliasing
+// Reduces aliasing artifacts at waveform discontinuities
+// Reference: Välimäki & Huovilainen 2006
+inline double polyBLEP(double t, double dt) {
+	// t = phase position (0 to 1), dt = phase increment per sample
+	if (dt <= 0) return 0;
+
+	if (t < dt) {
+		// Just after discontinuity (start of cycle)
+		t = t / dt;
+		return t + t - t * t - 1.0;
+	} else if (t > 1.0 - dt) {
+		// Just before discontinuity (end of cycle)
+		t = (t - 1.0) / dt;
+		return t * t + t + t + 1.0;
+	}
+	return 0;
+}
 
 const double PITWO=M_PI*2;
 
@@ -37,12 +75,17 @@ class NoiseGenerator {
 	uint64_t state0;
 	uint64_t state1;
 	double lastValue;
+	// Pink noise filter state (Voss-McCartney algorithm approximation)
+	double pinkState[5];
+	int pinkCounter;
 
 	public:
-	NoiseGenerator(): lastValue(0.0) {
+	NoiseGenerator(): lastValue(0.0), pinkCounter(0) {
 		// Seed with current time and address for uniqueness
 		state0 = 0x853c49e6748fea9bULL;
 		state1 = 0xda3e39cb94b95bdbULL;
+		// Initialize pink noise state
+		for (int i = 0; i < 5; i++) pinkState[i] = 0;
 	}
 
 	// xorshift128+ - fast, high quality PRNG
@@ -56,17 +99,43 @@ class NoiseGenerator {
 		return result;
 	}
 
+	// Raw white noise (no filtering)
+	double getWhite() {
+		return ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
+	}
+
 	double getNext() {
 		// Generate white noise with full frequency spectrum
-		double noise = ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
+		double noise = getWhite();
 		// Gentle smoothing (less than before) to reduce harshness
 		lastValue = noise * 0.7 + lastValue * 0.3;
 		return lastValue;
 	}
 
+	// Pink noise (1/f spectrum) for natural aspiration
+	// Uses Paul Kellet's refined method - cascaded 1-pole filters
+	// Better spectral match for breathy voice than white noise
+	double getNextPink() {
+		double white = getWhite();
+
+		// 5 cascaded 1-pole lowpass filters with different cutoffs
+		// Approximates 1/f spectrum from 20Hz to Nyquist
+		pinkState[0] = 0.99886 * pinkState[0] + white * 0.0555179;
+		pinkState[1] = 0.99332 * pinkState[1] + white * 0.0750759;
+		pinkState[2] = 0.96900 * pinkState[2] + white * 0.1538520;
+		pinkState[3] = 0.86650 * pinkState[3] + white * 0.3104856;
+		pinkState[4] = 0.55000 * pinkState[4] + white * 0.5329522;
+
+		double pink = pinkState[0] + pinkState[1] + pinkState[2]
+		            + pinkState[3] + pinkState[4] + white * 0.5362;
+
+		// Normalize (sum of coefficients is ~1.5)
+		return pink * 0.11;
+	}
+
 	// Highpass-filtered noise for sibilants (more high-frequency energy)
 	double getNextHighpass() {
-		double noise = ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
+		double noise = getWhite();
 		// Highpass by subtracting lowpass
 		double hp = noise - lastValue;
 		lastValue = lastValue * 0.8 + noise * 0.2;
@@ -113,12 +182,13 @@ class ColoredNoiseGenerator {
 	ColoredNoiseGenerator(int sr): sampleRate(sr), white(), bp1(0), bp2(0), lastFreq(0), lastBw(0) {}
 
 	double getNext(double filterFreq, double filterBw) {
-		double noise = white.getNext();
-
-		// If filterFreq is too low, return white noise (no filtering)
+		// If filterFreq is too low, return pink noise for natural aspiration
+		// Pink (1/f) spectrum better matches natural breathiness
 		// Threshold of 100 Hz prevents numerical instability from sinh() overflow
 		// during parameter interpolation when transitioning to/from filtered noise
-		if (filterFreq < 100) return noise;
+		if (filterFreq < 100) return white.getNextPink();
+
+		double noise = white.getNext();
 
 		// Clamp bandwidth to reasonable values
 		if (filterBw < 100) filterBw = 100;
@@ -204,16 +274,20 @@ class FrequencyGenerator {
 	private:
 	int sampleRate;
 	double lastCyclePos;
+	double lastDt;  // Phase increment for polyBLEP
 
 	public:
-	FrequencyGenerator(int sr): sampleRate(sr), lastCyclePos(0) {}
+	FrequencyGenerator(int sr): sampleRate(sr), lastCyclePos(0), lastDt(0) {}
 
 	double getNext(double frequency) {
-		double cyclePos=fmod((frequency/sampleRate)+lastCyclePos,1);
+		lastDt = frequency / sampleRate;  // Store phase increment
+		double cyclePos=fmod(lastDt+lastCyclePos,1);
 		lastCyclePos=cyclePos;
 		return cyclePos;
 	}
 
+	// Get the phase increment (needed for polyBLEP anti-aliasing)
+	double getDt() const { return lastDt; }
 };
 
 class VoiceGenerator {
@@ -263,43 +337,69 @@ class VoiceGenerator {
 
 		// Check if using LF model (Rd > 0) or legacy model
 		if (frame->lfRd > 0) {
-			// Liljencrants-Fant (LF) glottal model
+			// Improved Liljencrants-Fant (LF) glottal model
+			// Based on Fant 1995 and Degottex et al. 2011 refinements
 			// Rd parameter controls voice quality: 0.3=tense, 1.0=modal, 2.7=breathy
 			double Rd = max(0.3, min(2.7, frame->lfRd));
 
-			// Derive LF parameters from Rd (Fant et al. 1985 approximations)
-			// These polynomial fits map Rd to the four LF parameters
-			double Rk = 0.118 * Rd + 0.224;  // Glottal open time ratio
-			double Rg = 0.25 * Rd + 0.5;     // Glottal rise time
-			double Ra = 0.048 * Rd - 0.01;   // Return phase coefficient
-			if (Ra < 0.01) Ra = 0.01;
+			// Improved Rd-to-parameter mapping (Fant 1995 / Degottex 2011)
+			// These provide better spectral envelope matching than Fant 1985
+			double Rap = (-1.0 + 4.8 * Rd) / 100.0;           // Return phase quotient
+			double Rkp = (22.4 + 11.8 * Rd) / 100.0;          // Open quotient shape
+			double Rgp = 1.0 / (4.0 * ((0.11 * Rd / (0.5 + 1.2 * Rkp)) - Rap)); // Rise time
 
-			// Derived timing parameters
-			double tp = 1.0 / (2.0 * Rg);    // Time of peak (as fraction of T0)
-			double te = tp * (1.0 + Rk);     // Time of excitation (glottal closure)
-			double ta = Ra;                   // Return phase time constant
+			// Clamp parameters to valid ranges
+			if (Rap < 0.01) Rap = 0.01;
+			if (Rap > 0.20) Rap = 0.20;
+			if (Rkp < 0.20) Rkp = 0.20;
+			if (Rkp > 0.80) Rkp = 0.80;
+			if (Rgp < 0.50) Rgp = 0.50;
+			if (Rgp > 3.00) Rgp = 3.00;
 
-			// Ensure te <= 1.0
-			if (te > 0.99) te = 0.99;
+			// Derived timing parameters (normalized to T0 = 1)
+			double tp = 1.0 / (2.0 * Rgp);           // Time of peak flow
+			double te = tp * (1.0 + Rkp);            // Time of excitation (max negative derivative)
+			double ta = Rap;                          // Return phase time constant
+
+			// Ensure valid timing
+			if (tp > 0.45) tp = 0.45;
+			if (te > 0.98) te = 0.98;
+			if (te < tp + 0.05) te = tp + 0.05;
+
+			// Calculate epsilon for return phase (ensures smooth decay to zero)
+			// Solve: exp(-epsilon * (1-te)) = threshold (very small)
+			double epsilon = 1.0 / (ta * (1.0 - te) + 0.001);
+
+			// Amplitude normalization factor for consistent output level
+			// Compensates for Rd-dependent waveform shape changes
+			double ampNorm = 1.0 / (0.5 + 0.3 * Rd);
 
 			glottisOpen = voice < te;
 
 			if (voice < tp) {
-				// Rising phase: sinusoidal rise to peak
-				glottalWave = 0.5 * (1.0 - cos(M_PI * voice / tp));
+				// Opening phase: smooth sinusoidal rise to peak
+				// Uses raised cosine for C1 continuity at boundaries
+				double phase = M_PI * voice / tp;
+				glottalWave = 0.5 * (1.0 - cos(phase)) * ampNorm;
 			} else if (voice < te) {
-				// Falling phase: cosinusoidal fall from peak
-				double fallPos = (voice - tp) / (te - tp);
-				glottalWave = 0.5 * (1.0 + cos(M_PI * fallPos));
+				// Closing phase: smooth cosinusoidal fall
+				// Derivative is negative (excitation phase)
+				double phase = M_PI * (voice - tp) / (te - tp);
+				glottalWave = 0.5 * (1.0 + cos(phase)) * ampNorm;
 			} else {
-				// Return phase: exponential decay (models incomplete closure)
-				double returnPos = (voice - te) / (1.0 - te);
-				double epsilon = 1.0 / (ta + 0.001);  // Decay rate
-				glottalWave = 0.5 * exp(-epsilon * returnPos * (1.0 - te));
-				// Taper to zero at end of cycle
-				if (returnPos > 0.8) {
-					glottalWave *= (1.0 - returnPos) / 0.2;
+				// Return phase: exponential decay modeling incomplete closure
+				// This phase adds the "breathy" component to the voice
+				double t_return = (voice - te) / (1.0 - te);
+				double decay = exp(-epsilon * t_return * (1.0 - te));
+
+				// Apply smooth fade at end of cycle for C0 continuity
+				double fade = 1.0;
+				if (t_return > 0.7) {
+					// Raised cosine fade from t_return=0.7 to t_return=1.0
+					fade = 0.5 * (1.0 + cos(M_PI * (t_return - 0.7) / 0.3));
 				}
+
+				glottalWave = 0.5 * decay * fade * ampNorm;
 			}
 		} else {
 			// Legacy glottal model using openQuotientShape and speedQuotient
@@ -328,6 +428,13 @@ class VoiceGenerator {
 		}
 
 		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
+
+		// Apply polyBLEP anti-aliasing to reduce aliasing at cycle discontinuity
+		// The glottal waveform has a discontinuity when it resets at cycle boundary
+		double dt = pitchGen.getDt();
+		double cyclePos = lastCyclePos;  // Current position in cycle
+		// Apply polyBLEP at start of cycle (discontinuity from end of return phase)
+		voice -= polyBLEP(cyclePos, dt) * 0.5;  // Attenuated to match waveform jump size
 
 		if(!glottisOpen) {
 			turbulence*=0.01;
@@ -376,6 +483,12 @@ class Resonator {
 			this->frequency=frequency;
 			this->bandwidth=bandwidth;
 			double r=exp(-M_PI/sampleRate*bandwidth);
+
+			// Pole clamping: ensure stability by keeping pole radius < 1
+			// Prevents runaway oscillation at very narrow bandwidths
+			if (r >= 0.9999) r = 0.9999;
+			if (r < 0) r = 0;
+
 			c=-(r*r);
 			b=r*cos(PITWO/sampleRate*-frequency)*2.0;
 			a=1.0-b-c;
@@ -383,6 +496,11 @@ class Resonator {
 				a=1.0/a;
 				c*=-a;
 				b*=-a;
+			}
+
+			// NaN/Inf safety check - reset to bypass if coefficients are invalid
+			if (isnan(a) || isnan(b) || isnan(c) || isinf(a) || isinf(b) || isinf(c)) {
+				a = 1.0; b = 0.0; c = 0.0;  // Pass-through
 			}
 		}
 		this->setOnce=true;
@@ -585,6 +703,8 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 
 	public:
 	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
+		// Enable denormal suppression to prevent CPU stalls from subnormal floats
+		enableDenormalSuppression();
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
@@ -605,7 +725,8 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				// Soft limiting using tanh for smoother clipping
 				double scaled = out * 2500;  // Reduced from 4000 to prevent clipping
 				double limited = tanh(scaled / 32000.0) * 32000.0;  // Soft limit
-				sampleBuf[i].value = (int)limited;
+				// Use rounding instead of truncation to reduce quantization distortion
+				sampleBuf[i].value = (short)lrint(limited);
 			} else {
 				return i;
 			}
