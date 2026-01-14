@@ -4,6 +4,10 @@ Phoneme data: Vowels Back
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 VOWELS_BACK = {
@@ -17,9 +21,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,  # Low tilt for bright close vowel
 		'flutter': 0.10,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -33,12 +34,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 50,   # Narrowed for sharper F1 peak
-		'cb2': 80,   # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 200,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 60,   # Narrowed for sharper F1 peak
+		'cb2': 188,   # Narrowed for sharper F2 peak
+		'cb3': 460,
+		'cb4': 1100,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -49,12 +50,12 @@ VOWELS_BACK = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 50,   # Match cb1
-		'pb2': 80,   # Match cb2
-		'pb3': 150,
-		'pb4': 200,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 60,   # Match cb1
+		'pb2': 188,   # Match cb2
+		'pb3': 460,
+		'pb4': 1100,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -80,9 +81,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
 		'spectralTilt': 2,
 		'flutter': 0.12,  # Normalized from 0.25
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -96,12 +94,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 55,   # Narrowed for sharper F1 peak
-		'cb2': 90,   # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 90,   # Narrowed for sharper F1 peak
+		'cb2': 210,   # Narrowed for sharper F2 peak
+		'cb3': 460,
+		'cb4': 1167,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -112,12 +110,12 @@ VOWELS_BACK = {
 		'pf4': 3500,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 55,   # Match cb1
-		'pb2': 90,   # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 90,   # Match cb1
+		'pb2': 210,   # Match cb2
+		'pb3': 460,
+		'pb4': 1167,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -143,9 +141,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
 		'spectralTilt': 3,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -159,12 +154,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 60,   # Narrowed for sharper F1 peak
-		'cb2': 90,   # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 94,   # Narrowed for sharper F1 peak
+		'cb2': 218,   # Narrowed for sharper F2 peak
+		'cb3': 480,
+		'cb4': 1100,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -175,12 +170,12 @@ VOWELS_BACK = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 60,   # Match cb1
-		'pb2': 90,   # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 94,   # Match cb1
+		'pb2': 218,   # Match cb2
+		'pb3': 480,
+		'pb4': 1100,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -206,9 +201,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.5,
 		'spectralTilt': 6,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -224,12 +216,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 75,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 120,   # Narrowed for sharper F1 peak
+		'cb2': 220,  # Narrowed for sharper F2 peak
+		'cb3': 510,
+		'cb4': 1033,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -240,12 +232,12 @@ VOWELS_BACK = {
 		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 75,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 120,   # Match cb1
+		'pb2': 220,  # Match cb2
+		'pb3': 510,
+		'pb4': 1033,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -271,9 +263,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.40,  # Higher for open vowel
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
 		'spectralTilt': 10,  # Higher tilt for open back vowel warmth
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -289,12 +278,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 85,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 200,
-		'cb6': 400,
+		'cb1': 148,   # Narrowed for sharper F1 peak
+		'cb2': 288,  # Narrowed for sharper F2 peak
+		'cb3': 510,
+		'cb4': 1000,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -305,12 +294,12 @@ VOWELS_BACK = {
 		'pf4': 3000,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 85,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 200,
-		'pb6': 400,
+		'pb1': 148,   # Match cb1
+		'pb2': 288,  # Match cb2
+		'pb3': 510,
+		'pb4': 1000,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -336,9 +325,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.6,
 		'spectralTilt': 8,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -354,12 +340,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 80,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 124,   # Narrowed for sharper F1 peak
+		'cb2': 275,  # Narrowed for sharper F2 peak
+		'cb3': 504,
+		'cb4': 1000,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -370,12 +356,12 @@ VOWELS_BACK = {
 		'pf4': 3000,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 80,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 124,   # Match cb1
+		'pb2': 275,  # Match cb2
+		'pb3': 504,
+		'pb4': 1000,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -401,9 +387,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
 		'spectralTilt': 2,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -417,12 +400,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 50,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 200,
-		'cb6': 400,
+		'cb1': 60,   # Narrowed for sharper F1 peak
+		'cb2': 240,  # Narrowed for sharper F2 peak
+		'cb3': 420,
+		'cb4': 1167,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -433,12 +416,12 @@ VOWELS_BACK = {
 		'pf4': 3500,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 50,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 200,
-		'pb6': 400,
+		'pb1': 60,   # Match cb1
+		'pb2': 240,  # Match cb2
+		'pb3': 420,
+		'pb4': 1167,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -464,9 +447,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model
-		'glottalOpenQuotient': 0.22,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.7,
 		'spectralTilt': 4,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -480,12 +460,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 60,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 92,   # Narrowed for sharper F1 peak
+		'cb2': 240,  # Narrowed for sharper F2 peak
+		'cb3': 510,
+		'cb4': 1100,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -496,12 +476,12 @@ VOWELS_BACK = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 60,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 92,   # Match cb1
+		'pb2': 240,  # Match cb2
+		'pb3': 510,
+		'pb4': 1100,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -527,9 +507,6 @@ VOWELS_BACK = {
 		'aspirationAmplitude': 0,
 		'fricationAmplitude': 0,
 		# Voice quality - optimized with LF model for open vowel
-		'glottalOpenQuotient': 0.38,  # Increased for brighter upper formants
-		'openQuotientShape': 0.5,
-		'speedQuotient': 0.5,
 		'spectralTilt': 7,
 		'flutter': 0.12,
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
@@ -545,12 +522,12 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 75,   # Narrowed for sharper F1 peak
-		'cb2': 100,  # Narrowed for sharper F2 peak
-		'cb3': 150,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 124,   # Narrowed for sharper F1 peak
+		'cb2': 244,  # Narrowed for sharper F2 peak
+		'cb3': 510,
+		'cb4': 1033,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -561,12 +538,12 @@ VOWELS_BACK = {
 		'pf4': 3100,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 75,   # Match cb1
-		'pb2': 100,  # Match cb2
-		'pb3': 150,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 124,   # Match cb1
+		'pb2': 244,  # Match cb2
+		'pb3': 510,
+		'pb4': 1033,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,

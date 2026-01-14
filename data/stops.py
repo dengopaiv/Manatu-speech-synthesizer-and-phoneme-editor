@@ -4,6 +4,10 @@ Phoneme data: Stops
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 STOPS = {
@@ -56,9 +60,6 @@ STOPS = {
 		'burstAmplitude': 0.6,
 		'burstDuration': 0.4,  # Voiceless longer release
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -120,9 +121,6 @@ STOPS = {
 		'burstAmplitude': 0.6,
 		'burstDuration': 0.2,  # Voiced shorter release
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -184,10 +182,7 @@ STOPS = {
 		'burstAmplitude': 0.85,  # Updated from JSON
 		'burstDuration': 0.3,  # Updated from JSON
 		# Voice quality
-		'glottalOpenQuotient': 0.1,  # From JSON
-		'openQuotientShape': 0.5,  # From JSON
-		'speedQuotient': 1.0,  # From JSON
-		'spectralTilt': 0,  # From JSON
+		'spectralTilt': 0,
 		'flutter': 0.25,  # From JSON
 		'lfRd': 0,
 		'diplophonia': 0,  # From JSON
@@ -248,9 +243,6 @@ STOPS = {
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.2,  # Voiced shorter release
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -312,9 +304,6 @@ STOPS = {
 		'fricationAmplitude': 0,
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.35,
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -374,9 +363,6 @@ STOPS = {
 		'fricationAmplitude': 0,
 		'burstAmplitude': 0.7,
 		'burstDuration': 0.2,
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.15,
 		'lfRd': 1.0,
@@ -437,9 +423,6 @@ STOPS = {
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.4,  # Voiceless longer release
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -501,9 +484,6 @@ STOPS = {
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.2,  # Voiced shorter release
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -565,9 +545,6 @@ STOPS = {
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.2,  # Voiced shorter release
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -629,9 +606,6 @@ STOPS = {
 		'burstAmplitude': 0.3,
 		'burstDuration': 0.1,
 		# Voice quality - glottal stop has special creaky quality
-		'glottalOpenQuotient': 0.3,
-		'openQuotientShape': 0.3,
-		'speedQuotient': 1.0,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,

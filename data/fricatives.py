@@ -4,6 +4,10 @@ Phoneme data: Fricatives
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 FRICATIVES = {
@@ -57,9 +61,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -122,9 +123,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -186,9 +184,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 5500,
 		'noiseFilterBw': 2000,
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -252,9 +247,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 5500,
 		'noiseFilterBw': 2000,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -319,9 +311,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 3500,
 		'noiseFilterBw': 1500,
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -387,9 +376,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 3500,
 		'noiseFilterBw': 1500,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -452,9 +438,6 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		'noiseFilterFreq': 3500,  # Lower than alveolar s (~4500)
 		'noiseFilterBw': 1500,
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -512,9 +495,6 @@ FRICATIVES = {
 		'fricationAmplitude': 0.7,
 		'noiseFilterFreq': 3500,
 		'noiseFilterBw': 1500,
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'spectralTilt': 4,
 		'flutter': 0.15,
 		'lfRd': 1.0,
@@ -578,9 +558,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		# Voice quality
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -645,9 +622,6 @@ FRICATIVES = {
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -669,13 +643,10 @@ FRICATIVES = {
 		'voiceAmplitude': 0,
 		# KLSYN88: Breathy voice quality
 		'spectralTilt': 18,
-		'openQuotientShape': 0.7,
 		# Glottal: uses aspiration not frication, but include for completeness
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		# Voice quality
-		'glottalOpenQuotient': 0.7,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -737,9 +708,6 @@ FRICATIVES = {
 		'noiseFilterBw': 1000,
 		# Voice quality
 		'spectralTilt': 3,
-		'glottalOpenQuotient': 0.1,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,

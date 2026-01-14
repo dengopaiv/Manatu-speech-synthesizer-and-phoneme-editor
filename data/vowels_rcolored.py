@@ -4,6 +4,10 @@ Phoneme data: Vowels Rcolored
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 VOWELS_RCOLORED = {
@@ -25,12 +29,12 @@ VOWELS_RCOLORED = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 55,
-		'cb2': 80,
-		'cb3': 100,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb1': 100,
+		'cb2': 270,
+		'cb3': 330,
+		'cb4': 967,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -40,12 +44,12 @@ VOWELS_RCOLORED = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 55,
-		'pb2': 80,
-		'pb3': 100,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb1': 100,
+		'pb2': 270,
+		'pb3': 330,
+		'pb4': 967,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -55,10 +59,7 @@ VOWELS_RCOLORED = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -86,12 +87,12 @@ VOWELS_RCOLORED = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 55,
-		'cb2': 85,
-		'cb3': 100,
-		'cb4': 250,
-		'cb5': 200,
-		'cb6': 1000,
+		'cb1': 100,
+		'cb2': 280,
+		'cb3': 320,
+		'cb4': 967,
+		'cb5': 1250,
+		'cb6': 1633,
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -101,12 +102,12 @@ VOWELS_RCOLORED = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 55,
-		'pb2': 85,
-		'pb3': 100,
-		'pb4': 250,
-		'pb5': 200,
-		'pb6': 1000,
+		'pb1': 100,
+		'pb2': 280,
+		'pb3': 320,
+		'pb4': 967,
+		'pb5': 1250,
+		'pb6': 1633,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -116,10 +117,7 @@ VOWELS_RCOLORED = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
-		'lfRd': 0,
+		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

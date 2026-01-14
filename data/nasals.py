@@ -4,6 +4,10 @@ Phoneme data: Nasals
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 NASALS = {
@@ -55,9 +59,6 @@ NASALS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -116,9 +117,6 @@ NASALS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -178,9 +176,6 @@ NASALS = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		'ftpFreq1': 0,
@@ -238,9 +233,6 @@ NASALS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants

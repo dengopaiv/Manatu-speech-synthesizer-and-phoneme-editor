@@ -4,6 +4,10 @@ Phoneme data: Liquids Glides
 
 This file is part of the NV Speech Player project.
 Auto-generated from data.py split.
+
+Voice quality is controlled by lfRd parameter (LF model):
+- lfRd > 0: Modern LF glottal model (Fant 1995)
+- lfRd = 0: No voicing (voiceless consonants only)
 """
 
 LIQUIDS_GLIDES = {
@@ -55,9 +59,6 @@ LIQUIDS_GLIDES = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -116,9 +117,6 @@ LIQUIDS_GLIDES = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -176,9 +174,6 @@ LIQUIDS_GLIDES = {
 		'pa6': 0,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.6,
-		'speedQuotient': 0.8,
 		'spectralTilt': 2,
 		'flutter': 0.12,
 		'lfRd': 1.0,
@@ -238,9 +233,6 @@ LIQUIDS_GLIDES = {
 		# Voice quality
 		'spectralTilt': 4,
 		'flutter': 0.15,
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -300,9 +292,6 @@ LIQUIDS_GLIDES = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
@@ -362,9 +351,6 @@ LIQUIDS_GLIDES = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# Voice quality
-		'glottalOpenQuotient': 0.5,
-		'openQuotientShape': 0.5,
-		'speedQuotient': 1.0,
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
