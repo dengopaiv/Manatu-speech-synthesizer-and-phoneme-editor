@@ -48,13 +48,7 @@ Derives Rk, Rg, Ra from Rd using Fant 1985 polynomial fits.
 
 *Location: `speechWaveGenerator.cpp:265-303`*
 
-### Legacy Model (lfRd = 0)
-Uses `glottalOpenQuotient`, `openQuotientShape`, `speedQuotient`:
-- OQ controls fraction of cycle glottis is open
-- Shape controls linear (0) vs exponential (1) decay
-- SQ controls rise/fall asymmetry
-
-*Location: `speechWaveGenerator.cpp:305-328`*
+**Note:** When `lfRd = 0`, no glottal voicing is generated (used for voiceless consonants).
 
 ---
 
@@ -135,9 +129,7 @@ s2 = v2 + g*v1                 // Update integrator 2
 
 **4th-order variant**: Cascades two ZDF sections with 0.80 bandwidth adjustment for equivalent Q.
 
-*Location: `speechWaveGenerator.cpp:571-713`*
-
-**Legacy IIR implementation** (commented out): Preserved at lines 459-569 for reference.
+*Location: `speechWaveGenerator.cpp:459-601`*
 
 ---
 
@@ -287,7 +279,7 @@ samples = sp.synthesize(count)
 | `voicePitch` | 40-400 Hz | Fundamental frequency |
 | `voiceAmplitude` | 0-1 | Voice source level |
 | `aspirationAmplitude` | 0-1 | Aspiration noise |
-| `glottalOpenQuotient` | 0-1 | Open phase fraction |
+| `lfRd` | 0-2.7 | LF model voice quality (0=voiceless, 1=modal, 2.7=breathy) |
 
 ### Formants
 | Parameter | Range | Purpose |

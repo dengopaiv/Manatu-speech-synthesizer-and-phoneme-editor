@@ -402,29 +402,10 @@ class VoiceGenerator {
 				glottalWave = 0.5 * decay * fade * ampNorm;
 			}
 		} else {
-			// Legacy glottal model using openQuotientShape and speedQuotient
-			double oq = frame->glottalOpenQuotient;
-			double sq = frame->speedQuotient;  // 1.0 = symmetric, >1 = fast rise/slow fall
-			double shape = frame->openQuotientShape;  // 0 = linear decay, 1 = exponential decay
-
-			glottisOpen = voice < oq;
-
-			if (voice < oq) {
-				// Open phase: split by speed quotient into rising and falling portions
-				double openingEnd = oq / (1.0 + 1.0/sq);  // SQ controls rise/fall time ratio
-				if (voice < openingEnd) {
-					// Rising phase - linear ramp to peak
-					glottalWave = voice / openingEnd;
-				} else {
-					// Falling phase within open period - exponential decay
-					double fallPos = (voice - openingEnd) / (oq - openingEnd);
-					double expFactor = 1.0 + shape * 4.0;  // shape 0->1, expFactor 1->5
-					glottalWave = pow(1.0 - fallPos, expFactor);
-				}
-			} else {
-				// Closed phase - no airflow
-				glottalWave = 0.0;
-			}
+			// No voicing (voiceless consonants: /p/, /t/, /k/, /f/, /s/, /ʃ/, etc.)
+			// lfRd=0 means no glottal source - only noise/frication used
+			glottalWave = 0.0;
+			glottisOpen = false;
 		}
 
 		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
@@ -455,118 +436,6 @@ class VoiceGenerator {
 	}
 
 };
-
-// ============================================================================
-// LEGACY IIR RESONATORS (REPLACED BY ZDF - PRESERVED FOR REFERENCE)
-// ============================================================================
-// These traditional IIR resonators have been replaced by ZDF implementations
-// (see ZDFResonator and ZDFResonator4thOrder below). The old code is preserved
-// for reference and potential A/B testing. All formant generators now use ZDF.
-// ============================================================================
-/*
-class Resonator {
-	private:
-	//raw parameters
-	int sampleRate;
-	double frequency;
-	double bandwidth;
-	bool anti;
-	//calculated parameters
-	bool setOnce;
-	double a, b, c;
-	//Memory
-	double p1, p2;
-
-	public:
-	Resonator(int sampleRate, bool anti=false) {
-		this->sampleRate=sampleRate;
-		this->anti=anti;
-		this->setOnce=false;
-		this->p1=0;
-		this->p2=0;
-	}
-
-	void setParams(double frequency, double bandwidth) {
-		if(!setOnce||(frequency!=this->frequency)||(bandwidth!=this->bandwidth)) {
-			this->frequency=frequency;
-			this->bandwidth=bandwidth;
-			double r=exp(-M_PI/sampleRate*bandwidth);
-
-			// Soft saturation: smooth compression near critical zone
-			// Prevents discontinuity at hard clamp boundary
-			if (r >= 0.995) {
-				// Map r from [0.995, 1.0] → [0.995, 0.9999] using tanh curve
-				double excess = r - 0.995;
-				double maxExcess = 0.005;  // Range to compress
-				double compressed = tanh(excess / maxExcess * 3.0) * 0.0049 + 0.995;
-				r = compressed;
-			}
-
-			// Safety clamp (should rarely trigger now)
-			if (r >= 0.9999) r = 0.9999;
-			if (r < 0) r = 0;
-
-			c=-(r*r);
-			b=r*cos(PITWO/sampleRate*-frequency)*2.0;
-			a=1.0-b-c;
-			if(anti&&frequency!=0) {
-				a=1.0/a;
-				c*=-a;
-				b*=-a;
-			}
-
-			// NaN/Inf safety check - reset to bypass if coefficients are invalid
-			if (isnan(a) || isnan(b) || isnan(c) || isinf(a) || isinf(b) || isinf(c)) {
-				a = 1.0; b = 0.0; c = 0.0;  // Pass-through
-			}
-		}
-		this->setOnce=true;
-	}
-
-	double resonate(double in, double frequency, double bandwidth) {
-		setParams(frequency,bandwidth);
-		double out=a*in+b*p1+c*p2;
-		p2=p1;
-		p1=anti?in:out;
-		return out;
-	}
-
-	void setSampleRate(int sr) { sampleRate = sr; }
-};
-
-// 4th-order resonator (cascade of two 2nd-order sections)
-// Provides sharper formants with 24 dB/octave rolloff vs 12 dB/octave for 2nd-order
-// Better vowel clarity and more focused formant peaks
-class Resonator4thOrder {
-	private:
-	int sampleRate;
-	Resonator stage1, stage2;
-
-	public:
-	Resonator4thOrder(int sr): sampleRate(sr), stage1(sr), stage2(sr) {}
-
-	double resonate(double in, double frequency, double bandwidth) {
-		if (frequency <= 0) return in;  // Bypass if frequency is 0
-
-		// Adjust bandwidth for equivalent Q when cascading
-		// Using 0.80 factor for improved F1 stability (relaxed from 0.72)
-		double bwAdjusted = bandwidth * 0.80;
-
-		// Cascade two 2nd-order sections at same frequency
-		double out = stage1.resonate(in, frequency, bwAdjusted);
-		return stage2.resonate(out, frequency, bwAdjusted);
-	}
-
-	void setSampleRate(int sr) {
-		sampleRate = sr;
-		stage1.setSampleRate(sr);
-		stage2.setSampleRate(sr);
-	}
-};
-*/
-// ============================================================================
-// END LEGACY CODE
-// ============================================================================
 
 // Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
 // Based on Vadim Zavalishin (2012): "The Art of VA Filter Design"
