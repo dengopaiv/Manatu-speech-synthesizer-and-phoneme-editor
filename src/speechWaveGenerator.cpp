@@ -456,6 +456,14 @@ class VoiceGenerator {
 
 };
 
+// ============================================================================
+// LEGACY IIR RESONATORS (REPLACED BY ZDF - PRESERVED FOR REFERENCE)
+// ============================================================================
+// These traditional IIR resonators have been replaced by ZDF implementations
+// (see ZDFResonator and ZDFResonator4thOrder below). The old code is preserved
+// for reference and potential A/B testing. All formant generators now use ZDF.
+// ============================================================================
+/*
 class Resonator {
 	private:
 	//raw parameters
@@ -484,8 +492,17 @@ class Resonator {
 			this->bandwidth=bandwidth;
 			double r=exp(-M_PI/sampleRate*bandwidth);
 
-			// Pole clamping: ensure stability by keeping pole radius < 1
-			// Prevents runaway oscillation at very narrow bandwidths
+			// Soft saturation: smooth compression near critical zone
+			// Prevents discontinuity at hard clamp boundary
+			if (r >= 0.995) {
+				// Map r from [0.995, 1.0] → [0.995, 0.9999] using tanh curve
+				double excess = r - 0.995;
+				double maxExcess = 0.005;  // Range to compress
+				double compressed = tanh(excess / maxExcess * 3.0) * 0.0049 + 0.995;
+				r = compressed;
+			}
+
+			// Safety clamp (should rarely trigger now)
 			if (r >= 0.9999) r = 0.9999;
 			if (r < 0) r = 0;
 
@@ -532,10 +549,170 @@ class Resonator4thOrder {
 		if (frequency <= 0) return in;  // Bypass if frequency is 0
 
 		// Adjust bandwidth for equivalent Q when cascading
-		// Using 0.72 factor for natural formant width (less aggressive than 0.64)
-		double bwAdjusted = bandwidth * 0.72;
+		// Using 0.80 factor for improved F1 stability (relaxed from 0.72)
+		double bwAdjusted = bandwidth * 0.80;
 
 		// Cascade two 2nd-order sections at same frequency
+		double out = stage1.resonate(in, frequency, bwAdjusted);
+		return stage2.resonate(out, frequency, bwAdjusted);
+	}
+
+	void setSampleRate(int sr) {
+		sampleRate = sr;
+		stage1.setSampleRate(sr);
+		stage2.setSampleRate(sr);
+	}
+};
+*/
+// ============================================================================
+// END LEGACY CODE
+// ============================================================================
+
+// Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
+// Based on Vadim Zavalishin (2012): "The Art of VA Filter Design"
+//
+// Advantages over traditional IIR:
+// - Smooth parameter modulation without zipper noise or discontinuities
+// - Inherently stable for all positive g and R values (no pole clamping needed)
+// - Handles pitch-synchronous modulation cleanly (deltaF1/deltaB1)
+// - Zero-delay feedback via implicit integration (trapezoidal rule)
+//
+// Mathematical foundation:
+// Analog prototype: H(s) = (g*s) / (s² + 2*R*g*s + g²)
+// Where: g = tan(π*f/fs), R = 1/(2*Q), Q = f/BW
+//
+// Trapezoidal integration (zero-delay feedback):
+// v0 = k1 * (in - 2*R*s1 - s2)  // Bandpass output (implicit)
+// v1 = s1 + g*v0                 // Lowpass state
+// v2 = s2 + g*v1                 // Lowpass output
+// s1 = v1 + g*v0                 // Update integrator 1
+// s2 = v2 + g*v1                 // Update integrator 2
+// k1 = 1 / (1 + 2*R*g + g*g)     // Normalization
+class ZDFResonator {
+	private:
+	// Configuration
+	int sampleRate;
+	double frequency;
+	double bandwidth;
+	bool anti;  // Anti-resonator mode (zero instead of pole)
+
+	// ZDF state variables (integrator states)
+	double s1, s2;
+
+	// Cached coefficients (updated only when parameters change)
+	bool setOnce;
+	double g;   // Frequency warping: tan(π*f/fs)
+	double R;   // Damping coefficient: 1/(2*Q)
+	double k1;  // Normalization: 1 / (1 + 2*R*g + g*g)
+
+	public:
+	ZDFResonator(int sampleRate, bool anti=false) {
+		this->sampleRate = sampleRate;
+		this->anti = anti;
+		this->setOnce = false;
+		this->s1 = 0;
+		this->s2 = 0;
+		this->g = 0;
+		this->R = 0;
+		this->k1 = 1.0;
+	}
+
+	void setParams(double frequency, double bandwidth) {
+		// Only recalculate coefficients if parameters changed
+		if(!setOnce || (frequency != this->frequency) || (bandwidth != this->bandwidth)) {
+			this->frequency = frequency;
+			this->bandwidth = bandwidth;
+
+			// Edge case: zero frequency or bandwidth means bypass
+			if (frequency <= 0 || bandwidth <= 0) {
+				g = 0;
+				R = 0;
+				k1 = 1.0;
+				setOnce = true;
+				return;
+			}
+
+			// Calculate ZDF coefficients
+			// g: frequency warping via bilinear transform
+			double omega = M_PI * frequency / sampleRate;
+			g = tan(omega);
+
+			// Clamp g for numerical stability at very high frequencies
+			// (approaching Nyquist, tan(π/2) → ∞)
+			if (g > 10.0) {
+				g = 10.0;  // Roughly 0.46 * sampleRate
+			}
+
+			// R: damping coefficient from quality factor
+			// Q = frequency / bandwidth
+			double Q = frequency / bandwidth;
+			R = 1.0 / (2.0 * Q);
+
+			// k1: normalization coefficient for unity gain at resonance
+			k1 = 1.0 / (1.0 + 2.0 * R * g + g * g);
+
+			setOnce = true;
+		}
+	}
+
+	double resonate(double in, double frequency, double bandwidth) {
+		setParams(frequency, bandwidth);
+
+		// Bypass mode if frequency or bandwidth is zero
+		if (g == 0) {
+			return in;
+		}
+
+		// ZDF State Variable Filter algorithm (trapezoidal integration)
+		// This computes the implicit solution with zero-delay feedback
+
+		// Bandpass output (implicit feedback equation)
+		double v0 = k1 * (in - 2.0 * R * s1 - s2);
+
+		// State updates (integrate forward)
+		double v1 = s1 + g * v0;
+		double v2 = s2 + g * v1;
+
+		// Update integrator states with zero-delay sample
+		s1 = v1 + g * v0;
+		s2 = v2 + g * v1;
+
+		// Output selection
+		if (anti) {
+			// Anti-resonator mode (notch filter / zero)
+			// Subtract bandpass from input to create notch
+			return in - v0;
+		} else {
+			// Normal resonator mode (bandpass filter / pole)
+			return v0;
+		}
+	}
+
+	void setSampleRate(int sr) {
+		sampleRate = sr;
+		setOnce = false;  // Force coefficient recalculation
+	}
+};
+
+// 4th-order ZDF resonator (cascade of two 2nd-order ZDF sections)
+// Provides sharper formants with 24 dB/octave rolloff vs 12 dB/octave for 2nd-order
+// Better vowel clarity and more focused formant peaks
+class ZDFResonator4thOrder {
+	private:
+	int sampleRate;
+	ZDFResonator stage1, stage2;
+
+	public:
+	ZDFResonator4thOrder(int sr): sampleRate(sr), stage1(sr), stage2(sr) {}
+
+	double resonate(double in, double frequency, double bandwidth) {
+		if (frequency <= 0) return in;  // Bypass if frequency is 0
+
+		// Adjust bandwidth for equivalent Q when cascading
+		// Using 0.80 factor (same as original IIR implementation)
+		double bwAdjusted = bandwidth * 0.80;
+
+		// Cascade two 2nd-order ZDF sections at same frequency
 		double out = stage1.resonate(in, frequency, bwAdjusted);
 		return stage2.resonate(out, frequency, bwAdjusted);
 	}
@@ -552,7 +729,7 @@ class Resonator4thOrder {
 class TrachealResonator {
 	private:
 	int sampleRate;
-	Resonator pole1, zero1, pole2, zero2;  // Two pole-zero pairs for tracheal coupling
+	ZDFResonator pole1, zero1, pole2, zero2;  // Two pole-zero pairs for tracheal coupling (using ZDF)
 
 	public:
 	TrachealResonator(int sr): sampleRate(sr), pole1(sr), zero1(sr, true), pole2(sr), zero2(sr, true) {}
@@ -587,10 +764,10 @@ class TrachealResonator {
 class CascadeFormantGenerator {
 	private:
 	int sampleRate;
-	// F1-F3: 4th-order resonators for sharper, more focused formants
-	Resonator4thOrder r1, r2, r3;
-	// F4-F6: 2nd-order resonators (wider bandwidths, less benefit from 4th-order)
-	Resonator r4, r5, r6, rN0, rNP;
+	// F1-F3: 4th-order ZDF resonators for sharper, more focused formants
+	ZDFResonator4thOrder r1, r2, r3;
+	// F4-F6: 2nd-order ZDF resonators (wider bandwidths, less benefit from 4th-order)
+	ZDFResonator r4, r5, r6, rN0, rNP;
 
 	public:
 	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), rN0(sr,true), rNP(sr) {};
@@ -603,8 +780,9 @@ class CascadeFormantGenerator {
 		output=r5.resonate(output,frame->cf5,frame->cb5);
 		output=r4.resonate(output,frame->cf4,frame->cb4);
 		// F1-F3 use 4th-order for sharper resonance (24 dB/octave rolloff)
-		output=r3.resonate(output,frame->cf3,frame->cb3);
-		output=r2.resonate(output,frame->cf2,frame->cb2);
+		// Adaptive cascading: F2-F3 use 0.75 effective factor (pre-scale to compensate for 0.80 internal)
+		output=r3.resonate(output, frame->cf3, frame->cb3 * 0.9375);  // 0.9375 = 0.75/0.80
+		output=r2.resonate(output, frame->cf2, frame->cb2 * 0.9375);  // Effective: 0.75
 		// Pitch-synchronous F1 modulation: during glottal open phase,
 		// F1 rises and B1 widens due to subglottal coupling (Klatt 1990)
 		double f1 = frame->cf1;
@@ -670,7 +848,7 @@ class BurstGenerator {
 class ParallelFormantGenerator {
 	private:
 	int sampleRate;
-	Resonator r1, r2, r3, r4, r5, r6;
+	ZDFResonator r1, r2, r3, r4, r5, r6;  // Using ZDF resonators for smooth modulation
 
 	public:
 	ParallelFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr) {};

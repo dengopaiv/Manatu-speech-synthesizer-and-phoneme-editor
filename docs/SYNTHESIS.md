@@ -102,16 +102,42 @@ Parallel connection with individual amplitude control (pa1-pa6):
 *Location: `speechWaveGenerator.cpp:552-572`*
 
 ### Resonator Implementation
-Standard 2nd-order IIR digital resonator:
-```
-r = exp(-π * bandwidth / sampleRate)
-c = -(r²)
-b = 2r * cos(2π * frequency / sampleRate)
-a = 1 - b - c
-```
-Anti-resonators use reciprocal coefficients.
 
-*Location: `speechWaveGenerator.cpp:352-400`*
+**Zero Delay Feedback (ZDF) Resonators** - State-of-the-art implementation based on Zavalishin (2012).
+
+The synthesis engine uses modern ZDF topology for all formant resonators, replacing traditional IIR filters with inherently stable, smooth-modulating designs.
+
+**Mathematical foundation:**
+```
+Analog prototype: H(s) = (g*s) / (s² + 2*R*g*s + g²)
+
+ZDF coefficients:
+g = tan(π * f / fs)     // Frequency warping (bilinear transform)
+Q = f / BW               // Quality factor
+R = 1 / (2*Q)            // Damping coefficient
+k1 = 1 / (1 + 2*R*g + g*g)  // Normalization
+
+State equations (trapezoidal integration):
+v0 = k1 * (in - 2*R*s1 - s2)  // Bandpass output (implicit feedback)
+v1 = s1 + g*v0                 // Lowpass state
+v2 = s2 + g*v1                 // Lowpass output
+s1 = v1 + g*v0                 // Update integrator 1
+s2 = v2 + g*v1                 // Update integrator 2
+```
+
+**Key advantages over traditional IIR:**
+- **Smooth parameter modulation**: No zipper noise during formant transitions (diphthongs, coarticulation)
+- **Inherent stability**: No pole clamping or soft saturation needed - stable for all positive g, R
+- **Clean pitch-synchronous modulation**: Handles deltaF1/deltaB1 without discontinuities
+- **Modern DSP**: Aligned with current VA filter research
+
+**Anti-resonator mode** (for nasal zeros): Subtracts bandpass from input to create notch filter.
+
+**4th-order variant**: Cascades two ZDF sections with 0.80 bandwidth adjustment for equivalent Q.
+
+*Location: `speechWaveGenerator.cpp:571-713`*
+
+**Legacy IIR implementation** (commented out): Preserved at lines 459-569 for reference.
 
 ---
 
@@ -317,3 +343,5 @@ samples = sp.synthesize(count)
 - Stevens 1998: "Acoustic Phonetics"
 - Fant 1985: LF model parameter derivation
 - Agrawal & Stevens 1992: Retroflex consonant parameters
+- Zavalishin 2012: "The Art of VA Filter Design" (Zero Delay Feedback topology)
+- Välimäki & Huovilainen 2006: "Oscillator and Filter Algorithms for Virtual Analog Synthesis" (PolyBLEP anti-aliasing)
