@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python3
 """
 Phoneme Parameter Editor - Comprehensive Klatt Synthesis Parameter GUI
 

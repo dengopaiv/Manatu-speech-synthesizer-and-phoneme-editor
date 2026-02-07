@@ -27,7 +27,7 @@ VOWELS_BACK = {
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
 		'cf1': 300,  # Standard close back ~300-340
-		'cf2': 750,  # Standard ~870-1020
+		'cf2': 870,  # Standard ~870-1020 (Hillenbrand: 870)
 		'cf3': 2300,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -35,7 +35,7 @@ VOWELS_BACK = {
 		'cfNP': 200,
 		'cfN0': 250,
 		'cb1': 60,   # Narrowed for sharper F1 peak
-		'cb2': 188,   # Narrowed for sharper F2 peak
+		'cb2': 174,   # cf2/5.0 = 870/5.0 (Q=5.0)
 		'cb3': 460,
 		'cb4': 1100,
 		'cb5': 1250,
@@ -45,13 +45,13 @@ VOWELS_BACK = {
 		'caNP': 0,
 		# Parallel formants - matched to cascade
 		'pf1': 300,
-		'pf2': 750,
+		'pf2': 870,
 		'pf3': 2300,
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
 		'pb1': 60,   # Match cb1
-		'pb2': 188,   # Match cb2
+		'pb2': 174,   # Match cb2
 		'pb3': 460,
 		'pb4': 1100,
 		'pb5': 1250,
@@ -146,7 +146,7 @@ VOWELS_BACK = {
 		'lfRd': 2.7,  # Enable LF model for natural glottal pulses
 		'diplophonia': 0,
 		# Cascade formants - narrower bandwidths for colour
-		'cf1': 470,  # Standard close-mid ~450-500
+		'cf1': 400,  # Standard close-mid ~390-500 (Hillenbrand: 390)
 		'cf2': 870,  # Standard ~830-920
 		'cf3': 2400,  # Standard ~2380-2500
 		'cf4': 3300,
@@ -154,7 +154,7 @@ VOWELS_BACK = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 94,   # Narrowed for sharper F1 peak
+		'cb1': 80,   # cf1/5.0 = 400/5.0 (Q=5.0)
 		'cb2': 218,   # Narrowed for sharper F2 peak
 		'cb3': 480,
 		'cb4': 1100,
@@ -164,13 +164,13 @@ VOWELS_BACK = {
 		'cbN0': 100,
 		'caNP': 0,
 		# Parallel formants - matched to cascade
-		'pf1': 470,
+		'pf1': 400,
 		'pf2': 870,
 		'pf3': 2400,
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 94,   # Match cb1
+		'pb1': 80,   # Match cb1
 		'pb2': 218,   # Match cb2
 		'pb3': 480,
 		'pb4': 1100,

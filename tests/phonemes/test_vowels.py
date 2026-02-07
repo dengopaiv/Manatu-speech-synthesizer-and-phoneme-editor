@@ -22,22 +22,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 # Add parent to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import numpy as np
 import speechPlayer
-
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'output')
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
-def save_wav(filename, samples, sample_rate=22050):
-    """Save samples to WAV file."""
-    filepath = os.path.join(OUTPUT_DIR, filename)
-    with wave.open(filepath, 'w') as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(sample_rate)
-        data = struct.pack(f'<{len(samples)}h', *samples)
-        wav.writeframes(data)
-    return filepath
+import ipa
+from data import data as phoneme_data
+from tests.conftest import save_wav, collect_samples, OUTPUT_DIR, SAMPLE_RATE
+from tools.spectral_analysis import (
+    extract_formants_lpc, estimate_hnr, analyze_segment, is_voiced,
+)
 
 
 def synthesize_vowel(sp, f1, f2, f3, f4=3300, duration_ms=400, pitch=120):
@@ -231,6 +223,202 @@ def test_all_reference_vowels():
     return True
 
 
+# --- Spectral assertion tests (using actual phoneme data + LPC analysis) ---
+
+FORMANT_TOLERANCE = 0.15  # 15% tolerance for synthesis accuracy
+
+
+def _synthesize_ipa_vowel(ipa_char, duration_ms=400, pitch=120):
+    """Synthesize a vowel using the full ipa.py pipeline with phoneme data."""
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
+    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+        ipa_char, speed=1, basePitch=pitch, inflection=0
+    ):
+        sp.queueFrame(frame, max(min_dur, duration_ms), fade_dur)
+    return collect_samples(sp)
+
+
+def test_vowel_synthesis_accuracy():
+    """For each vowel in data/*.py, synthesize via ipa.py, run LPC,
+    check measured formants against cf1/cf2/cf3.
+
+    F1 is the primary accuracy check (LPC is reliable for F1).
+    F2/F3 are informational with wider tolerance due to LPC limitations
+    on back rounded vowels where F1/F2 are close together."""
+    print("\n=== Test: Vowel Synthesis Accuracy (LPC) ===")
+
+    test_vowels = ['i', 'e', 'ɛ', 'æ', 'a', 'ɑ', 'ɔ', 'o', 'u', 'ə']
+    f1_passed = 0
+    f1_failed = 0
+
+    for char in test_vowels:
+        pdata = phoneme_data.get(char)
+        if not pdata or not pdata.get('_isVowel'):
+            continue
+
+        samples = _synthesize_ipa_vowel(char)
+        if len(samples) < 200:
+            print(f"  /{char}/ - SKIP (too few samples)")
+            continue
+
+        # Analyze middle 50%
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        formants = extract_formants_lpc(mid, SAMPLE_RATE, num_formants=3)
+
+        details = []
+        f1_ok = True
+        # Tolerances: F1=15%, F2=30%, F3=40% (LPC resolves F1 best)
+        tolerances = [FORMANT_TOLERANCE, FORMANT_TOLERANCE * 2, FORMANT_TOLERANCE * 2.5]
+        for i, key in enumerate(['cf1', 'cf2', 'cf3']):
+            expected = pdata.get(key, 0)
+            if expected <= 0 or i >= len(formants):
+                continue
+            measured = formants[i][0]
+            dev = abs(measured - expected) / expected
+            tol = tolerances[i]
+            status = "OK" if dev <= tol else "HIGH"
+            if i == 0 and dev > tol:
+                f1_ok = False
+            details.append(f"F{i+1}={measured:.0f}/{expected:.0f} ({dev:.0%}) {status}")
+
+        label = "PASS" if f1_ok else "FAIL"
+        print(f"  /{char}/ [{label}] {', '.join(details)}")
+        if f1_ok:
+            f1_passed += 1
+        else:
+            f1_failed += 1
+
+    print(f"  F1 accuracy: {f1_passed} passed, {f1_failed} failed")
+    assert f1_failed == 0, f"{f1_failed} vowels had F1 outside tolerance"
+    return True
+
+
+def test_vowel_reference_deviation():
+    """Print how far phoneme data is from Hillenbrand reference (informational)."""
+    print("\n=== Test: Vowel Reference Deviation (Informational) ===")
+
+    for key, ref in REFERENCE_VOWELS.items():
+        pdata = phoneme_data.get(ref['ipa'])
+        if not pdata:
+            continue
+
+        deviations = []
+        for i, (fkey, ckey) in enumerate([('f1', 'cf1'), ('f2', 'cf2'), ('f3', 'cf3')]):
+            ref_val = ref[fkey]
+            data_val = pdata.get(ckey, 0)
+            if ref_val > 0 and data_val > 0:
+                dev = (data_val - ref_val) / ref_val
+                deviations.append(f"F{i+1}: {data_val:.0f} vs {ref_val} ({dev:+.0%})")
+
+        print(f"  /{ref['ipa']}/ {', '.join(deviations)}")
+
+    print("  (no assertions — for tuning guidance)")
+    return True
+
+
+def test_vowel_voicing():
+    """Assert all vowels are voiced (detected by autocorrelation)."""
+    print("\n=== Test: Vowel Voicing ===")
+
+    test_vowels = ['i', 'a', 'u', 'e', 'o', 'ə']
+    all_passed = True
+
+    for char in test_vowels:
+        samples = _synthesize_ipa_vowel(char)
+        if len(samples) < 200:
+            continue
+
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        voiced = is_voiced(mid, SAMPLE_RATE)
+
+        status = "PASS" if voiced else "FAIL"
+        if not voiced:
+            all_passed = False
+        print(f"  /{char}/ voicing: {status}")
+
+    assert all_passed, "Some vowels detected as unvoiced"
+    print("  PASSED")
+    return True
+
+
+def test_vowel_formant_ordering():
+    """Assert F1 < F2 < F3 for all vowels."""
+    print("\n=== Test: Vowel Formant Ordering (F1 < F2 < F3) ===")
+
+    test_vowels = ['i', 'e', 'ɛ', 'æ', 'a', 'ɑ', 'ɔ', 'o', 'u', 'ə']
+    all_passed = True
+
+    for char in test_vowels:
+        samples = _synthesize_ipa_vowel(char)
+        if len(samples) < 200:
+            continue
+
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        formants = extract_formants_lpc(mid, SAMPLE_RATE, num_formants=3)
+
+        if len(formants) >= 3:
+            f1, f2, f3 = formants[0][0], formants[1][0], formants[2][0]
+            ordered = f1 < f2 < f3
+            status = "PASS" if ordered else "FAIL"
+            if not ordered:
+                all_passed = False
+            print(f"  /{char}/ F1={f1:.0f} F2={f2:.0f} F3={f3:.0f} {status}")
+        else:
+            print(f"  /{char}/ fewer than 3 formants detected")
+
+    assert all_passed, "Some vowels have incorrect formant ordering"
+    print("  PASSED")
+    return True
+
+
+def test_cardinal_vowel_space():
+    """Assert /i/, /a/, /u/ form a proper F1 triangle.
+
+    LPC reliably resolves F1 for all vowel types, so we verify:
+    - /a/ has highest F1 (most open)
+    - /i/ and /u/ have low F1 (most closed)
+    - F1 separation is significant
+
+    Note: F2 assertions are skipped because LPC has known limitations
+    resolving F2 for back rounded vowels (/u/) where F1/F2 are close.
+    """
+    print("\n=== Test: Cardinal Vowel F1 Triangle ===")
+
+    formant_map = {}
+    for char in ['i', 'a', 'u']:
+        samples = _synthesize_ipa_vowel(char)
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        formants = extract_formants_lpc(mid, SAMPLE_RATE, num_formants=2)
+        if len(formants) >= 1:
+            formant_map[char] = formants[0][0]
+            f2_str = f", F2={formants[1][0]:.0f}" if len(formants) >= 2 else ""
+            print(f"  /{char}/ F1={formants[0][0]:.0f}{f2_str}")
+
+    if len(formant_map) < 3:
+        print("  SKIP: Could not extract formants for all three vowels")
+        return True
+
+    f1_i = formant_map['i']
+    f1_a = formant_map['a']
+    f1_u = formant_map['u']
+
+    # /a/ should have highest F1 (most open vowel)
+    assert f1_a > f1_i, f"/a/ F1 ({f1_a:.0f}) should be > /i/ F1 ({f1_i:.0f})"
+    assert f1_a > f1_u, f"/a/ F1 ({f1_a:.0f}) should be > /u/ F1 ({f1_u:.0f})"
+
+    # F1 separation should be significant (at least 200 Hz difference)
+    assert f1_a - f1_i > 200, f"/a/-/i/ F1 gap ({f1_a - f1_i:.0f}) should be > 200 Hz"
+    assert f1_a - f1_u > 200, f"/a/-/u/ F1 gap ({f1_a - f1_u:.0f}) should be > 200 Hz"
+
+    print("  Cardinal vowel F1 triangle verified: /a/ highest F1, /i/ and /u/ low F1")
+    print("  PASSED")
+    return True
+
+
 def run_all_tests():
     """Run all vowel tests."""
     print("=" * 50)
@@ -238,12 +426,19 @@ def run_all_tests():
     print("=" * 50)
 
     tests = [
+        # Original WAV-generation tests
         test_cardinal_vowels,
         test_front_vowels,
         test_back_vowels,
         test_central_vowels,
         test_pitch_variation,
         test_all_reference_vowels,
+        # New spectral assertion tests
+        test_vowel_synthesis_accuracy,
+        test_vowel_reference_deviation,
+        test_vowel_voicing,
+        test_vowel_formant_ordering,
+        test_cardinal_vowel_space,
     ]
 
     passed = 0

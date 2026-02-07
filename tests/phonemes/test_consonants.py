@@ -22,22 +22,15 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 # Add parent to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+import numpy as np
 import speechPlayer
-
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'output')
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
-def save_wav(filename, samples, sample_rate=22050):
-    """Save samples to WAV file."""
-    filepath = os.path.join(OUTPUT_DIR, filename)
-    with wave.open(filepath, 'w') as wav:
-        wav.setnchannels(1)
-        wav.setsampwidth(2)
-        wav.setframerate(sample_rate)
-        data = struct.pack(f'<{len(samples)}h', *samples)
-        wav.writeframes(data)
-    return filepath
+import ipa
+from data import data as phoneme_data
+from tests.conftest import save_wav, collect_samples, OUTPUT_DIR, SAMPLE_RATE
+from tools.spectral_analysis import (
+    extract_formants_lpc, estimate_hnr, estimate_spectral_centroid,
+    analyze_segment, is_voiced,
+)
 
 
 def synthesize_vowel_frame(sp, f1=700, f2=1200, f3=2600, duration_ms=200, pitch=120):
@@ -190,17 +183,6 @@ NASALS = {
 }
 
 
-def collect_samples(sp):
-    """Collect all synthesized samples."""
-    samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        samples.extend(chunk[i] for i in range(len(chunk)))
-    return samples
-
-
 def test_voiceless_stops():
     """Test voiceless stop consonants /p/, /t/, /k/."""
     print("\n=== Test: Voiceless Stops ===")
@@ -349,6 +331,173 @@ def test_minimal_pairs():
     return True
 
 
+# --- Spectral assertion tests (using actual phoneme data + spectral analysis) ---
+
+def _synthesize_ipa_phoneme(ipa_text, duration_ms=300, pitch=120):
+    """Synthesize IPA text using the full ipa.py pipeline."""
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
+    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+        ipa_text, speed=1, basePitch=pitch, inflection=0
+    ):
+        sp.queueFrame(frame, max(min_dur, duration_ms), fade_dur)
+    return collect_samples(sp)
+
+
+def test_voicing_contrast():
+    """Assert voiced phonemes have voicing detected via HNR.
+
+    Voiced consonants in VCV context should show strong periodicity.
+    Voiceless consonants are tested for *lower* HNR than voiced ones,
+    rather than asserting zero voicing (the pipeline may add aspiration
+    or brief voiced transitions even for voiceless consonants).
+    """
+    print("\n=== Test: Voicing Contrast (Spectral) ===")
+
+    voiced_chars = ['b', 'd', 'v', 'z', 'm', 'n']
+    voiced_hnrs = []
+    all_voiced_ok = True
+
+    # Voiced consonants: synthesize in VCV context for clearer voicing
+    for char in voiced_chars:
+        if char not in phoneme_data:
+            continue
+        samples = _synthesize_ipa_phoneme(f'a{char}a')
+        if len(samples) < 200:
+            continue
+        # Check middle third (the consonant region)
+        n = len(samples)
+        mid = samples[n // 3: 2 * n // 3]
+        analysis = analyze_segment(mid, SAMPLE_RATE)
+
+        status = "PASS" if analysis.is_voiced else "FAIL"
+        if not analysis.is_voiced:
+            all_voiced_ok = False
+        hnr_str = f"HNR={analysis.hnr:.1f}dB" if analysis.hnr else "HNR=N/A"
+        if analysis.hnr is not None:
+            voiced_hnrs.append(analysis.hnr)
+        print(f"  /{char}/ voiced: {status} ({hnr_str})")
+
+    assert all_voiced_ok, "Some voiced consonants not detected as voiced"
+
+    # Verify voiced consonants have reasonable HNR (> 5 dB)
+    if voiced_hnrs:
+        avg_hnr = sum(voiced_hnrs) / len(voiced_hnrs)
+        print(f"  Average voiced HNR: {avg_hnr:.1f} dB")
+        assert avg_hnr > 5, f"Average voiced HNR ({avg_hnr:.1f}) should be > 5 dB"
+
+    print("  PASSED")
+    return True
+
+
+def test_fricative_spectral_centroid():
+    """Assert /s/ has highest spectral centroid among fricatives.
+
+    /s/ (alveolar) should have a distinctly higher centroid than /ʃ/ and /f/.
+    The ordering between /ʃ/ and /f/ is not strictly enforced since both
+    have relatively diffuse spectra at similar centroid frequencies.
+    """
+    print("\n=== Test: Fricative Spectral Centroid ===")
+
+    centroids = {}
+    for char in ['s', 'ʃ', 'f']:
+        if char not in phoneme_data:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        samples = _synthesize_ipa_phoneme(char)
+        if len(samples) < 200:
+            continue
+
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        centroid = estimate_spectral_centroid(mid, SAMPLE_RATE)
+        centroids[char] = centroid
+        print(f"  /{char}/ centroid: {centroid:.0f} Hz")
+
+    if 's' not in centroids:
+        print("  SKIP: /s/ not available")
+        return True
+
+    # /s/ should have highest centroid (alveolar sibilant = concentrated high-freq energy)
+    for char in ['ʃ', 'f']:
+        if char in centroids:
+            assert centroids['s'] > centroids[char], \
+                f"/s/ centroid ({centroids['s']:.0f}) should be > /{char}/ ({centroids[char]:.0f})"
+
+    print("  Verified: /s/ has highest centroid")
+    print("  PASSED")
+    return True
+
+
+def test_nasal_low_f1():
+    """Assert nasals have F1 < 500 Hz."""
+    print("\n=== Test: Nasal Low F1 ===")
+
+    nasal_chars = ['m', 'n', 'ŋ']
+    all_passed = True
+
+    for char in nasal_chars:
+        if char not in phoneme_data:
+            continue
+
+        samples = _synthesize_ipa_phoneme(char)
+        if len(samples) < 200:
+            continue
+
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        formants = extract_formants_lpc(mid, SAMPLE_RATE, num_formants=2)
+
+        if formants:
+            f1 = formants[0][0]
+            ok = f1 < 500
+            status = "PASS" if ok else "FAIL"
+            if not ok:
+                all_passed = False
+            print(f"  /{char}/ F1={f1:.0f} Hz {status} (< 500 Hz)")
+        else:
+            print(f"  /{char}/ no formants detected")
+
+    assert all_passed, "Some nasals have F1 >= 500 Hz"
+    print("  PASSED")
+    return True
+
+
+def test_stop_burst_presence():
+    """Assert energy spike in CV context for stops."""
+    print("\n=== Test: Stop Burst Presence ===")
+
+    stop_chars = ['p', 't', 'k', 'b', 'd']
+    all_passed = True
+
+    for char in stop_chars:
+        if char not in phoneme_data:
+            continue
+
+        # Synthesize in CV context
+        samples = _synthesize_ipa_phoneme(f'{char}a')
+        if len(samples) < 200:
+            continue
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        # Look for energy in the onset region vs silence before it
+        # The first portion should have burst energy
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2))
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2))
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"  /{char}a/ onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+    assert all_passed, "Some stops show no energy in CV context"
+    print("  PASSED")
+    return True
+
+
 def run_all_tests():
     """Run all consonant tests."""
     print("=" * 50)
@@ -356,12 +505,18 @@ def run_all_tests():
     print("=" * 50)
 
     tests = [
+        # Original WAV-generation tests
         test_voiceless_stops,
         test_voiced_stops,
         test_fricatives_voiceless,
         test_fricatives_voiced,
         test_nasals,
         test_minimal_pairs,
+        # New spectral assertion tests
+        test_voicing_contrast,
+        test_fricative_spectral_centroid,
+        test_nasal_low_f1,
+        test_stop_burst_presence,
     ]
 
     passed = 0

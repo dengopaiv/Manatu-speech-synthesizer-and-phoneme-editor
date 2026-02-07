@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!python3
 """
 Conlang IPA Speech Synthesizer - Accessible wxPython GUI
 A desktop GUI for testing constructed languages with Klatt synthesis.
