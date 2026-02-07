@@ -30,3 +30,6 @@ nul
 # IDE
 .vscode/
 __pycache__/
+
+# Claude Code temp files
+tmpclaude-*
