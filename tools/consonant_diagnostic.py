@@ -8,7 +8,7 @@ and reports pairwise differentiation scores for confusable pairs.
 Measures:
 - Stops: burst centroid, peak frequency, spectral tilt
 - Fricatives: centroid, peak prominence, spectral flatness
-- Nasals: F2 frequency, nasal zero depth (VCV context)
+- Nasals: anti-resonance frequency, band energy ratios, spectral slope (VCV context)
 
 Usage:
     python tools/consonant_diagnostic.py              # Full report
@@ -143,9 +143,9 @@ def synthesize_vcv(consonant_char, vowel_char='a', pitch=120):
     v_frame = _build_frame(vowel_char, pitch)
     sp.queueFrame(v_frame, 150, 40)
 
-    # Consonant
+    # Consonant — 200ms for stable steady-state
     c_frame = _build_frame(consonant_char, pitch)
-    sp.queueFrame(c_frame, 150, 40)
+    sp.queueFrame(c_frame, 200, 40)
 
     # Second vowel
     v_frame2 = _build_frame(vowel_char, pitch)
@@ -153,9 +153,9 @@ def synthesize_vcv(consonant_char, vowel_char='a', pitch=120):
 
     all_samples = _collect_samples(sp)
 
-    # Consonant region is middle portion
+    # Consonant region: skip V1 (150ms), take consonant (200ms)
     v1_end = int(SAMPLE_RATE * 0.150)
-    c_end = int(SAMPLE_RATE * 0.300)
+    c_end = int(SAMPLE_RATE * 0.350)
     v1_end = min(v1_end, len(all_samples))
     c_end = min(c_end, len(all_samples))
     return all_samples, all_samples[v1_end:c_end]
@@ -303,18 +303,23 @@ def measure_fricative_spectrum(samples, sample_rate=SAMPLE_RATE, highpass_hz=0):
 
 
 def measure_nasal_spectrum(samples, sample_rate=SAMPLE_RATE):
-    """Measure spectral properties of a nasal (F2 region, zero depth).
+    """Measure spectral properties of a nasal for place differentiation.
 
-    Returns dict with: f2_estimate, zero_depth, low_energy_ratio
+    Key measurements:
+    - Spectral centroid: center of gravity in 400-4000 Hz (shifts with place)
+    - Band energy ratios: mid/low and high/mid (shift with zero and F2 placement)
+    - Spectral slope: dB/kHz from 400-4000 Hz
+
+    Returns dict with: centroid, mid_low_ratio, high_mid_ratio, spectral_slope
     """
     samples = np.asarray(samples, dtype=np.float64)
     if len(samples) < 200:
         return None
 
-    # Take middle 60%
+    # Take middle 40% — skip transitions on both sides
     n = len(samples)
-    start = n // 5
-    end = n - n // 5
+    start = int(n * 0.3)
+    end = int(n * 0.7)
     middle = samples[start:end]
     if len(middle) < 200:
         return None
@@ -329,46 +334,45 @@ def measure_nasal_spectrum(samples, sample_rate=SAMPLE_RATE):
     freqs = np.fft.rfftfreq(len(windowed), 1.0 / sample_rate)
     spectrum_db = 20 * np.log10(np.maximum(spectrum, 1e-10))
 
-    # Smooth spectrum
-    kernel_size = max(5, len(spectrum_db) // 40)
+    # Spectral centroid in 400-4000 Hz (power-weighted)
+    analysis_mask = (freqs >= 400) & (freqs <= 4000)
+    if not np.any(analysis_mask):
+        return None
+    a_freqs = freqs[analysis_mask]
+    a_power = spectrum[analysis_mask] ** 2
+    total_power = np.sum(a_power)
+    if total_power <= 0:
+        return None
+    centroid = np.sum(a_freqs * a_power) / total_power
+
+    # Band energy ratios (raw spectrum power)
+    low_mask = (freqs >= 200) & (freqs < 800)
+    mid_mask = (freqs >= 800) & (freqs < 2000)
+    high_mask = (freqs >= 2000) & (freqs <= 4000)
+
+    low_energy = np.sum(spectrum[low_mask] ** 2) if np.any(low_mask) else 0
+    mid_energy = np.sum(spectrum[mid_mask] ** 2) if np.any(mid_mask) else 0
+    high_energy = np.sum(spectrum[high_mask] ** 2) if np.any(high_mask) else 0
+
+    mid_low_ratio = mid_energy / low_energy if low_energy > 0 else 0
+    high_mid_ratio = high_energy / mid_energy if mid_energy > 0 else 0
+
+    # Spectral slope: smooth to reduce harmonic noise, then linear regression
+    kernel_size = max(5, len(spectrum_db) // 80)
     kernel = np.ones(kernel_size) / kernel_size
     smoothed = np.convolve(spectrum_db, kernel, mode='same')
-
-    # Find F2 estimate: strongest peak between 800-2500 Hz
-    f2_mask = (freqs >= 800) & (freqs <= 2500)
-    if not np.any(f2_mask):
-        return None
-
-    f2_freqs = freqs[f2_mask]
-    f2_smoothed = smoothed[f2_mask]
-    f2_peak_idx = np.argmax(f2_smoothed)
-    f2_estimate = f2_freqs[f2_peak_idx]
-
-    # Zero depth: find the deepest notch between 500-4000 Hz
-    notch_mask = (freqs >= 500) & (freqs <= 4000)
-    notch_freqs = freqs[notch_mask]
-    notch_smoothed = smoothed[notch_mask]
-    if len(notch_smoothed) > 0:
-        notch_min = np.min(notch_smoothed)
-        notch_max = np.max(notch_smoothed)
-        zero_depth = notch_max - notch_min
+    slope_db = smoothed[analysis_mask]
+    if len(a_freqs) > 2:
+        slope_coeffs = np.polyfit(a_freqs / 1000.0, slope_db, 1)
+        spectral_slope = slope_coeffs[0]  # dB per kHz
     else:
-        zero_depth = 0
-
-    # Low energy ratio: energy below 500 Hz vs total (nasal murmur concentration)
-    low_mask = (freqs >= 100) & (freqs <= 500)
-    total_mask = freqs >= 100
-    if np.any(low_mask) and np.any(total_mask):
-        low_energy = np.sum(spectrum[low_mask] ** 2)
-        total_energy = np.sum(spectrum[total_mask] ** 2)
-        low_ratio = low_energy / total_energy if total_energy > 0 else 0
-    else:
-        low_ratio = 0
+        spectral_slope = 0
 
     return {
-        'f2_estimate': f2_estimate,
-        'zero_depth': zero_depth,
-        'low_energy_ratio': low_ratio,
+        'centroid': centroid,
+        'mid_low_ratio': mid_low_ratio,
+        'high_mid_ratio': high_mid_ratio,
+        'spectral_slope': spectral_slope,
     }
 
 
@@ -516,8 +520,8 @@ def diagnose_nasals(save_wavs=False):
     print("  NASAL SPECTRAL ANALYSIS (VCV context)")
     print("=" * 80)
 
-    header = (f"{'Nasal':>5} | {'F2 est':>7} | {'Zero depth':>10} | "
-              f"{'Low ratio':>9} | {'cf2':>5} | {'cfN0':>5} | {'cbN0':>5}")
+    header = (f"{'Nasal':>5} | {'Centroid':>8} | {'Mid/Low':>7} | "
+              f"{'High/Mid':>8} | {'Slope':>7} | {'cfN0':>5} | {'cf2':>5}")
     print(header)
     print("-" * 70)
 
@@ -539,18 +543,18 @@ def diagnose_nasals(save_wavs=False):
             group_samples.extend(all_samp)
             group_samples.extend([0] * int(SAMPLE_RATE * 0.15))
 
-        cf2 = phoneme_data[char].get('cf2', 0)
         cfN0 = phoneme_data[char].get('cfN0', 0)
-        cbN0 = phoneme_data[char].get('cbN0', 0)
+        cf2 = phoneme_data[char].get('cf2', 0)
 
         if profile:
-            print(f"  /{char:>2}/ | {profile['f2_estimate']:>6.0f} | "
-                  f"{profile['zero_depth']:>9.1f} | "
-                  f"{profile['low_energy_ratio']:>8.3f} | "
-                  f"{cf2:>5} | {cfN0:>5} | {cbN0:>5}")
+            slope_str = f"{profile['spectral_slope']:+.1f}"
+            print(f"  /{char:>2}/ | {profile['centroid']:>7.0f} | "
+                  f"{profile['mid_low_ratio']:>6.4f} | "
+                  f"{profile['high_mid_ratio']:>7.4f} | "
+                  f"{slope_str:>7} | {cfN0:>5} | {cf2:>5}")
         else:
-            print(f"  /{char:>2}/ | {'N/A':>7} | {'N/A':>10} | "
-                  f"{'N/A':>9} | {cf2:>5} | {cfN0:>5} | {cbN0:>5}")
+            print(f"  /{char:>2}/ | {'N/A':>8} | {'N/A':>7} | "
+                  f"{'N/A':>8} | {'N/A':>7} | {cfN0:>5} | {cf2:>5}")
 
     if save_wavs and group_samples:
         _save_wav('diag_nasals.wav', group_samples)
@@ -559,10 +563,12 @@ def diagnose_nasals(save_wavs=False):
     print("\n  Pairwise differentiation:")
     for group in NASAL_PAIRS:
         profiles = [all_profiles.get(c) for c in group]
-        f2_score = differentiation_score(profiles, 'f2_estimate')
-        zero_score = differentiation_score(profiles, 'zero_depth')
+        cent_score = differentiation_score(profiles, 'centroid')
+        mid_low_score = differentiation_score(profiles, 'mid_low_ratio')
+        high_mid_score = differentiation_score(profiles, 'high_mid_ratio')
         chars = ','.join(group)
-        print(f"    ({chars}): F2={f2_score:.0f} Hz, zero_depth={zero_score:.1f} dB")
+        print(f"    ({chars}): centroid={cent_score:.0f} Hz, "
+              f"mid/low={mid_low_score:.4f}, high/mid={high_mid_score:.4f}")
 
     return all_profiles
 
