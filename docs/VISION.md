@@ -1,4 +1,4 @@
-# NVSpeechPlayer Vision
+# Manatu Vision
 
 ## Mission Statement
 

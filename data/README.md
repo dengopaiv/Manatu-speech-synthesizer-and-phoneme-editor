@@ -1,6 +1,6 @@
 # Phoneme Parameter Files
 
-This directory contains phoneme data definitions for the NV Speech Player.
+This directory contains phoneme data definitions for Manatu.
 
 ## Voice Quality Parameters
 

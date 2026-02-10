@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-NVSpeechPlayer is a KLSYN88-based Klatt formant speech synthesizer written in C++ with Python bindings. It produces human-like speech for NVDA (NonVisual Desktop Access) screen reader. The goal is to exceed DecTalk/Eloquence quality with complete IPA phoneme coverage.
+Manatu is a KLSYN88-based Klatt formant speech synthesizer written in C++ with Python bindings. It produces human-like speech for NVDA (NonVisual Desktop Access) screen reader. The goal is to exceed DecTalk/Eloquence quality with complete IPA phoneme coverage.
 
 ## Build Commands
 

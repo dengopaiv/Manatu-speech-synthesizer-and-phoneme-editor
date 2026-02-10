@@ -1,4 +1,4 @@
-# NVSpeechPlayer Synthesis Changes Log
+# Manatu Synthesis Changes Log
 
 This document tracks changes to the synthesis engine, phoneme data, and processing pipeline.
 

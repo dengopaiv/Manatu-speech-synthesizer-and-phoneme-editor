@@ -1,10 +1,10 @@
-# NVSpeechPlayer Synthesis Architecture
+# Manatu Synthesis Architecture
 
 Technical reference for the KLSYN88-based speech synthesis engine.
 
 ## Overview
 
-NVSpeechPlayer synthesizes speech by generating glottal pulses and filtering them through cascaded and parallel formant resonators. The C++ engine handles real-time synthesis while Python manages phoneme data and linguistic processing.
+Manatu synthesizes speech by generating glottal pulses and filtering them through cascaded and parallel formant resonators. The C++ engine handles real-time synthesis while Python manages phoneme data and linguistic processing.
 
 ```
 IPA Text → Phoneme Parsing → Coarticulation → Pitch Contours → Frames
@@ -306,7 +306,7 @@ samples = sp.synthesize(count)
 
 ## 10. Enhancements Over Classic KLSYN88
 
-| Feature | Classic | NVSpeechPlayer |
+| Feature | Classic | Manatu |
 |---------|---------|----------------|
 | Glottal model | OQ/SQ only | LF model + legacy |
 | Resonator order | 2nd-order | 4th-order for F1-F3 |

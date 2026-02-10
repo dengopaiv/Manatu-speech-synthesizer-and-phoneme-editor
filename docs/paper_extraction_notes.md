@@ -841,7 +841,7 @@ Where:
 
 #### Implementation Notes
 
-Current NVSpeechPlayer could implement:
+Current Manatu could implement:
 1. Inherent durations per phoneme class
 2. Simple phrase-final lengthening
 3. Unstressed vowel shortening
@@ -1075,7 +1075,7 @@ Correlation matrix between 12 acoustic measures and 4 perceptual rating categori
 
 Baseline parameters for the modal female voice used in perception testing:
 
-| Parameter | KLSYN88 Name | Value | NVSpeechPlayer Mapping |
+| Parameter | KLSYN88 Name | Value | Manatu Mapping |
 |-----------|--------------|-------|------------------------|
 | F0 | F0 | 200 Hz | `voicePitch` = 200 |
 | F1 | F1 | 800 Hz | `cf1` = 800 |

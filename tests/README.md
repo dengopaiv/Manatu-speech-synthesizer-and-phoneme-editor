@@ -1,4 +1,4 @@
-# NVSpeechPlayer Tests
+# Manatu Tests
 
 ## Directory Structure
 

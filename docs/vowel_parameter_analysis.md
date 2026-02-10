@@ -1,4 +1,4 @@
-# NVSpeechPlayer Vowel Parameter Analysis
+# Manatu Vowel Parameter Analysis
 
 This document analyzes the current vowel parameters and provides recommendations for improvement.
 

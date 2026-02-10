@@ -1,6 +1,6 @@
 # Speech Synthesis Reference Notes
 
-Notes extracted from academic papers for NVSpeechPlayer synthesizer tuning.
+Notes extracted from academic papers for Manatu synthesizer tuning.
 
 ---
 
