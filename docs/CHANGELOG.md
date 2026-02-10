@@ -11,6 +11,40 @@ Each entry documents:
 
 ---
 
+## [2026-02-11] - Phase 3: Extended Consonant Validation & Testing
+
+### Summary
+Validated, tuned, and added comprehensive test coverage for all Phase 3 extended consonants: palatals, uvulars, pharyngeals, bilabial fricatives, trills, extended laterals, and approximants.
+
+### What Changed
+- `data/transitions.py`: Added ʀ (uvular trill) and ʙ (bilabial trill) to PHONEME_PLACE coarticulation map
+- `data/nasals.py`: Tuned ɲ cf2 from 2000→2200 Hz (better palatal place match)
+- `data/fricatives.py`: Tuned ç cf2 from 2100→2200 Hz, ʝ cf2 from 2100→2300 Hz (better separation from postalveolar ʃ/ʒ at 1840)
+- `data/liquids_glides.py`: Tuned ʙ trillRate from 28→24 Hz (bilabial trills not faster than alveolar ~25 Hz)
+- `tests/phonemes/test_consonants.py`: Added 14 new test functions covering all extended consonants
+
+### New Tests Added
+**WAV-generation tests** (CV context with /ɑ/):
+- Palatal stops (c, ɟ), uvular stops (q, ɢ)
+- Palatal fricatives (ç, ʝ), uvular fricatives (χ, ʁ)
+- Pharyngeal fricatives (ħ, ʕ), bilabial fricatives (ɸ, β)
+- Extended nasals (ɲ, ɴ, ɱ), trills (r, ʀ, ʙ)
+- Extended laterals (ʎ, ʟ), extended approximants (ʋ, ɻ, ɰ)
+
+**Spectral assertion tests** (parameter validation):
+- Palatal high F2 (> 2000 Hz for c, ɟ, ç, ʝ, ɲ)
+- Uvular low F2 (< 1400 Hz for q, ɢ, χ, ʁ, ɴ)
+- Pharyngeal high F1 (> 500 Hz for ħ, ʕ)
+- Place minimal pairs (c vs k, q vs k, ɲ vs n)
+
+### How Phonemes Are Handled Differently
+- Palatal fricatives now have higher F2 separation from postalveolars
+- Palatal nasal ɲ better matches palatal stop formant range
+- Bilabial trill uses more realistic oscillation rate
+- All extended consonants now have coarticulation support via PHONEME_PLACE
+
+---
+
 ## [2025-12-12] - Retroflex Consonants (Phase 3)
 
 ### Summary

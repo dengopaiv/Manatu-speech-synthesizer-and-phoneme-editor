@@ -781,7 +781,7 @@ FRICATIVES = {
 		'aspirationAmplitude': 0,
 		'spectralTilt': 2,
 		'cf1': 300,
-		'cf2': 2100,   # Palatal
+		'cf2': 2200,   # Palatal (raised from 2100 for better separation from postalveolar ʃ=1840)
 		'cf3': 3000,   # Palatal high F3
 		'cf4': 3300,
 		'cf5': 3750,
@@ -798,7 +798,7 @@ FRICATIVES = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 300,
-		'pf2': 2100,
+		'pf2': 2200,
 		'pf3': 3000,
 		'pf4': 3300,
 		'pf5': 3750,
@@ -838,7 +838,7 @@ FRICATIVES = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 2100,   # Palatal
+		'cf2': 2300,   # Palatal (raised from 2100 for better separation from postalveolar ʒ=1840)
 		'cf3': 3000,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -855,7 +855,7 @@ FRICATIVES = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 300,
-		'pf2': 2100,
+		'pf2': 2300,
 		'pf3': 3000,
 		'pf4': 3300,
 		'pf5': 3750,

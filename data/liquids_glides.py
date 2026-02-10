@@ -892,7 +892,7 @@ LIQUIDS_GLIDES = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'trillRate': 28,     # Fast bilabial oscillation
+		'trillRate': 24,     # Bilabial oscillation (~24 Hz, not faster than alveolar ~25 Hz)
 		'trillDepth': 0.9,   # Nearly complete closure
 		# Bilabial formants — low F2 due to lip constriction
 		'cf1': 400,

@@ -51,10 +51,11 @@ Build a research-grounded, academically-accurate Klatt speech synthesizer that *
 - Liquids and glides (l, r, w, j)
 - Affricates (tʃ, dʒ)
 
-### Phase 3: Extended Consonants
+### Phase 3: Extended Consonants - done
 - Retroflexes (ʈ, ɖ, ʂ, ʐ, ɳ, ɭ) - done
-- Palatals, uvulars, pharyngeals
-- Voiced/voiceless pairs for all places
+- Palatals (c, ɟ, ç, ʝ, ɲ, ʎ), uvulars (q, ɢ, χ, ʁ, ɴ, ʀ), pharyngeals (ħ, ʕ) - done
+- Voiced/voiceless pairs for all places - done
+- Trills (r, ʀ, ʙ), bilabial fricatives (ɸ, β), extended approximants (ʋ, ɻ, ɰ) - done
 
 ### Phase 4: Non-Pulmonic & Exotic
 - Ejectives

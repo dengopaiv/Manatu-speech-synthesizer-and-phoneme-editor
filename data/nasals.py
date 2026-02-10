@@ -250,7 +250,7 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 2000,   # Palatal high F2
+		'cf2': 2200,   # Palatal high F2 (matches palatal stop ɟ cf2=2400)
 		'cf3': 2900,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -269,7 +269,7 @@ NASALS = {
 		'spectralTilt': 4,
 		'flutter': 0.15,
 		'pf1': 300,
-		'pf2': 2000,
+		'pf2': 2200,
 		'pf3': 2900,
 		'pf4': 3300,
 		'pf5': 3750,

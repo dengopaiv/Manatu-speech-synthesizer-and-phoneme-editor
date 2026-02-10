@@ -58,6 +58,12 @@ def synthesize_nasal(sp, ipa_char, duration_ms=150, pitch=120):
     sp.queueFrame(frame, duration_ms, 40)
 
 
+def synthesize_consonant(sp, ipa_char, duration_ms=150, pitch=120):
+    """Synthesize a generic consonant (liquid, approximant, trill)."""
+    frame = build_phoneme_frame(ipa_char, pitch)
+    sp.queueFrame(frame, duration_ms, 40)
+
+
 # Stop consonants — IPA chars + descriptions (params read from phoneme_data)
 STOPS = {
     'p': {'ipa': 'p', 'desc': 'voiceless bilabial'},
@@ -84,6 +90,61 @@ NASALS = {
     'm': {'ipa': 'm', 'desc': 'bilabial'},
     'n': {'ipa': 'n', 'desc': 'alveolar'},
     'N': {'ipa': 'ŋ', 'desc': 'velar (ng)'},
+}
+
+# --- Extended consonant dictionaries (Phase 3) ---
+
+PALATAL_STOPS = {
+    'c': {'ipa': 'c', 'desc': 'voiceless palatal'},
+    'ɟ': {'ipa': 'ɟ', 'desc': 'voiced palatal'},
+}
+
+UVULAR_STOPS = {
+    'q': {'ipa': 'q', 'desc': 'voiceless uvular'},
+    'ɢ': {'ipa': 'ɢ', 'desc': 'voiced uvular'},
+}
+
+PALATAL_FRICATIVES = {
+    'ç': {'ipa': 'ç', 'desc': 'voiceless palatal'},
+    'ʝ': {'ipa': 'ʝ', 'desc': 'voiced palatal'},
+}
+
+UVULAR_FRICATIVES = {
+    'χ': {'ipa': 'χ', 'desc': 'voiceless uvular'},
+    'ʁ': {'ipa': 'ʁ', 'desc': 'voiced uvular'},
+}
+
+PHARYNGEAL_FRICATIVES = {
+    'ħ': {'ipa': 'ħ', 'desc': 'voiceless pharyngeal'},
+    'ʕ': {'ipa': 'ʕ', 'desc': 'voiced pharyngeal'},
+}
+
+BILABIAL_FRICATIVES = {
+    'ɸ': {'ipa': 'ɸ', 'desc': 'voiceless bilabial'},
+    'β': {'ipa': 'β', 'desc': 'voiced bilabial'},
+}
+
+EXTENDED_NASALS = {
+    'ɲ': {'ipa': 'ɲ', 'desc': 'palatal'},
+    'ɴ': {'ipa': 'ɴ', 'desc': 'uvular'},
+    'ɱ': {'ipa': 'ɱ', 'desc': 'labiodental'},
+}
+
+TRILLS = {
+    'r': {'ipa': 'r', 'desc': 'alveolar trill'},
+    'ʀ': {'ipa': 'ʀ', 'desc': 'uvular trill'},
+    'ʙ': {'ipa': 'ʙ', 'desc': 'bilabial trill'},
+}
+
+EXTENDED_LATERALS = {
+    'ʎ': {'ipa': 'ʎ', 'desc': 'palatal lateral'},
+    'ʟ': {'ipa': 'ʟ', 'desc': 'velar lateral'},
+}
+
+EXTENDED_APPROXIMANTS = {
+    'ʋ': {'ipa': 'ʋ', 'desc': 'labiodental approximant'},
+    'ɻ': {'ipa': 'ɻ', 'desc': 'retroflex approximant'},
+    'ɰ': {'ipa': 'ɰ', 'desc': 'velar approximant'},
 }
 
 
@@ -233,6 +294,115 @@ def test_minimal_pairs():
     save_wav("consonant_minimal_pairs.wav", samples)
     print("  PASSED")
     return True
+
+
+# --- Extended consonant WAV-generation tests (Phase 3) ---
+
+def _synthesize_cv_group(phoneme_dict, synth_func, filename, label):
+    """Generic helper: synthesize each phoneme in CV context with /ɑ/, save WAV."""
+    print(f"\n=== Test: {label} ===")
+
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
+
+    for key, info in phoneme_dict.items():
+        ipa_char = info['ipa']
+        if ipa_char not in phoneme_data:
+            print(f"  /{ipa_char}/ - {info['desc']} (SKIP: not in phoneme data)")
+            continue
+        print(f"  /{ipa_char}/ - {info['desc']}")
+
+        silence = speechPlayer.Frame()
+        silence.voiceAmplitude = 0.0
+        sp.queueFrame(silence, 50, 10)
+
+        synth_func(sp, ipa_char)
+        synthesize_vowel_frame(sp, ipa_char='ɑ')
+
+    samples = collect_samples(sp)
+
+    save_wav(filename, samples)
+    print("  PASSED")
+    return True
+
+
+def test_palatal_stops():
+    """Test palatal stop consonants /c/, /ɟ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        PALATAL_STOPS, synthesize_stop_burst,
+        "consonant_palatal_stops.wav", "Palatal Stops",
+    )
+
+
+def test_uvular_stops():
+    """Test uvular stop consonants /q/, /ɢ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        UVULAR_STOPS, synthesize_stop_burst,
+        "consonant_uvular_stops.wav", "Uvular Stops",
+    )
+
+
+def test_palatal_fricatives():
+    """Test palatal fricatives /ç/, /ʝ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        PALATAL_FRICATIVES, synthesize_fricative,
+        "consonant_palatal_fricatives.wav", "Palatal Fricatives",
+    )
+
+
+def test_uvular_fricatives():
+    """Test uvular fricatives /χ/, /ʁ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        UVULAR_FRICATIVES, synthesize_fricative,
+        "consonant_uvular_fricatives.wav", "Uvular Fricatives",
+    )
+
+
+def test_pharyngeal_fricatives():
+    """Test pharyngeal fricatives /ħ/, /ʕ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        PHARYNGEAL_FRICATIVES, synthesize_fricative,
+        "consonant_pharyngeal_fricatives.wav", "Pharyngeal Fricatives",
+    )
+
+
+def test_bilabial_fricatives():
+    """Test bilabial fricatives /ɸ/, /β/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        BILABIAL_FRICATIVES, synthesize_fricative,
+        "consonant_bilabial_fricatives.wav", "Bilabial Fricatives",
+    )
+
+
+def test_extended_nasals():
+    """Test extended nasals /ɲ/, /ɴ/, /ɱ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        EXTENDED_NASALS, synthesize_nasal,
+        "consonant_extended_nasals.wav", "Extended Nasals",
+    )
+
+
+def test_trills():
+    """Test trills /r/, /ʀ/, /ʙ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        TRILLS, synthesize_consonant,
+        "consonant_trills.wav", "Trills",
+    )
+
+
+def test_extended_laterals():
+    """Test extended laterals /ʎ/, /ʟ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        EXTENDED_LATERALS, synthesize_consonant,
+        "consonant_extended_laterals.wav", "Extended Laterals",
+    )
+
+
+def test_extended_approximants():
+    """Test extended approximants /ʋ/, /ɻ/, /ɰ/ in CV context with /ɑ/."""
+    return _synthesize_cv_group(
+        EXTENDED_APPROXIMANTS, synthesize_consonant,
+        "consonant_extended_approximants.wav", "Extended Approximants",
+    )
 
 
 # --- Spectral assertion tests (using actual phoneme data + spectral analysis) ---
@@ -402,10 +572,153 @@ def test_stop_burst_presence():
     return True
 
 
+# --- Phase 3: Extended consonant spectral assertion tests ---
+
+def _get_phoneme_cf2(ipa_char):
+    """Get the cascade F2 value from phoneme data."""
+    if ipa_char in phoneme_data:
+        return phoneme_data[ipa_char].get('cf2', None)
+    return None
+
+
+def test_palatal_high_f2():
+    """Assert palatal consonants (c, ɟ, ç, ʝ, ɲ) have F2 > 2000 Hz.
+
+    Palatal place of articulation is characterized by high F2 due to
+    the tongue body being raised toward the hard palate.
+    """
+    print("\n=== Test: Palatal High F2 ===")
+
+    palatal_chars = ['c', 'ɟ', 'ç', 'ʝ', 'ɲ']
+    all_passed = True
+
+    for char in palatal_chars:
+        cf2 = _get_phoneme_cf2(char)
+        if cf2 is None:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        ok = cf2 > 2000
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char}/ cf2={cf2} Hz {status} (> 2000 Hz)")
+
+    assert all_passed, "Some palatals have F2 <= 2000 Hz"
+    print("  PASSED")
+    return True
+
+
+def test_uvular_low_f2():
+    """Assert uvular consonants (q, ɢ, χ, ʁ, ɴ) have F2 < 1400 Hz.
+
+    Uvular place is characterized by low F2 due to constriction
+    at the back of the oral cavity near the uvula.
+    """
+    print("\n=== Test: Uvular Low F2 ===")
+
+    uvular_chars = ['q', 'ɢ', 'χ', 'ʁ', 'ɴ']
+    all_passed = True
+
+    for char in uvular_chars:
+        cf2 = _get_phoneme_cf2(char)
+        if cf2 is None:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        ok = cf2 < 1400
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char}/ cf2={cf2} Hz {status} (< 1400 Hz)")
+
+    assert all_passed, "Some uvulars have F2 >= 1400 Hz"
+    print("  PASSED")
+    return True
+
+
+def test_pharyngeal_high_f1():
+    """Assert pharyngeal consonants (ħ, ʕ) have F1 > 500 Hz.
+
+    Pharyngeal constriction dramatically raises F1, which is the
+    primary acoustic cue for pharyngeal place of articulation.
+    """
+    print("\n=== Test: Pharyngeal High F1 ===")
+
+    pharyngeal_chars = ['ħ', 'ʕ']
+    all_passed = True
+
+    for char in pharyngeal_chars:
+        if char not in phoneme_data:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        cf1 = phoneme_data[char].get('cf1', None)
+        if cf1 is None:
+            print(f"  /{char}/ no cf1 defined, skipping")
+            continue
+
+        ok = cf1 > 500
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char}/ cf1={cf1} Hz {status} (> 500 Hz)")
+
+    assert all_passed, "Some pharyngeals have F1 <= 500 Hz"
+    print("  PASSED")
+    return True
+
+
+def test_place_minimal_pairs():
+    """Assert place-contrasting consonants are distinct via F2.
+
+    Verifies that consonants at different places of articulation
+    have sufficiently different F2 values to be perceptually distinct:
+    - c (palatal) vs k (velar): palatal should have higher F2
+    - q (uvular) vs k (velar): uvular should have lower F2
+    - ɲ (palatal) vs n (alveolar): palatal should have higher F2
+    """
+    print("\n=== Test: Place Minimal Pairs ===")
+
+    pairs = [
+        ('c', 'k', 'palatal vs velar (c > k)'),
+        ('q', 'k', 'uvular vs velar (q < k)'),
+        ('ɲ', 'n', 'palatal vs alveolar (ɲ > n)'),
+    ]
+    all_passed = True
+
+    for char1, char2, desc in pairs:
+        cf2_1 = _get_phoneme_cf2(char1)
+        cf2_2 = _get_phoneme_cf2(char2)
+
+        if cf2_1 is None or cf2_2 is None:
+            print(f"  /{char1}/ vs /{char2}/ - skipping (missing data)")
+            continue
+
+        # Determine expected ordering
+        if char1 in ['c', 'ɲ']:
+            # Palatal should have higher F2
+            ok = cf2_1 > cf2_2
+            direction = ">"
+        else:
+            # Uvular should have lower F2
+            ok = cf2_1 < cf2_2
+            direction = "<"
+
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char1}/ ({cf2_1} Hz) {direction} /{char2}/ ({cf2_2} Hz) — {desc} {status}")
+
+    assert all_passed, "Some place minimal pairs not distinct"
+    print("  PASSED")
+    return True
+
+
 def run_all_tests():
     """Run all consonant tests."""
     print("=" * 50)
-    print("NVSpeechPlayer Consonant Phoneme Tests")
+    print("Manatu Consonant Phoneme Tests")
     print("=" * 50)
 
     tests = [
@@ -416,11 +729,27 @@ def run_all_tests():
         test_fricatives_voiced,
         test_nasals,
         test_minimal_pairs,
-        # New spectral assertion tests
+        # Phase 3: Extended consonant WAV-generation tests
+        test_palatal_stops,
+        test_uvular_stops,
+        test_palatal_fricatives,
+        test_uvular_fricatives,
+        test_pharyngeal_fricatives,
+        test_bilabial_fricatives,
+        test_extended_nasals,
+        test_trills,
+        test_extended_laterals,
+        test_extended_approximants,
+        # Spectral assertion tests
         test_voicing_contrast,
         test_fricative_spectral_centroid,
         test_nasal_low_f1,
         test_stop_burst_presence,
+        # Phase 3: Extended spectral assertion tests
+        test_palatal_high_f2,
+        test_uvular_low_f2,
+        test_pharyngeal_high_f1,
+        test_place_minimal_pairs,
     ]
 
     passed = 0

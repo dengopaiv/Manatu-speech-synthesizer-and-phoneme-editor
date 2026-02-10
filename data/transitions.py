@@ -65,7 +65,7 @@ F2_LOCUS = {
 PHONEME_PLACE = {
     # Bilabials
     'p': 'bilabial', 'b': 'bilabial', 'm': 'bilabial',
-    'ɸ': 'bilabial', 'β': 'bilabial',
+    'ɸ': 'bilabial', 'β': 'bilabial', 'ʙ': 'bilabial',
     # Labiodentals
     'f': 'labiodental', 'v': 'labiodental', 'ɱ': 'labiodental',
     'ʋ': 'labiodental', 'ⱱ': 'labiodental',
@@ -97,7 +97,7 @@ PHONEME_PLACE = {
     'ʟ': 'velar', 'ɰ': 'velar',
     # Uvulars
     'q': 'uvular', 'ɢ': 'uvular', 'ɴ': 'uvular',
-    'χ': 'uvular', 'ʁ': 'uvular',
+    'χ': 'uvular', 'ʁ': 'uvular', 'ʀ': 'uvular',
     # Pharyngeals
     'ħ': 'pharyngeal', 'ʕ': 'pharyngeal',
     # Glottals
