@@ -57,6 +57,7 @@ F2_LOCUS = {
     'palatal': 2300,    # ɲ, ç, j
     'velar': 1500,      # k, g, ŋ - varies with vowel context
     'uvular': 1200,     # q, χ, ʁ
+    'pharyngeal': 1000, # ħ, ʕ
     'glottal': None,    # h, ʔ - no locus effect
 }
 
@@ -64,14 +65,17 @@ F2_LOCUS = {
 PHONEME_PLACE = {
     # Bilabials
     'p': 'bilabial', 'b': 'bilabial', 'm': 'bilabial',
+    'ɸ': 'bilabial', 'β': 'bilabial',
     # Labiodentals
     'f': 'labiodental', 'v': 'labiodental', 'ɱ': 'labiodental',
+    'ʋ': 'labiodental',
     # Dentals
     'θ': 'dental', 'ð': 'dental',
     # Alveolars
     't': 'alveolar', 'd': 'alveolar', 'n': 'alveolar',
     's': 'alveolar', 'z': 'alveolar', 'l': 'alveolar',
     'ɾ': 'alveolar', 'r': 'alveolar', 'ɹ': 'alveolar',
+    'ɬ': 'alveolar', 'ɮ': 'alveolar',
     # Postalveolars
     'ʃ': 'postalveolar', 'ʒ': 'postalveolar',
     'tʃ': 'postalveolar', 'dʒ': 'postalveolar',
@@ -79,16 +83,20 @@ PHONEME_PLACE = {
     # Retroflexes
     'ʈ': 'retroflex', 'ɖ': 'retroflex', 'ɳ': 'retroflex',
     'ʂ': 'retroflex', 'ʐ': 'retroflex', 'ɭ': 'retroflex',
-    'ɻ': 'retroflex',
+    'ɻ': 'retroflex', 'ɽ': 'retroflex',
     # Palatals
     'c': 'palatal', 'ɟ': 'palatal', 'ɲ': 'palatal',
     'ç': 'palatal', 'ʝ': 'palatal', 'j': 'palatal',
+    'ʎ': 'palatal',
     # Velars
     'k': 'velar', 'g': 'velar', 'ɡ': 'velar', 'ŋ': 'velar',
     'x': 'velar', 'ɣ': 'velar', 'w': 'velar',
+    'ʟ': 'velar',
     # Uvulars
     'q': 'uvular', 'ɢ': 'uvular', 'ɴ': 'uvular',
     'χ': 'uvular', 'ʁ': 'uvular',
+    # Pharyngeals
+    'ħ': 'pharyngeal', 'ʕ': 'pharyngeal',
     # Glottals
     'h': 'glottal', 'ʔ': 'glottal', 'ɦ': 'glottal',
 }

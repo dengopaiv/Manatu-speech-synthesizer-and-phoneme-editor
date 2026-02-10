@@ -44,18 +44,30 @@ OUTPUT_DIR = os.path.join(PROJECT_ROOT, 'tests', 'output')
 # ── Confusable pairs ─────────────────────────────────────────────────
 
 STOP_PAIRS = [
-    ('p', 't', 'k'),   # voiceless stops
-    ('b', 'd', 'g'),   # voiced stops
+    ('p', 't', 'k'),       # voiceless stops
+    ('b', 'd', 'g'),       # voiced stops
+    ('c', 'k', 'q'),       # palatal vs velar vs uvular voiceless
+    ('ɟ', 'g', 'ɢ'),       # palatal vs velar vs uvular voiced
 ]
 
 FRICATIVE_PAIRS = [
-    ('f', 'θ'),   # labiodental vs dental
-    ('v', 'ð'),   # voiced counterparts
-    ('s', 'ʃ'),   # alveolar vs postalveolar sibilant
+    ('f', 'θ'),             # labiodental vs dental
+    ('v', 'ð'),             # voiced counterparts
+    ('s', 'ʃ'),             # alveolar vs postalveolar sibilant
+    ('ɸ', 'f'),             # bilabial vs labiodental
+    ('β', 'v'),             # bilabial vs labiodental voiced
+    ('ç', 'x', 'χ'),       # palatal vs velar vs uvular
+    ('ʝ', 'ɣ', 'ʁ'),       # palatal vs velar vs uvular voiced
+    ('ħ', 'h'),             # pharyngeal vs glottal
+    ('ʕ', 'ɦ'),             # pharyngeal vs glottal voiced
+    ('ɬ', 's'),             # lateral vs plain alveolar
 ]
 
 NASAL_PAIRS = [
-    ('m', 'n', 'ŋ'),  # bilabial, alveolar, velar
+    ('m', 'n', 'ŋ'),       # bilabial, alveolar, velar
+    ('ɱ', 'm'),             # labiodental vs bilabial
+    ('ɲ', 'n'),             # palatal vs alveolar
+    ('ɴ', 'ŋ'),             # uvular vs velar
 ]
 
 # ── Synthesis helpers ─────────────────────────────────────────────────
