@@ -19,7 +19,7 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 2,  # Close-mid — cutoff ~6540 Hz
+		'spectralTilt': 1,  # Close-mid — reduce from 2 (was above bypass threshold)
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1350,
@@ -51,17 +51,17 @@ VOWELS_RCOLORED = {
 		'pb5': 938,  # Match cb5
 		'pb6': 1225,  # Match cb6
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
-		'pa4': 0.1,
-		'pa5': 0.08,
-		'pa6': 0.04,
+		'pa2': 0.71,   # Auto-tuned F2 reinforcement
+		'pa3': 0.53,   # Auto-tuned F3 reinforcement
+		'pa4': 0,
+		'pa5': 0,
+		'pa6': 0,
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0.1,
+		'parallelVoiceMix': 0.71,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 1.7,  # Close-mid — moderate modality
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -79,7 +79,7 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 2,  # Close-mid — cutoff ~6540 Hz
+		'spectralTilt': 1,  # Close-mid — reduce from 2 (was above bypass threshold)
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1400,
@@ -111,17 +111,17 @@ VOWELS_RCOLORED = {
 		'pb5': 938,  # Match cb5
 		'pb6': 1225,  # Match cb6
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
-		'pa4': 0.1,
-		'pa5': 0.08,
-		'pa6': 0.04,
+		'pa2': 0.51,   # Auto-tuned F2 reinforcement
+		'pa3': 0.47,   # Auto-tuned F3 reinforcement
+		'pa4': 0,
+		'pa5': 0,
+		'pa6': 0,
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0.1,
+		'parallelVoiceMix': 0.51,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 1.7,  # Close-mid — moderate modality
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

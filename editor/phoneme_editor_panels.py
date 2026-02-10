@@ -240,7 +240,13 @@ class HeaderPanel(wx.Panel):
         self.ref_btn = wx.Button(self, label="Ref (F7)", size=(70, -1))
         self.ref_btn.SetName("Play Reference Sample")
         self.ref_btn.SetToolTip("Play human-recorded reference (F7)")
-        preview_sizer.Add(self.ref_btn, 0)
+        preview_sizer.Add(self.ref_btn, 0, wx.RIGHT, 10)
+
+        # Live preview button
+        self.live_btn = wx.Button(self, label="Live (F8)", size=(80, -1))
+        self.live_btn.SetName("Toggle Live Preview")
+        self.live_btn.SetToolTip("Toggle live audio preview (F8)")
+        preview_sizer.Add(self.live_btn, 0)
 
         main_sizer.Add(preview_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
@@ -258,6 +264,7 @@ class HeaderPanel(wx.Panel):
         custom_idx = self.voice_preset_choice.FindString('Custom')
         if custom_idx != wx.NOT_FOUND and event:
             self.voice_preset_choice.SetSelection(custom_idx)
+        self.editor.on_param_changed()
 
     def _on_duration_change(self, event):
         self.duration_value.SetLabel(f"{self.duration_slider.GetValue()} ms")
@@ -349,6 +356,7 @@ class ParametersPanel(scrolled.ScrolledPanel):
         slider = self.sliders[name]
         unit = slider.unit
         self.value_labels[name].SetLabel(f"{slider.GetValue()} {unit}")
+        self.editor.on_param_changed()
 
     def _set_status(self, message):
         """Set status bar message via editor."""

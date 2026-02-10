@@ -48,17 +48,19 @@ STOPS = {
 		'pb4': 180,
 		'pb5': 150,
 		'pb6': 400,
-		'pa1': 0.25,  # Labials: diffuse flat spectrum (Klatt Table III)
-		'pa2': 0.25,
+		'pa1': 0.5,   # Labials: diffuse-falling spectrum (Klatt 1980)
+		'pa2': 0.4,
 		'pa3': 0.25,
-		'pa4': 0.25,
-		'pa5': 0.25,
-		'pa6': 0.25,
-		'parallelBypass': 1.1,
+		'pa4': 0.15,
+		'pa5': 0.1,
+		'pa6': 0.05,
+		'parallelBypass': 0.5,  # Reduced from 1.1 — let resonators shape burst
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - labial weakest (Stevens Ch.7)
 		'burstAmplitude': 0.6,
 		'burstDuration': 0.4,  # Voiceless longer release
+		'burstFilterFreq': 600,   # Low, muffled bilabial burst
+		'burstFilterBw': 800,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -109,17 +111,19 @@ STOPS = {
 		'pb4': 180,
 		'pb5': 150,
 		'pb6': 400,
-		'pa1': 0.2,  # Labials: diffuse flat spectrum (Klatt Table III)
-		'pa2': 0.2,
+		'pa1': 0.4,   # Labials: diffuse-falling spectrum (Klatt 1980)
+		'pa2': 0.35,
 		'pa3': 0.2,
-		'pa4': 0.2,
-		'pa5': 0.2,
-		'pa6': 0.2,
-		'parallelBypass': 1.05,
+		'pa4': 0.12,
+		'pa5': 0.08,
+		'pa6': 0.04,
+		'parallelBypass': 0.45,  # Reduced from 1.05 — let resonators shape burst
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - labial weakest, voiced shorter
 		'burstAmplitude': 0.6,
 		'burstDuration': 0.2,  # Voiced shorter release
+		'burstFilterFreq': 600,   # Low, muffled bilabial burst
+		'burstFilterBw': 800,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -171,16 +175,18 @@ STOPS = {
 		'pb5': 200,  # Updated from JSON
 		'pb6': 1000,  # Updated from JSON
 		'pa1': 0,
-		'pa2': 0.41,  # Alveolar: energy in F2-F5 region (Klatt Table III)
-		'pa3': 0.41,
-		'pa4': 0.5,   # F4-F5 prominent for alveolars
-		'pa5': 0.6,
-		'pa6': 0.4,
+		'pa2': 0.15,  # Alveolar: energy peaks at F5 (Stevens Ch.7)
+		'pa3': 0.2,
+		'pa4': 0.5,
+		'pa5': 0.85,  # F5 peak is THE key alveolar place cue
+		'pa6': 0.7,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - alveolar medium (Stevens Ch.7)
 		'burstAmplitude': 0.85,  # Updated from JSON
 		'burstDuration': 0.3,  # Updated from JSON
+		'burstFilterFreq': 4000,  # High, sharp alveolar burst
+		'burstFilterBw': 3000,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,  # From JSON
@@ -232,16 +238,18 @@ STOPS = {
 		'pb5': 150,
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.33,  # Alveolar: energy in F2-F5 region (Klatt Table III)
-		'pa3': 0.33,
-		'pa4': 0.4,   # F4-F5 prominent for alveolars
-		'pa5': 0.5,
-		'pa6': 0.35,
+		'pa2': 0.12,  # Alveolar: energy peaks at F5 (Stevens Ch.7)
+		'pa3': 0.16,
+		'pa4': 0.4,
+		'pa5': 0.7,   # F5 peak is THE key alveolar place cue
+		'pa6': 0.55,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - alveolar medium, voiced shorter
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.2,  # Voiced shorter release
+		'burstFilterFreq': 4000,  # High, sharp alveolar burst
+		'burstFilterBw': 3000,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -304,6 +312,8 @@ STOPS = {
 		'fricationAmplitude': 0,
 		'burstAmplitude': 0.8,
 		'burstDuration': 0.35,
+		'burstFilterFreq': 3000,  # Retroflex: between alveolar and velar
+		'burstFilterBw': 2500,
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -363,6 +373,8 @@ STOPS = {
 		'fricationAmplitude': 0,
 		'burstAmplitude': 0.7,
 		'burstDuration': 0.2,
+		'burstFilterFreq': 3000,  # Retroflex: between alveolar and velar
+		'burstFilterBw': 2500,
 		'spectralTilt': 0,
 		'flutter': 0.15,
 		'lfRd': 1.0,
@@ -412,16 +424,18 @@ STOPS = {
 		'pb5': 150,
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.8,
-		'pa3': 0.633333333333,
-		'pa4': 0.366666666667,
-		'pa5': 0.383333333333,
-		'pa6': 0.383333333333,
+		'pa2': 0.9,   # Velar: compact mid-frequency peak at F2-F3
+		'pa3': 0.85,
+		'pa4': 0.15,  # Sharp rolloff above F3 distinguishes from alveolar
+		'pa5': 0.08,
+		'pa6': 0.05,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest (Stevens Ch.7)
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.4,  # Voiceless longer release
+		'burstFilterFreq': 2000,  # Mid, compact velar burst
+		'burstFilterBw': 1500,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -473,16 +487,18 @@ STOPS = {
 		'pb5': 150,
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.8,
-		'pa3': 0.65,
-		'pa4': 0.366666666667,
-		'pa5': 0.383333333333,
-		'pa6': 0.383333333333,
+		'pa2': 0.8,   # Velar: compact mid-frequency peak at F2-F3
+		'pa3': 0.7,
+		'pa4': 0.12,  # Sharp rolloff above F3
+		'pa5': 0.06,
+		'pa6': 0.04,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest, voiced shorter
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.2,  # Voiced shorter release
+		'burstFilterFreq': 2000,  # Mid, compact velar burst
+		'burstFilterBw': 1500,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -534,16 +550,18 @@ STOPS = {
 		'pb5': 150,
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.8,   # Unified with 'g'
-		'pa3': 0.65,  # Unified with 'g'
-		'pa4': 0.366666666667,
-		'pa5': 0.383333333333,
-		'pa6': 0.383333333333,
+		'pa2': 0.8,   # Unified with 'g' — compact mid-frequency peak
+		'pa3': 0.7,   # Unified with 'g'
+		'pa4': 0.12,  # Sharp rolloff above F3
+		'pa5': 0.06,
+		'pa6': 0.04,
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest, voiced shorter
 		'burstAmplitude': 0.9,
 		'burstDuration': 0.2,  # Voiced shorter release
+		'burstFilterFreq': 2000,  # Mid, compact velar burst
+		'burstFilterBw': 1500,
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,

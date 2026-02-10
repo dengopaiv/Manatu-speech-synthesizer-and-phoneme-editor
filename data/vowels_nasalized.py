@@ -19,7 +19,7 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 3,   # Open vowel
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 650,
 		'cf2': 1430,
@@ -32,9 +32,9 @@ VOWELS_NASALIZED = {
 		'cb1': 130,
 		'cb2': 286,
 		'cb3': 500,
-		'cb4': 1000,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb4': 750,   # Q-corrected: cf4/4.0 = 3000/4.0 (was 1000)
+		'cb5': 938,   # Q-corrected: cf5/4.0 = 3750/4.0 (was 1250)
+		'cb6': 1225,  # Q-corrected: cf6/4.0 = 4900/4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0.5,
@@ -47,19 +47,20 @@ VOWELS_NASALIZED = {
 		'pb1': 130,
 		'pb2': 286,
 		'pb3': 500,
-		'pb4': 1000,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb4': 750,   # Match cb4
+		'pb5': 938,   # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
+		'pa2': 0.53,   # Auto-tuned F2 reinforcement
+		'pa3': 0.37,   # Auto-tuned F3 reinforcement
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.53,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 2.0,  # Open vowel — less breathy for HF presence
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -77,7 +78,7 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 3,   # Open-mid vowel
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 530,
 		'cf2': 1680,
@@ -90,9 +91,9 @@ VOWELS_NASALIZED = {
 		'cb1': 106,
 		'cb2': 336,
 		'cb3': 500,
-		'cb4': 1033,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb4': 775,   # Q-corrected: cf4/4.0 = 3100/4.0 (was 1033)
+		'cb5': 938,   # Q-corrected: cf5/4.0 = 3750/4.0 (was 1250)
+		'cb6': 1225,  # Q-corrected: cf6/4.0 = 4900/4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0.5,
@@ -105,19 +106,20 @@ VOWELS_NASALIZED = {
 		'pb1': 106,
 		'pb2': 336,
 		'pb3': 500,
-		'pb4': 1033,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb4': 775,   # Match cb4
+		'pb5': 938,   # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
+		'pa2': 0.54,   # Auto-tuned F2 reinforcement
+		'pa3': 0.24,   # Auto-tuned F3 reinforcement
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.54,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 2.3,  # Open-mid — slightly less breathy
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -135,7 +137,7 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 3,   # Open-mid vowel
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 450,
 		'cf2': 870,
@@ -148,9 +150,9 @@ VOWELS_NASALIZED = {
 		'cb1': 90,
 		'cb2': 218,
 		'cb3': 514,
-		'cb4': 1033,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb4': 775,   # Q-corrected: cf4/4.0 = 3100/4.0 (was 1033)
+		'cb5': 938,   # Q-corrected: cf5/4.0 = 3750/4.0 (was 1250)
+		'cb6': 1225,  # Q-corrected: cf6/4.0 = 4900/4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0.5,
@@ -163,19 +165,20 @@ VOWELS_NASALIZED = {
 		'pb1': 90,
 		'pb2': 218,
 		'pb3': 514,
-		'pb4': 1033,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb4': 775,   # Match cb4
+		'pb5': 938,   # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
 		'pa2': 0,
-		'pa3': 0,
+		'pa3': 0.41,   # Auto-tuned F3 reinforcement
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.41,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 2.0,  # Open-mid — less breathy for HF presence
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -193,7 +196,7 @@ VOWELS_NASALIZED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 3,   # Open-mid vowel
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 530,
 		'cf2': 1500,
@@ -206,9 +209,9 @@ VOWELS_NASALIZED = {
 		'cb1': 106,
 		'cb2': 300,
 		'cb3': 500,
-		'cb4': 1033,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb4': 775,   # Q-corrected: cf4/4.0 = 3100/4.0 (was 1033)
+		'cb5': 938,   # Q-corrected: cf5/4.0 = 3750/4.0 (was 1250)
+		'cb6': 1225,  # Q-corrected: cf6/4.0 = 4900/4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0.5,
@@ -221,19 +224,20 @@ VOWELS_NASALIZED = {
 		'pb1': 106,
 		'pb2': 300,
 		'pb3': 500,
-		'pb4': 1033,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb4': 775,   # Match cb4
+		'pb5': 938,   # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
+		'pa2': 0.6,   # Auto-tuned F2 reinforcement
+		'pa3': 0.27,   # Auto-tuned F3 reinforcement
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.6,  # Auto-tuned voice mix for parallel F2/F3
 		'fricationAmplitude': 0,
 		# Voice quality
-		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
+		'lfRd': 2.3,  # Open-mid — slightly less breathy
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,

@@ -70,6 +70,12 @@ typedef struct {
 	speechPlayer_frameParam_t outputGain; // amplitude from 0 to 1 of final output (master volume)
 	speechPlayer_frameParam_t endVoicePitch; //  pitch of voice at the end of the frame length
 	speechPlayer_frameParam_t midVoicePitch; // pitch at midpoint for contour tones (0=linear interp, >0=3-point contour)
+	// Trill modulation
+	speechPlayer_frameParam_t trillRate; // Trill LFO rate in Hz (0=disabled, ~25 typical for alveolar trill)
+	speechPlayer_frameParam_t trillDepth; // Trill modulation depth 0-1 (amplitude reduction during closure)
+	// Burst pre-filter
+	speechPlayer_frameParam_t burstFilterFreq; // Burst noise pre-filter center freq Hz (0=unfiltered white)
+	speechPlayer_frameParam_t burstFilterBw; // Burst noise pre-filter bandwidth Hz
 } speechPlayer_frame_t;
 
 const int speechPlayer_frame_numParams=sizeof(speechPlayer_frame_t)/sizeof(speechPlayer_frameParam_t);

@@ -51,6 +51,10 @@ KLSYN88_DEFAULTS = {
 	'ftpBw2': 100,
 	'burstAmplitude': 0,      # No burst by default
 	'burstDuration': 0.25,    # 5ms at 20ms max
+	'trillRate': 0,           # No trill by default
+	'trillDepth': 0,          # No trill by default
+	'burstFilterFreq': 0,     # Unfiltered burst by default
+	'burstFilterBw': 2000,    # Default bandwidth if filter enabled
 }
 
 def applyPhonemeToFrame(frame,phoneme):
@@ -375,8 +379,8 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 		elif phoneme.get('_postStopAspiration'):
 			phonemeDuration=20.0/speed
 		elif phoneme.get('_isStop'):
-			phonemeDuration=min(6.0/speed,6.0)
-			phonemeFadeDuration=3.0/speed  # Was 0.001 - caused clicks
+			phonemeDuration=min(10.0/speed,10.0)  # 10ms lets burst resonators develop spectral character
+			phonemeFadeDuration=5.0/speed
 		elif phoneme.get('_isAfricate'):
 			phonemeDuration=24.0/speed
 			phonemeFadeDuration=5.0/speed  # Was 0.001 - caused clicks

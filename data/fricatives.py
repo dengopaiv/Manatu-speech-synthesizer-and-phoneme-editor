@@ -55,11 +55,11 @@ FRICATIVES = {
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
-		'parallelBypass': 0.95,
-		'fricationAmplitude': 1,
-		# Labiodental: broad diffuse spectrum ~1-5 kHz
-		'noiseFilterFreq': 3000,
-		'noiseFilterBw': 5000,
+		'parallelBypass': 0.98,  # Essentially all bypass — diffuse spectrum
+		'fricationAmplitude': 0.7,  # Non-sibilants are weaker
+		# Labiodental: lower center, flatter diffuse spectrum
+		'noiseFilterFreq': 2500,
+		'noiseFilterBw': 6000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -115,13 +115,13 @@ FRICATIVES = {
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
-		'parallelBypass': 0.95,
-		'fricationAmplitude': 1,
+		'parallelBypass': 0.98,  # Match /f/ — diffuse spectrum
+		'fricationAmplitude': 0.5,  # Voiced fricatives have less noise
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Labiodental: broad diffuse spectrum ~1-5 kHz
-		'noiseFilterFreq': 3000,
-		'noiseFilterBw': 5000,
+		# Labiodental: mirror /f/ spectral shape
+		'noiseFilterFreq': 2500,
+		'noiseFilterBw': 6000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -176,13 +176,13 @@ FRICATIVES = {
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0.866666666667,
+		'pa5': 0.3,   # Boost F5 for higher centroid
+		'pa6': 0.95,  # Stronger high peak
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
-		# Alveolar sibilant: high-frequency emphasis (4-8 kHz)
-		'noiseFilterFreq': 5500,
-		'noiseFilterBw': 2000,
+		# Alveolar sibilant: push centroid higher to separate from /ʃ/
+		'noiseFilterFreq': 6000,
+		'noiseFilterBw': 1800,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -237,15 +237,15 @@ FRICATIVES = {
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0.866666666667,
+		'pa5': 0.3,   # Mirror /s/ — boost F5
+		'pa6': 0.95,  # Mirror /s/ — stronger high peak
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Alveolar sibilant: high-frequency emphasis (4-8 kHz)
-		'noiseFilterFreq': 5500,
-		'noiseFilterBw': 2000,
+		# Alveolar sibilant: mirror /s/ spectral shape
+		'noiseFilterFreq': 6000,
+		'noiseFilterBw': 1800,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -299,16 +299,15 @@ FRICATIVES = {
 		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
-		# KLSYN88: Klatt Table III - postalveolar has distributed energy F3-F6
-		# A3=57dB (strongest), A4=48dB, A5=48dB, A6=46dB
-		'pa3': 0.95,
+		# KLSYN88: Klatt Table III - postalveolar concentrated at F3-F4
+		'pa3': 1.0,   # F3 strongest — postalveolar peak
 		'pa4': 0.8,
-		'pa5': 0.8,
-		'pa6': 0.77,
+		'pa5': 0.5,   # Reduced from 0.8 — less HF overlap with /s/
+		'pa6': 0.35,  # Reduced from 0.77 — sharp rolloff above F4
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
-		# Postalveolar: mid-high frequency (2.5-4 kHz)
-		'noiseFilterFreq': 3500,
+		# Postalveolar: lower center to separate from /s/
+		'noiseFilterFreq': 3200,
 		'noiseFilterBw': 1500,
 		# Voice quality
 		'flutter': 0.25,
@@ -362,18 +361,17 @@ FRICATIVES = {
 		'pb6': 400,
 		'pa1': 0,
 		'pa2': 0,
-		# KLSYN88: Klatt Table III - postalveolar has distributed energy F3-F6
-		# A3=57dB (strongest), A4=48dB, A5=48dB, A6=46dB
-		'pa3': 0.95,
+		# KLSYN88: Mirror /ʃ/ — postalveolar concentrated at F3-F4
+		'pa3': 1.0,
 		'pa4': 0.8,
-		'pa5': 0.8,
-		'pa6': 0.77,
+		'pa5': 0.5,   # Mirror /ʃ/ — reduced HF
+		'pa6': 0.35,  # Mirror /ʃ/ — sharp rolloff
 		'parallelBypass': 0,
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Postalveolar: mid-high frequency (2.5-4 kHz)
-		'noiseFilterFreq': 3500,
+		# Postalveolar: mirror /ʃ/ spectral shape
+		'noiseFilterFreq': 3200,
 		'noiseFilterBw': 1500,
 		# Voice quality
 		'flutter': 0.25,
@@ -434,9 +432,9 @@ FRICATIVES = {
 		'pa4': 0.65,
 		'pa5': 0.45,
 		'pa6': 0.30,
-		'parallelBypass': 0.6,
+		'parallelBypass': 0.66,
 		'fricationAmplitude': 1,
-		'noiseFilterFreq': 3500,  # Lower than alveolar s (~4500)
+		'noiseFilterFreq': 3170,  # Auto-tuned: lower than alveolar s, centroid ~3950 Hz
 		'noiseFilterBw': 1500,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -486,14 +484,14 @@ FRICATIVES = {
 		'pb5': 160,
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0.20,
-		'pa3': 0.45,
-		'pa4': 0.55,
-		'pa5': 0.40,
-		'pa6': 0.25,
-		'parallelBypass': 0.4,
+		'pa2': 0.25,
+		'pa3': 0.50,
+		'pa4': 0.65,
+		'pa5': 0.45,
+		'pa6': 0.30,
+		'parallelBypass': 0.66,
 		'fricationAmplitude': 0.7,
-		'noiseFilterFreq': 3500,
+		'noiseFilterFreq': 3170,
 		'noiseFilterBw': 1500,
 		'spectralTilt': 4,
 		'flutter': 0.15,
@@ -548,15 +546,14 @@ FRICATIVES = {
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
+		'pa5': 0.25,  # High-frequency peak separates from /f/
 		# KLSYN88: Klatt Table III - dental has weak high + bypass
-		# A6=28dB (weak), AB=48dB (strong bypass)
-		'pa6': 0.47,
-		'parallelBypass': 0.8,
-		'fricationAmplitude': 1,
-		# Dental: diffuse/weak spectrum (white noise)
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		'pa6': 0.55,
+		'parallelBypass': 0.6,  # More resonator shaping than /f/
+		'fricationAmplitude': 0.75,  # Non-sibilants are weaker
+		# Dental: higher center, narrower band — separates from labiodental /f/
+		'noiseFilterFreq': 5500,
+		'noiseFilterBw': 2500,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -610,17 +607,15 @@ FRICATIVES = {
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
-		# KLSYN88: Klatt Table III - dental has weak high + bypass
-		# A6=28dB (weak), AB=48dB (strong bypass)
-		'pa6': 0.47,
-		'parallelBypass': 0.8,
-		'fricationAmplitude': 1,
+		'pa5': 0.25,  # Mirror /θ/ high-frequency peak
+		'pa6': 0.55,
+		'parallelBypass': 0.6,  # Mirror /θ/ resonator shaping
+		'fricationAmplitude': 0.5,  # Voiced fricatives have less noise
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Dental: diffuse/weak spectrum (white noise)
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		# Dental: mirror /θ/ spectral shape
+		'noiseFilterFreq': 5500,
+		'noiseFilterBw': 2500,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,

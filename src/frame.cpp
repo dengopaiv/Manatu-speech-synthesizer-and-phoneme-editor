@@ -53,7 +53,7 @@ class FrameManagerImpl: public FrameManager {
 					// Burst parameters (indices 26-27) and preFormantGain (index 68) should step instantly
 					// This ensures stop bursts trigger at full amplitude and prevents
 					// preFormantGain from silencing output during transitions
-					if (i == 26 || i == 27 || i == 68) {
+					if (i == 26 || i == 27 || i == 68 || i == 74 || i == 75) {
 						// Use target value immediately
 						((speechPlayer_frameParam_t*)&curFrame)[i] = ((speechPlayer_frameParam_t*)&(newFrameRequest->frame))[i];
 					} else {

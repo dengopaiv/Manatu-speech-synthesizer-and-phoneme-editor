@@ -20,7 +20,7 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 1100,
+		'cf2': 1000,  # Lower F2 for bilabial place
 		'cf3': 2130,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -28,13 +28,13 @@ NASALS = {
 		'cfNP': 270,  # Nasal pole ~270 Hz (Stevens)
 		'cfN0': 750,  # Bilabial nasal zero ~750 Hz (Stevens Ch.9)
 		'cb1': 44,
-		'cb2': 150,
+		'cb2': 200,   # Wider — more muffled bilabial quality
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 80,   # Narrower bandwidth for bilabial
+		'cbN0': 150,  # Wider zero notch for more audible bilabial place
 		'caNP': 1,
 		'spectralTilt': 4,  # Modal voice naturalness
 		'flutter': 0.15,    # Natural F0 jitter
@@ -78,7 +78,7 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 280,
-		'cf2': 1700,
+		'cf2': 1800,   # Higher F2 for alveolar place
 		'cf3': 2740,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -92,7 +92,7 @@ NASALS = {
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 120,   # Slightly wider bandwidth for alveolar
+		'cbN0': 200,   # Wider zero notch for more audible alveolar place
 		'caNP': 1,
 		'spectralTilt': 4,  # Modal voice naturalness
 		'flutter': 0.15,    # Natural F0 jitter
@@ -194,7 +194,7 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 2000,
+		'cf2': 2100,   # Higher F2 for velar place
 		'cf3': 2900,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -208,7 +208,7 @@ NASALS = {
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 200,   # Wider bandwidth for velar
+		'cbN0': 300,   # Widest zero notch for most audible velar place
 		'caNP': 1,
 		'spectralTilt': 4,  # Modal voice naturalness
 		'flutter': 0.15,    # Natural F0 jitter

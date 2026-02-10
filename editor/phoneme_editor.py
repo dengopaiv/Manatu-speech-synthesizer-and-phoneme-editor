@@ -63,6 +63,13 @@ try:
 except ImportError:
     HAS_WINSOUND = False
 
+# For live preview streaming audio
+try:
+    import sounddevice as sd
+    HAS_SOUNDDEVICE = True
+except ImportError:
+    HAS_SOUNDDEVICE = False
+
 # Custom events
 StatusUpdateEvent, EVT_STATUS_UPDATE = wx.lib.newevent.NewEvent()
 PlayDoneEvent, EVT_PLAY_DONE = wx.lib.newevent.NewEvent()
@@ -158,6 +165,11 @@ class PhonemeEditorFrame(wx.Frame):
         self.is_playing = False
         self.play_thread = None
         self.preset_manager = PresetManager()
+
+        # Live preview state
+        self.is_live_preview = False
+        self._live_sp = None       # SpeechPlayer instance for live preview
+        self._live_stream = None   # sounddevice.OutputStream
 
         # Diphthong components (if current phoneme is a diphthong)
         self._diphthong_components = None
@@ -302,6 +314,7 @@ class PhonemeEditorFrame(wx.Frame):
         self.header_panel.play_btn.Bind(wx.EVT_BUTTON, self.on_play)
         self.header_panel.stop_btn.Bind(wx.EVT_BUTTON, self.on_stop)
         self.header_panel.ref_btn.Bind(wx.EVT_BUTTON, self.on_play_reference)
+        self.header_panel.live_btn.Bind(wx.EVT_BUTTON, self.on_toggle_live_preview)
 
         # Parameters panel
         self.params_panel.reset_btn.Bind(wx.EVT_BUTTON, self.on_reset)
@@ -370,6 +383,8 @@ class PhonemeEditorFrame(wx.Frame):
 
     def set_frame_params(self, params, apply_klsyn88_defaults=True):
         self.params_panel.set_frame_params(params, apply_klsyn88_defaults)
+        if self.is_live_preview:
+            self._queue_live_frame()
 
     def build_preset_data(self):
         # Get all params then filter out prosody params (pitch, vibrato, gain)
@@ -501,6 +516,8 @@ class PhonemeEditorFrame(wx.Frame):
             self.on_play_sequence(None)
         elif key == wx.WXK_F7:
             self.on_play_reference(None)
+        elif key == wx.WXK_F8:
+            self.on_toggle_live_preview(None)
         elif key == wx.WXK_ESCAPE:
             self.on_stop(None)
         else:
@@ -538,6 +555,103 @@ class PhonemeEditorFrame(wx.Frame):
             self.set_status(f"Inserted: {symbol} ({description})")
             return True
         return False
+
+    # =========================================================================
+    # LIVE PREVIEW
+    # =========================================================================
+
+    def on_toggle_live_preview(self, event):
+        """Toggle live audio preview on/off (F8)."""
+        if not HAS_SOUNDDEVICE:
+            wx.MessageBox(
+                "Live preview requires the sounddevice package.\n\n"
+                "Install it with: pip install sounddevice",
+                "Missing dependency",
+                wx.OK | wx.ICON_INFORMATION
+            )
+            return
+        if self.is_live_preview:
+            self._stop_live_preview()
+        else:
+            self._start_live_preview()
+
+    def _start_live_preview(self):
+        """Start streaming live audio from the current slider parameters."""
+        # Stop batch playback first if active
+        if self.is_playing:
+            self.on_stop(None)
+
+        self._live_sp = speechPlayer.SpeechPlayer(self.sample_rate)
+        self._queue_live_frame()
+
+        def audio_callback(outdata, frames, time_info, status):
+            samples = self._live_sp.synthesize(frames)
+            if samples and hasattr(samples, 'length') and samples.length > 0:
+                count = min(samples.length, frames)
+                for i in range(count):
+                    outdata[i][0] = samples[i]
+                for i in range(count, frames):
+                    outdata[i][0] = 0
+            elif samples:
+                count = min(len(samples), frames)
+                for i in range(count):
+                    outdata[i][0] = samples[i]
+                for i in range(count, frames):
+                    outdata[i][0] = 0
+            else:
+                # No samples — output silence and re-queue frame
+                for i in range(frames):
+                    outdata[i][0] = 0
+                wx.CallAfter(self._queue_live_frame)
+
+        self._live_stream = sd.OutputStream(
+            samplerate=self.sample_rate,
+            channels=1,
+            dtype='int16',
+            blocksize=1024,
+            callback=audio_callback,
+        )
+        self._live_stream.start()
+
+        self.is_live_preview = True
+        self.header_panel.play_btn.Enable(False)
+        self.header_panel.live_btn.SetLabel("Stop Live")
+        self.set_status("Live preview ON — adjust sliders to hear changes")
+
+    def _stop_live_preview(self):
+        """Stop the live audio stream and clean up."""
+        self.is_live_preview = False
+        if self._live_stream is not None:
+            self._live_stream.stop()
+            self._live_stream.close()
+            self._live_stream = None
+        self._live_sp = None
+        self.header_panel.play_btn.Enable(True)
+        self.header_panel.live_btn.SetLabel("Live (F8)")
+        self.set_status("Live preview OFF")
+
+    def _queue_live_frame(self):
+        """Read current sliders and queue a long frame for continuous playback."""
+        if not self.is_live_preview or self._live_sp is None:
+            return
+        frame = self.create_frame()
+        formant_scale = self.header_panel.formant_slider.GetValue() / 100.0
+        self.apply_formant_scaling(frame, formant_scale)
+        # Safety defaults for continuous playback
+        if frame.voicePitch < 25:
+            frame.voicePitch = 100
+        if frame.endVoicePitch < 25:
+            frame.endVoicePitch = frame.voicePitch
+        if frame.preFormantGain <= 0:
+            frame.preFormantGain = 1.0
+        if frame.outputGain <= 0:
+            frame.outputGain = 1.0
+        self._live_sp.queueFrame(frame, 10000, 50, purgeQueue=True)
+
+    def on_param_changed(self):
+        """Called by panels when a parameter slider or formant scale changes."""
+        if self.is_live_preview:
+            self._queue_live_frame()
 
     # =========================================================================
     # PLAYBACK METHODS
@@ -699,6 +813,8 @@ class PhonemeEditorFrame(wx.Frame):
     def on_play(self, event):
         if self.is_playing:
             return
+        if self.is_live_preview:
+            self._stop_live_preview()
         self.is_playing = True
         self.header_panel.play_btn.Enable(False)
         self.header_panel.stop_btn.Enable(True)
@@ -722,6 +838,9 @@ class PhonemeEditorFrame(wx.Frame):
         self.play_thread.start()
 
     def on_stop(self, event):
+        if self.is_live_preview:
+            self._stop_live_preview()
+            return
         if self.is_playing:
             self.is_playing = False
             if HAS_WINSOUND:
@@ -892,6 +1011,8 @@ class PhonemeEditorFrame(wx.Frame):
     def on_play_sequence(self, event):
         if self.is_playing:
             return
+        if self.is_live_preview:
+            self._stop_live_preview()
         sequence_str = self.sequence_input.GetValue().strip()
         if not sequence_str:
             self.set_status("No sequence to play.")
@@ -1002,6 +1123,7 @@ class PhonemeEditorFrame(wx.Frame):
             "- Home/End: Min/Max\n"
             "- F2: Edit exact value\n"
             "- D: Restore saved | Shift+D: Restore original\n\n"
+            "- F8: Toggle live preview (requires sounddevice)\n\n"
             "Based on NVSpeechPlayer by NV Access Limited\n"
             "License: GPL v2",
             "About",
@@ -1012,6 +1134,8 @@ class PhonemeEditorFrame(wx.Frame):
         self.Close()
 
     def on_close(self, event):
+        if self.is_live_preview:
+            self._stop_live_preview()
         if self.is_playing:
             self.is_playing = False
             if HAS_WINSOUND:

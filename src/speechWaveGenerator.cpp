@@ -270,6 +270,24 @@ class FlutterGenerator {
 	}
 };
 
+// Trill modulator: amplitude LFO for trills /r/, /ʀ/, /ʙ/
+// Modulates voice amplitude and preFormantGain at 20-35 Hz
+// Cosine shape models natural aerodynamic articulator oscillation
+class TrillModulator {
+	double phase;
+	int sampleRate;
+public:
+	TrillModulator(int sr) : phase(0), sampleRate(sr) {}
+
+	// Returns modulation factor: 1.0 (fully open) to (1-depth) (maximally closed)
+	double getNext(double rate, double depth) {
+		if (rate <= 0 || depth <= 0) return 1.0;
+		phase = fmod(phase + rate / sampleRate, 1.0);
+		// Cosine: smooth closure (1.0 at phase=0, minimum at phase=0.5)
+		return 1.0 - depth * 0.5 * (1.0 - cos(PITWO * phase));
+	}
+};
+
 // DC-Blocking Filter (first-order HPF)
 // Removes DC offset from glottal source before cascade filtering.
 // The LF model at high Rd values produces asymmetric pulses with significant DC,
@@ -719,13 +737,14 @@ class BurstGenerator {
 	private:
 	int sampleRate;
 	NoiseGenerator noiseGen;
+	ZDFResonator burstFilter;  // Place-specific spectral coloring
 	double burstPhase;  // 0 = burst start, 1 = burst end
 	double lastBurstAmp;  // Track amplitude to detect burst start
 
 	public:
-	BurstGenerator(int sr): sampleRate(sr), noiseGen(), burstPhase(1.0), lastBurstAmp(0) {}
+	BurstGenerator(int sr): sampleRate(sr), noiseGen(), burstFilter(sr), burstPhase(1.0), lastBurstAmp(0) {}
 
-	double getNext(double burstAmplitude, double burstDuration) {
+	double getNext(double burstAmplitude, double burstDuration, double filterFreq, double filterBw) {
 		if (burstAmplitude <= 0) {
 			lastBurstAmp = 0;
 			burstPhase = 1.0;
@@ -737,6 +756,7 @@ class BurstGenerator {
 		// so this triggers immediately at full amplitude
 		if (lastBurstAmp <= 0 && burstAmplitude > 0) {
 			burstPhase = 0;  // Reset burst to start
+			burstFilter.reset();  // Reset filter state for clean burst onset
 		}
 		lastBurstAmp = burstAmplitude;
 
@@ -757,9 +777,16 @@ class BurstGenerator {
 		burstPhase += 1.0 / durationSamples;
 		if (burstPhase > 1.0) burstPhase = 1.0;
 
-		// Generate burst: noise * envelope * amplitude
-		return noiseGen.getNext() * envelope * burstAmplitude;
+		// Generate burst noise with optional pre-filtering for place coloring
+		double noise = noiseGen.getNext();
+		if (filterFreq > 0 && filterBw > 0) {
+			noise = burstFilter.resonate(noise, filterFreq, filterBw) * 3.0;
+		}
+		return noise * envelope * burstAmplitude;
 	}
+
+	void decay(double factor) { burstFilter.decay(factor); }
+	void reset() { burstFilter.reset(); burstPhase = 1.0; }
 };
 
 class ParallelFormantGenerator {
@@ -852,6 +879,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	TrachealResonator trachealRes;  // KLSYN88: subglottal resonances
 	ColoredNoiseGenerator fricGenerator;  // Bandpass-filtered noise for fricatives
 	BurstGenerator burstGen;  // KLSYN88: stop burst envelopes
+	TrillModulator trillMod;  // Amplitude LFO for trill consonants
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
 	CascadeDuckTracker cascadeDuck;  // Reduce cascade during voiceless bursts
@@ -860,7 +888,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), cascadeDuck(sr), peakLimiter(sr), prevPreGain(0), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), trillMod(sr), cascade(sr), parallel(sr), cascadeDuck(sr), peakLimiter(sr), prevPreGain(0), frameManager(NULL) {
 		// Enable denormal suppression to prevent CPU stalls from subnormal floats
 		enableDenormalSuppression();
 	}
@@ -874,8 +902,11 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				voice=dcBlock.filter(voice);  // Remove DC offset from LF glottal source
 				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
 				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
+				// Trill modulation: amplitude LFO applied to voice and overall gain
+				double trillMod_val = trillMod.getNext(frame->trillRate, frame->trillDepth);
+				voice *= trillMod_val;
 				// Resonator drain/reset during silence
-				double preGain = frame->preFormantGain;
+				double preGain = frame->preFormantGain * trillMod_val;
 				if (preGain < 0.01) {
 					cascade.decay(0.95);   // ~1ms exponential drain
 					parallel.decay(0.95);
@@ -891,7 +922,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				cascadeOut *= duck;
 				// Colored noise for fricatives (bandpass filtered based on place of articulation)
 				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
-				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
+				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration,frame->burstFilterFreq,frame->burstFilterBw);  // KLSYN88: stop burst
 				double parallelInput=(fric+burst)*preGain;
 				parallelInput+=voice*frame->parallelVoiceMix*preGain;
 				double parallelOut=parallel.getNext(frame,parallelInput);

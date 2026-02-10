@@ -67,6 +67,12 @@ class Frame(Structure):
 		'outputGain',
 		'endVoicePitch',
 		'midVoicePitch',      # Pitch at midpoint for contour tones (0=linear, >0=3-point)
+		# Trill modulation
+		'trillRate',          # Trill LFO rate in Hz (0=disabled, ~25 typical)
+		'trillDepth',         # Trill modulation depth 0-1
+		# Burst pre-filter
+		'burstFilterFreq',    # Burst pre-filter center freq Hz (0=unfiltered)
+		'burstFilterBw',      # Burst pre-filter bandwidth Hz
 	]]
 
 dllPath=os.path.join(os.path.dirname(__file__),'speechPlayer.dll')

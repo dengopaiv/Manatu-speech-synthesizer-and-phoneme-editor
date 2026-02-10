@@ -87,7 +87,8 @@ PARAM_GROUPS = {
         ('pb6', 200, 2000, 1000, 'Hz', 'Parallel F6 BW'),
         ('pa6', 0, 100, 0, '%', 'Parallel F6 amp'),
     ],
-    'Parallel Bypass': [
+    'Parallel Mix': [
+        ('parallelVoiceMix', 0, 100, 0, '%', 'Voice signal into parallel bank'),
         ('parallelBypass', 0, 105, 0, '%', 'Unfiltered noise bypass'),
     ],
     'Voice Quality (KLSYN88)': [
@@ -123,7 +124,7 @@ PARAM_GROUPS = {
 PERCENT_PARAMS = {
     'voiceAmplitude', 'voiceTurbulenceAmplitude', 'aspirationAmplitude',
     'fricationAmplitude', 'caNP', 'pa1', 'pa2', 'pa3', 'pa4', 'pa5', 'pa6',
-    'glottalOpenQuotient', 'vibratoPitchOffset',
+    'glottalOpenQuotient', 'vibratoPitchOffset', 'parallelVoiceMix',
     'flutter', 'openQuotientShape', 'speedQuotient', 'diplophonia',
     'burstAmplitude', 'burstDuration', 'sinusoidalVoicingAmplitude',
 }
