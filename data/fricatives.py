@@ -57,9 +57,9 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0.95,
 		'fricationAmplitude': 1,
-		# Labiodental: flat/diffuse spectrum (white noise)
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		# Labiodental: broad diffuse spectrum ~1-5 kHz
+		'noiseFilterFreq': 3000,
+		'noiseFilterBw': 5000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -119,9 +119,9 @@ FRICATIVES = {
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Labiodental: flat/diffuse spectrum (white noise)
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		# Labiodental: broad diffuse spectrum ~1-5 kHz
+		'noiseFilterFreq': 3000,
+		'noiseFilterBw': 5000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,

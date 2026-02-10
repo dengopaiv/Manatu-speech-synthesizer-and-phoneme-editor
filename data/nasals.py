@@ -19,7 +19,7 @@ NASALS = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'cf1': 472,
+		'cf1': 300,
 		'cf2': 1100,
 		'cf3': 2130,
 		'cf4': 3300,
@@ -38,7 +38,7 @@ NASALS = {
 		'caNP': 1,
 		'spectralTilt': 4,  # Modal voice naturalness
 		'flutter': 0.15,    # Natural F0 jitter
-		'pf1': 480,
+		'pf1': 300,
 		'pf2': 1270,
 		'pf3': 2130,
 		'pf4': 3300,
@@ -193,7 +193,7 @@ NASALS = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'cf1': 480,
+		'cf1': 300,
 		'cf2': 2000,
 		'cf3': 2900,
 		'cf4': 3300,
@@ -212,7 +212,7 @@ NASALS = {
 		'caNP': 1,
 		'spectralTilt': 4,  # Modal voice naturalness
 		'flutter': 0.15,    # Natural F0 jitter
-		'pf1': 480,
+		'pf1': 300,
 		'pf2': 2000,
 		'pf3': 2900,
 		'pf4': 3300,

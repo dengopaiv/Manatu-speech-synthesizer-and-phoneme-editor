@@ -19,7 +19,7 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 2,  # Close-mid — cutoff ~6540 Hz
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1350,
@@ -29,12 +29,12 @@ VOWELS_RCOLORED = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 100,
-		'cb2': 270,
-		'cb3': 330,
-		'cb4': 967,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb1': 80,   # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb2': 216,  # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb3': 264,  # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb4': 725,  # Q=4.0 (was 967)
+		'cb5': 938,  # Q=4.0 (was 1250)
+		'cb6': 1225,  # Q=4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -44,20 +44,22 @@ VOWELS_RCOLORED = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 100,
-		'pb2': 270,
-		'pb3': 330,
-		'pb4': 967,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb1': 80,   # Match cb1
+		'pb2': 216,  # Match cb2
+		'pb3': 264,  # Match cb3
+		'pb4': 725,  # Match cb4
+		'pb5': 938,  # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.1,
+		'pa5': 0.08,
+		'pa6': 0.04,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.1,
 		'fricationAmplitude': 0,
+		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality
 		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
 		'diplophonia': 0,
@@ -77,7 +79,7 @@ VOWELS_RCOLORED = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
+		'spectralTilt': 2,  # Close-mid — cutoff ~6540 Hz
 		'flutter': 0.12,     # Natural F0 jitter
 		'cf1': 500,
 		'cf2': 1400,
@@ -87,12 +89,12 @@ VOWELS_RCOLORED = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 100,
-		'cb2': 280,
-		'cb3': 320,
-		'cb4': 967,
-		'cb5': 1250,
-		'cb6': 1633,
+		'cb1': 80,   # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb2': 224,  # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb3': 256,  # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb4': 725,  # Q=4.0 (was 967)
+		'cb5': 938,  # Q=4.0 (was 1250)
+		'cb6': 1225,  # Q=4.0 (was 1633)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -102,20 +104,22 @@ VOWELS_RCOLORED = {
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 100,
-		'pb2': 280,
-		'pb3': 320,
-		'pb4': 967,
-		'pb5': 1250,
-		'pb6': 1633,
+		'pb1': 80,   # Match cb1
+		'pb2': 224,  # Match cb2
+		'pb3': 256,  # Match cb3
+		'pb4': 725,  # Match cb4
+		'pb5': 938,  # Match cb5
+		'pb6': 1225,  # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.1,
+		'pa5': 0.08,
+		'pa6': 0.04,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.1,
 		'fricationAmplitude': 0,
+		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality
 		'lfRd': 2.7,  # Modern LF model (breathy voice, consistent with other vowels)
 		'diplophonia': 0,

@@ -55,6 +55,18 @@ data.update(SPECIAL)
 from .calculations import update_all_phonemes
 update_all_phonemes(data)
 
+# Optional JSON preset overlay (activated by env var)
+import os as _os
+if _os.environ.get('NVSPEECHPLAYER_USE_JSON_PRESETS', '').strip() == '1':
+    _presets_dir = _os.path.join(_os.path.dirname(_os.path.dirname(__file__)), 'editor', 'presets')
+    if _os.path.isdir(_presets_dir):
+        from ._json_overlay import load_json_presets_overlay
+        for _ipa, _params in load_json_presets_overlay(_presets_dir).items():
+            if _ipa in data:
+                data[_ipa].update(_params)
+            else:
+                data[_ipa] = _params
+
 # Category mappings for organized menu display
 PHONEME_CATEGORIES = {
     'Vowels - Front': VOWELS_FRONT,
