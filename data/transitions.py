@@ -68,7 +68,7 @@ PHONEME_PLACE = {
     'ɸ': 'bilabial', 'β': 'bilabial',
     # Labiodentals
     'f': 'labiodental', 'v': 'labiodental', 'ɱ': 'labiodental',
-    'ʋ': 'labiodental',
+    'ʋ': 'labiodental', 'ⱱ': 'labiodental',
     # Dentals
     'θ': 'dental', 'ð': 'dental',
     # Alveolars
@@ -91,7 +91,7 @@ PHONEME_PLACE = {
     # Velars
     'k': 'velar', 'g': 'velar', 'ɡ': 'velar', 'ŋ': 'velar',
     'x': 'velar', 'ɣ': 'velar', 'w': 'velar',
-    'ʟ': 'velar',
+    'ʟ': 'velar', 'ɰ': 'velar',
     # Uvulars
     'q': 'uvular', 'ɢ': 'uvular', 'ɴ': 'uvular',
     'χ': 'uvular', 'ʁ': 'uvular',
