@@ -80,6 +80,9 @@ PHONEME_PLACE = {
     'ʃ': 'postalveolar', 'ʒ': 'postalveolar',
     'tʃ': 'postalveolar', 'dʒ': 'postalveolar',
     't͡ʃ': 'postalveolar', 'd͡ʒ': 'postalveolar',
+    't͡s': 'alveolar', 'd͡z': 'alveolar',
+    't͡ɬ': 'alveolar',
+    'p͡f': 'labiodental',
     # Retroflexes
     'ʈ': 'retroflex', 'ɖ': 'retroflex', 'ɳ': 'retroflex',
     'ʂ': 'retroflex', 'ʐ': 'retroflex', 'ɭ': 'retroflex',

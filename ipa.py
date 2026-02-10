@@ -169,8 +169,17 @@ def _parseToneLetters(text, index):
 		else:
 			return 'falling', consumed
 
+# Consonant modifier diacritics (superscript letters following a consonant)
+CONSONANT_MODIFIERS = {
+	'ʰ': 'aspiration',     # U+02B0 — modifier letter small h
+	# Future:
+	# 'ʷ': 'labialization',  # U+02B7
+	# 'ʲ': 'palatalization',  # U+02B2
+	# 'ⁿ': 'prenasalization', # U+207F
+}
+
 # Characters that should not be included in multi-char phoneme lookups
-_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys())
+_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys()) | set(CONSONANT_MODIFIERS.keys())
 
 def _findLongestPhoneme(text, index, maxLen=4):
 	"""Try to match the longest phoneme starting at index.
@@ -226,6 +235,13 @@ def _IPAToPhonemesHelper(text):
 			if tone and lastPhonemeRef[0] is not None:
 				lastPhonemeRef[0]['_tone'] = tone
 			offset += consumed - 1  # -1 because the loop will advance by 1
+			continue
+		# Check for consonant modifier diacritics (e.g. ʰ for aspiration)
+		elif char in CONSONANT_MODIFIERS:
+			modifier = CONSONANT_MODIFIERS[char]
+			if lastPhonemeRef[0] is not None:
+				if modifier == 'aspiration':
+					lastPhonemeRef[0]['_hasExplicitAspiration'] = True
 			continue
 		isLengthened=(text[index+1:index+2]=='ː')
 		isTiedTo=(text[index+1:index+2]=='͡')
@@ -314,11 +330,20 @@ def IPAToPhonemes(ipaText):
 			elif stress==1 and lastPhoneme and lastPhoneme.get('_isVowel'):
 				phoneme['_syllableStart']=True
 				syllableStartPhoneme=phoneme
-			if lastPhoneme and lastPhoneme.get('_isStop') and not lastPhoneme.get('_isVoiced') and phoneme and phoneme.get('_isVoiced') and not phoneme.get('_isStop') and not phoneme.get('_isAfricate'): 
+			# Auto-aspiration: voiceless stop before voiced sound (suppressed if explicit ʰ)
+			if lastPhoneme and lastPhoneme.get('_isStop') and not lastPhoneme.get('_isVoiced') and phoneme and phoneme.get('_isVoiced') and not phoneme.get('_isStop') and not phoneme.get('_isAfricate') and not lastPhoneme.get('_hasExplicitAspiration'):
 				psa=data['h'].copy()
 				psa['_postStopAspiration']=True
 				psa['_char']=None
 				phonemeList.append(psa)
+				lastPhoneme=psa
+			# Explicit ʰ: insert aspiration after the stop, regardless of what follows
+			if lastPhoneme and lastPhoneme.get('_hasExplicitAspiration'):
+				psa=data['h'].copy()
+				psa['_postStopAspiration']=True
+				psa['_char']=None
+				phonemeList.append(psa)
+				lastPhoneme.pop('_hasExplicitAspiration')
 				lastPhoneme=psa
 			if newWord:
 				newWord=False
@@ -337,8 +362,27 @@ def IPAToPhonemes(ipaText):
 				# Then add the silence gap
 				gap=dict(_silence=True,_preStopGap=True)
 				phonemeList.append(gap)
-			phonemeList.append(phoneme)
-			lastPhoneme=phoneme
+			# Phase expansion for affricates with _phases
+			phases = phoneme.get('_phases')
+			if phases:
+				for i, phase in enumerate(phases):
+					phaseFrame = {k: v for k, v in phoneme.items() if k != '_phases'}
+					phaseFrame.update(phase)
+					phaseFrame['_isAffricatePhase'] = True
+					phaseFrame['_phaseIndex'] = i
+					phaseFrame['_phaseCount'] = len(phases)
+					phonemeList.append(phaseFrame)
+				lastPhoneme = phonemeList[-1]
+			else:
+				phonemeList.append(phoneme)
+				lastPhoneme=phoneme
+	# Handle trailing explicit aspiration (word-final tʰ)
+	if lastPhoneme and lastPhoneme.get('_hasExplicitAspiration'):
+		psa=data['h'].copy()
+		psa['_postStopAspiration']=True
+		psa['_char']=None
+		phonemeList.append(psa)
+		lastPhoneme.pop('_hasExplicitAspiration')
 	return phonemeList
 
 def correctHPhonemes(phonemeList):
@@ -381,6 +425,9 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 		elif phoneme.get('_isStop'):
 			phonemeDuration=min(10.0/speed,10.0)  # 10ms lets burst resonators develop spectral character
 			phonemeFadeDuration=5.0/speed
+		elif phoneme.get('_isAffricatePhase'):
+			phonemeDuration=phoneme.get('_phaseDuration', 30) / speed
+			phonemeFadeDuration=phoneme.get('_phaseFade', 5) / speed
 		elif phoneme.get('_isAfricate'):
 			phonemeDuration=24.0/speed
 			phonemeFadeDuration=5.0/speed  # Was 0.001 - caused clicks

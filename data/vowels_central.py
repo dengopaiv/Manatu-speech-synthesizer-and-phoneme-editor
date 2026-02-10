@@ -344,18 +344,18 @@ VOWELS_CENTRAL = {
 		'flutter': 0.12,
 		'lfRd': 1.0,  # Modal voice — close vowel, maximum HF energy for distant F2/F3
 		'diplophonia': 0,
-		# Cascade formants - narrower bandwidths for colour
+		# Cascade formants - Swedish reference tuning (F2≈1700-1800, F3≈2400-2500)
 		'cf1': 320,
-		'cf2': 1500,
-		'cf3': 2300,
+		'cf2': 1750,
+		'cf3': 2450,
 		'cf4': 3100,
 		'cf5': 3500,
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
 		'cb1': 90,   # Widened from 64 — 4th-order F1 needs cb1≥80 for close vowels
-		'cb2': 240,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb3': 368,  # Q=6.25 (narrowed ×0.80 for clarity)
+		'cb2': 280,  # Q=6.25 (1750/6.25)
+		'cb3': 392,  # Q=6.25 (2450/6.25)
 		'cb4': 775,  # Q=4.0 (was 1033)
 		'cb5': 875,  # Q=4.0 (was 1167)
 		'cb6': 1225,  # Q=4.0 (was 1633)
@@ -364,14 +364,14 @@ VOWELS_CENTRAL = {
 		'caNP': 0,
 		# Parallel formants - matched to cascade
 		'pf1': 320,
-		'pf2': 1500,
-		'pf3': 2300,
+		'pf2': 1750,
+		'pf3': 2450,
 		'pf4': 3100,
 		'pf5': 3500,
 		'pf6': 4900,
 		'pb1': 90,   # Match cb1
-		'pb2': 240,  # Match cb2
-		'pb3': 368,  # Match cb3
+		'pb2': 280,  # Match cb2
+		'pb3': 392,  # Match cb3
 		'pb4': 775,  # Match cb4
 		'pb5': 875,  # Match cb5
 		'pb6': 1225,  # Match cb6
