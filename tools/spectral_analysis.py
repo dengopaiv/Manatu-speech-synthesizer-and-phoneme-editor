@@ -102,7 +102,7 @@ def _get_lpc_coefficients(samples, sample_rate, lpc_order=None):
         samples = samples / max_val
 
     if lpc_order is None:
-        lpc_order = 13
+        lpc_order = int(sample_rate / 1700)
 
     # Pre-emphasis
     emphasized = _pre_emphasis(samples)
@@ -215,7 +215,7 @@ def extract_formants_lpc(samples, sample_rate, num_formants=4, lpc_order=None):
         samples: Audio samples as numpy array or list (int16 or float)
         sample_rate: Sample rate in Hz
         num_formants: Number of formants to extract (default 4)
-        lpc_order: LPC order (default 13, good for 3-4 formants at 22050 Hz)
+        lpc_order: LPC order (default: sample_rate/1700, giving 13@22050 or 26@44100)
 
     Returns:
         List of (frequency, bandwidth) tuples, sorted by frequency.

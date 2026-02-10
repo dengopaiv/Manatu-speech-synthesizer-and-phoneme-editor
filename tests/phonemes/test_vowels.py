@@ -13,8 +13,6 @@ Output WAVs saved to tests/output/
 import sys
 import os
 import io
-import wave
-import struct
 
 # Handle encoding for Windows console
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
@@ -26,35 +24,18 @@ import numpy as np
 import speechPlayer
 import ipa
 from data import data as phoneme_data
-from tests.conftest import save_wav, collect_samples, OUTPUT_DIR, SAMPLE_RATE
+from tests.conftest import (
+    save_wav, collect_samples, build_phoneme_frame,
+    OUTPUT_DIR, SAMPLE_RATE,
+)
 from tools.spectral_analysis import (
     extract_formants_lpc, estimate_hnr, analyze_segment, is_voiced,
 )
 
 
-def synthesize_vowel(sp, f1, f2, f3, f4=3300, duration_ms=400, pitch=120):
-    """Synthesize a vowel with given formants."""
-    frame = speechPlayer.Frame()
-    frame.voicePitch = pitch
-    frame.voiceAmplitude = 1.0
-
-    # Cascade formants
-    frame.cf1, frame.cb1 = f1, max(60, f1 * 0.08)
-    frame.cf2, frame.cb2 = f2, max(80, f2 * 0.05)
-    frame.cf3, frame.cb3 = f3, 100
-    frame.cf4, frame.cb4 = f4, 150
-    frame.cf5, frame.cb5 = 4500, 200
-    frame.cf6, frame.cb6 = 5500, 250
-
-    # Voice quality
-    frame.lfRd = 1.0
-    frame.glottalOpenQuotient = 0.7
-    frame.spectralTilt = 6
-    frame.flutter = 0.2
-
-    frame.preFormantGain = 1.0
-    frame.outputGain = 2.0
-
+def synthesize_vowel(sp, ipa_char, duration_ms=400, pitch=120):
+    """Synthesize a vowel using actual phoneme data."""
+    frame = build_phoneme_frame(ipa_char, pitch)
     sp.queueFrame(frame, duration_ms, 50)
 
 
@@ -79,22 +60,15 @@ def test_cardinal_vowels():
     """Test the cardinal vowels /i/, /a/, /u/."""
     print("\n=== Test: Cardinal Vowels ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
-    all_samples = []
     for key in ['i', 'a', 'u']:
         v = REFERENCE_VOWELS[key]
         print(f"  /{v['ipa']}/ - {v['desc']}")
-        print(f"    F1={v['f1']}, F2={v['f2']}, F3={v['f3']}")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'])
+        synthesize_vowel(sp, v['ipa'])
 
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_cardinal_i_a_u.wav", all_samples)
     print(f"  Generated {len(all_samples)} samples")
     print("  PASSED")
@@ -105,21 +79,15 @@ def test_front_vowels():
     """Test front vowels /i/, /ɪ/, /e/, /ɛ/, /æ/."""
     print("\n=== Test: Front Vowels ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
     for key in ['i', 'I', 'e', 'E', 'ae']:
         v = REFERENCE_VOWELS[key]
-        print(f"  /{v['ipa']}/ - F1={v['f1']}, F2={v['f2']}")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'])
+        print(f"  /{v['ipa']}/ - {v['desc']}")
+        synthesize_vowel(sp, v['ipa'])
 
-    all_samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_front_series.wav", all_samples)
     print("  PASSED")
     return True
@@ -129,21 +97,15 @@ def test_back_vowels():
     """Test back vowels /u/, /ʊ/, /o/, /ɔ/, /ɑ/."""
     print("\n=== Test: Back Vowels ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
     for key in ['u', 'U', 'o', 'O', 'a']:
         v = REFERENCE_VOWELS[key]
-        print(f"  /{v['ipa']}/ - F1={v['f1']}, F2={v['f2']}")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'])
+        print(f"  /{v['ipa']}/ - {v['desc']}")
+        synthesize_vowel(sp, v['ipa'])
 
-    all_samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_back_series.wav", all_samples)
     print("  PASSED")
     return True
@@ -153,21 +115,15 @@ def test_central_vowels():
     """Test central vowels /ə/, /ʌ/."""
     print("\n=== Test: Central Vowels ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
     for key in ['@', 'V']:
         v = REFERENCE_VOWELS[key]
-        print(f"  /{v['ipa']}/ - F1={v['f1']}, F2={v['f2']}")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'])
+        print(f"  /{v['ipa']}/ - {v['desc']}")
+        synthesize_vowel(sp, v['ipa'])
 
-    all_samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_central.wav", all_samples)
     print("  PASSED")
     return True
@@ -177,22 +133,14 @@ def test_pitch_variation():
     """Test vowels at different pitches (male/female range)."""
     print("\n=== Test: Vowel Pitch Variation ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
-
-    v = REFERENCE_VOWELS['a']  # Use /ɑ/ for test
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
     for pitch in [80, 120, 180, 240]:
         print(f"  /ɑ/ at {pitch} Hz")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'], pitch=pitch)
+        synthesize_vowel(sp, 'ɑ', pitch=pitch)
 
-    all_samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_pitch_variation.wav", all_samples)
     print("  PASSED")
     return True
@@ -202,22 +150,16 @@ def test_all_reference_vowels():
     """Generate all reference vowels in sequence."""
     print("\n=== Test: All Reference Vowels ===")
 
-    sp = speechPlayer.SpeechPlayer(22050)
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
     for key, v in REFERENCE_VOWELS.items():
         print(f"  /{v['ipa']}/ ({key})")
-        synthesize_vowel(sp, v['f1'], v['f2'], v['f3'], duration_ms=300)
+        synthesize_vowel(sp, v['ipa'], duration_ms=300)
 
-    all_samples = []
-    while True:
-        chunk = sp.synthesize(1024)
-        if not chunk:
-            break
-        all_samples.extend(chunk[i] for i in range(len(chunk)))
+    all_samples = collect_samples(sp)
 
-    
     save_wav("vowel_all_reference.wav", all_samples)
-    duration = len(all_samples) / 22050
+    duration = len(all_samples) / SAMPLE_RATE
     print(f"  Generated {duration:.2f}s audio with {len(REFERENCE_VOWELS)} vowels")
     print("  PASSED")
     return True

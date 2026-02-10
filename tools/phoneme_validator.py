@@ -39,7 +39,7 @@ from tools.spectral_analysis import (
     estimate_spectral_centroid, is_voiced, analyze_segment,
 )
 
-SAMPLE_RATE = 22050
+SAMPLE_RATE = 44100
 
 # Tier 1 tolerance: synthesized formants must be within this fraction of target
 FORMANT_TOLERANCE = 0.15  # 15%
