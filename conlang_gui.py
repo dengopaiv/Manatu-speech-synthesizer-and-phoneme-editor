@@ -39,7 +39,7 @@ class ConlangSynthesizer:
         self.root.minsize(500, 400)
 
         # Synthesis parameters
-        self.sample_rate = 22050
+        self.sample_rate = 44100
         self.is_speaking = False
         self.speech_thread = None
 

@@ -270,6 +270,34 @@ class FlutterGenerator {
 	}
 };
 
+// DC-Blocking Filter (first-order HPF)
+// Removes DC offset from glottal source before cascade filtering.
+// The LF model at high Rd values produces asymmetric pulses with significant DC,
+// which passes through allPole cascade resonators (unity DC gain) and shifts
+// the tanh soft limiter operating point, causing asymmetric distortion.
+// y[n] = x[n] - x[n-1] + R * y[n-1], R = 1 - 2π*fc/fs
+// At 44100 Hz, fc=20 Hz: R≈0.997, transparent above ~40 Hz.
+class DCBlockFilter {
+private:
+	double R, lastIn, lastOut;
+
+public:
+	DCBlockFilter(int sampleRate, double cutoffHz = 20.0) {
+		R = 1.0 - (2.0 * M_PI * cutoffHz / sampleRate);
+		if (R < 0.9) R = 0.9;
+		if (R > 0.9999) R = 0.9999;
+		lastIn = 0.0;
+		lastOut = 0.0;
+	}
+
+	double filter(double input) {
+		double output = input - lastIn + R * lastOut;
+		lastIn = input;
+		lastOut = output;
+		return output;
+	}
+};
+
 class FrequencyGenerator {
 	private:
 	int sampleRate;
@@ -438,52 +466,54 @@ class VoiceGenerator {
 };
 
 // Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
-// Based on Vadim Zavalishin (2012): "The Art of VA Filter Design"
+// Reference: Vadim Zavalishin (2012), "The Art of VA Filter Design", Chapter 3.10
 //
 // Advantages over traditional IIR:
 // - Smooth parameter modulation without zipper noise or discontinuities
-// - Inherently stable for all positive g and R values (no pole clamping needed)
+// - Inherently stable for all positive g and d values (no pole clamping needed)
 // - Handles pitch-synchronous modulation cleanly (deltaF1/deltaB1)
 // - Zero-delay feedback via implicit integration (trapezoidal rule)
 //
-// Mathematical foundation:
-// Analog prototype: H(s) = (g*s) / (s² + 2*R*g*s + g²)
-// Where: g = tan(π*f/fs), R = 1/(2*Q), Q = f/BW
+// Algorithm (Zavalishin's canonical SVF):
+// v3 = in - ic2eq
+// v1 = a1*ic1eq + a2*v3       // Bandpass output
+// v2 = ic2eq + a2*ic1eq + a3*v3  // Lowpass output (unity DC gain)
+// ic1eq = 2*v1 - ic1eq        // Update integrator 1
+// ic2eq = 2*v2 - ic2eq        // Update integrator 2
 //
-// Trapezoidal integration (zero-delay feedback):
-// v0 = k1 * (in - 2*R*s1 - s2)  // Bandpass output (implicit)
-// v1 = s1 + g*v0                 // Lowpass state
-// v2 = s2 + g*v1                 // Lowpass output
-// s1 = v1 + g*v0                 // Update integrator 1
-// s2 = v2 + g*v1                 // Update integrator 2
-// k1 = 1 / (1 + 2*R*g + g*g)     // Normalization
+// Where: g = tan(π*f/fs), d = BW/f (damping = 1/Q)
+//        a1 = 1/(1 + g*(g+d)), a2 = g*a1, a3 = g*a2
 class ZDFResonator {
 	private:
 	// Configuration
 	int sampleRate;
 	double frequency;
 	double bandwidth;
-	bool anti;  // Anti-resonator mode (zero instead of pole)
+	bool anti;    // Anti-resonator mode (zero instead of pole)
+	bool allPole; // All-pole (lowpass) mode for cascade topology
 
 	// ZDF state variables (integrator states)
-	double s1, s2;
+	double ic1eq, ic2eq;
 
 	// Cached coefficients (updated only when parameters change)
 	bool setOnce;
 	double g;   // Frequency warping: tan(π*f/fs)
-	double R;   // Damping coefficient: 1/(2*Q)
-	double k1;  // Normalization: 1 / (1 + 2*R*g + g*g)
+	double a1;  // 1 / (1 + g*(g+d))
+	double a2;  // g * a1
+	double a3;  // g * a2
 
 	public:
-	ZDFResonator(int sampleRate, bool anti=false) {
+	ZDFResonator(int sampleRate, bool anti=false, bool allPole=false) {
 		this->sampleRate = sampleRate;
 		this->anti = anti;
+		this->allPole = allPole;
 		this->setOnce = false;
-		this->s1 = 0;
-		this->s2 = 0;
+		this->ic1eq = 0;
+		this->ic2eq = 0;
 		this->g = 0;
-		this->R = 0;
-		this->k1 = 1.0;
+		this->a1 = 1.0;
+		this->a2 = 0;
+		this->a3 = 0;
 	}
 
 	void setParams(double frequency, double bandwidth) {
@@ -495,30 +525,29 @@ class ZDFResonator {
 			// Edge case: zero frequency or bandwidth means bypass
 			if (frequency <= 0 || bandwidth <= 0) {
 				g = 0;
-				R = 0;
-				k1 = 1.0;
+				a1 = 1.0;
+				a2 = 0;
+				a3 = 0;
 				setOnce = true;
 				return;
 			}
 
-			// Calculate ZDF coefficients
 			// g: frequency warping via bilinear transform
 			double omega = M_PI * frequency / sampleRate;
 			g = tan(omega);
 
 			// Clamp g for numerical stability at very high frequencies
-			// (approaching Nyquist, tan(π/2) → ∞)
 			if (g > 10.0) {
-				g = 10.0;  // Roughly 0.46 * sampleRate
+				g = 10.0;
 			}
 
-			// R: damping coefficient from quality factor
-			// Q = frequency / bandwidth
-			double Q = frequency / bandwidth;
-			R = 1.0 / (2.0 * Q);
+			// d: damping coefficient (1/Q where Q = frequency/bandwidth)
+			double d = bandwidth / frequency;
 
-			// k1: normalization coefficient for unity gain at resonance
-			k1 = 1.0 / (1.0 + 2.0 * R * g + g * g);
+			// Zavalishin's SVF coefficients
+			a1 = 1.0 / (1.0 + g * (g + d));
+			a2 = g * a1;
+			a3 = g * a2;
 
 			setOnce = true;
 		}
@@ -532,28 +561,25 @@ class ZDFResonator {
 			return in;
 		}
 
-		// ZDF State Variable Filter algorithm (trapezoidal integration)
-		// This computes the implicit solution with zero-delay feedback
+		// Zavalishin's canonical ZDF SVF algorithm
+		double v3 = in - ic2eq;
+		double v1 = a1 * ic1eq + a2 * v3;             // Bandpass
+		double v2 = ic2eq + a2 * ic1eq + a3 * v3;     // Lowpass
 
-		// Bandpass output (implicit feedback equation)
-		double v0 = k1 * (in - 2.0 * R * s1 - s2);
-
-		// State updates (integrate forward)
-		double v1 = s1 + g * v0;
-		double v2 = s2 + g * v1;
-
-		// Update integrator states with zero-delay sample
-		s1 = v1 + g * v0;
-		s2 = v2 + g * v1;
+		// Update integrator states
+		ic1eq = 2.0 * v1 - ic1eq;
+		ic2eq = 2.0 * v2 - ic2eq;
 
 		// Output selection
 		if (anti) {
-			// Anti-resonator mode (notch filter / zero)
-			// Subtract bandpass from input to create notch
-			return in - v0;
+			// Anti-resonator: subtract bandpass from input to create notch
+			return in - v1;
+		} else if (allPole) {
+			// Lowpass mode for cascade topology (unity DC gain)
+			return v2;
 		} else {
-			// Normal resonator mode (bandpass filter / pole)
-			return v0;
+			// Bandpass mode for parallel topology
+			return v1;
 		}
 	}
 
@@ -572,14 +598,15 @@ class ZDFResonator4thOrder {
 	ZDFResonator stage1, stage2;
 
 	public:
-	ZDFResonator4thOrder(int sr): sampleRate(sr), stage1(sr), stage2(sr) {}
+	ZDFResonator4thOrder(int sr, bool allPole=false): sampleRate(sr), stage1(sr, false, allPole), stage2(sr, false, allPole) {}
 
 	double resonate(double in, double frequency, double bandwidth) {
 		if (frequency <= 0) return in;  // Bypass if frequency is 0
 
-		// Adjust bandwidth for equivalent Q when cascading
-		// Using 0.80 factor (same as original IIR implementation)
-		double bwAdjusted = bandwidth * 0.80;
+		// Widen per-stage bandwidth to compensate for cascade narrowing.
+		// Two cascaded 2nd-order stages narrow the combined -3dB BW by ~0.644×,
+		// so each stage needs BW × 1.554 to achieve the target combined bandwidth.
+		double bwAdjusted = bandwidth * 1.554;
 
 		// Cascade two 2nd-order ZDF sections at same frequency
 		double out = stage1.resonate(in, frequency, bwAdjusted);
@@ -601,7 +628,7 @@ class TrachealResonator {
 	ZDFResonator pole1, zero1, pole2, zero2;  // Two pole-zero pairs for tracheal coupling (using ZDF)
 
 	public:
-	TrachealResonator(int sr): sampleRate(sr), pole1(sr), zero1(sr, true), pole2(sr), zero2(sr, true) {}
+	TrachealResonator(int sr): sampleRate(sr), pole1(sr, false, true), zero1(sr, true), pole2(sr, false, true), zero2(sr, true) {}
 
 	double resonate(double input, const speechPlayer_frame_t* frame) {
 		double output = input;
@@ -633,13 +660,13 @@ class TrachealResonator {
 class CascadeFormantGenerator {
 	private:
 	int sampleRate;
-	// F1-F3: 4th-order ZDF resonators for sharper, more focused formants
+	// F1-F3: 4th-order ZDF resonators with allPole (lowpass) for cascade topology
 	ZDFResonator4thOrder r1, r2, r3;
-	// F4-F6: 2nd-order ZDF resonators (wider bandwidths, less benefit from 4th-order)
+	// F4-F6: 2nd-order ZDF resonators with allPole (lowpass) for cascade topology
 	ZDFResonator r4, r5, r6, rN0, rNP;
 
 	public:
-	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), rN0(sr,true), rNP(sr) {};
+	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true) {};
 
 	double getNext(const speechPlayer_frame_t* frame, bool glottisOpen, double input) {
 		input/=2.0;
@@ -648,10 +675,9 @@ class CascadeFormantGenerator {
 		output=r6.resonate(output,frame->cf6,frame->cb6);
 		output=r5.resonate(output,frame->cf5,frame->cb5);
 		output=r4.resonate(output,frame->cf4,frame->cb4);
-		// F1-F3 use 4th-order for sharper resonance (24 dB/octave rolloff)
-		// Adaptive cascading: F2-F3 use 0.75 effective factor (pre-scale to compensate for 0.80 internal)
-		output=r3.resonate(output, frame->cf3, frame->cb3 * 0.9375);  // 0.9375 = 0.75/0.80
-		output=r2.resonate(output, frame->cf2, frame->cb2 * 0.9375);  // Effective: 0.75
+		// F1-F3 use 4th-order allPole for sharper resonance (24 dB/octave rolloff)
+		output=r3.resonate(output, frame->cf3, frame->cb3);
+		output=r2.resonate(output, frame->cf2, frame->cb2);
 		// Pitch-synchronous F1 modulation: during glottal open phase,
 		// F1 rises and B1 widens due to subglottal coupling (Klatt 1990)
 		double f1 = frame->cf1;
@@ -740,6 +766,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	private:
 	int sampleRate;
 	VoiceGenerator voiceGenerator;
+	DCBlockFilter dcBlock;  // Remove DC offset from glottal source before cascade
 	SpectralTiltFilter tiltFilter;  // KLSYN88: spectral tilt for breathy voice
 	TrachealResonator trachealRes;  // KLSYN88: subglottal resonances
 	ColoredNoiseGenerator fricGenerator;  // Bandpass-filtered noise for fricatives
@@ -749,7 +776,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
 		// Enable denormal suppression to prevent CPU stalls from subnormal floats
 		enableDenormalSuppression();
 	}
@@ -761,16 +788,19 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 			const speechPlayer_frame_t* frame=frameManager->getCurrentFrame();
 			if(frame) {
 				double voice=voiceGenerator.getNext(frame);
+				voice=dcBlock.filter(voice);  // Remove DC offset from LF glottal source
 				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
 				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
 				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
 				// Colored noise for fricatives (bandpass filtered based on place of articulation)
 				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
 				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
-				double parallelOut=parallel.getNext(frame,(fric+burst)*frame->preFormantGain);
+				double parallelInput=(fric+burst)*frame->preFormantGain;
+			parallelInput+=voice*frame->parallelVoiceMix*frame->preFormantGain;
+			double parallelOut=parallel.getNext(frame,parallelInput);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;
 				// Soft limiting using tanh for smoother clipping
-				double scaled = out * 2500;  // Reduced from 4000 to prevent clipping
+				double scaled = out * 4000;
 				double limited = tanh(scaled / 32000.0) * 32000.0;  // Soft limit
 				// Use rounding instead of truncation to reduce quantization distortion
 				sampleBuf[i].value = (short)lrint(limited);

@@ -62,6 +62,7 @@ class Frame(Structure):
 		'pb1','pb2','pb3','pb4','pb5','pb6',
 		'pa1','pa2','pa3','pa4','pa5','pa6',
 		'parallelBypass',
+		'parallelVoiceMix',    # Fraction of voice signal routed to parallel bank (0-1)
 		'preFormantGain',
 		'outputGain',
 		'endVoicePitch',

@@ -48,7 +48,7 @@ class ConlangSynthesizerFrame(wx.Frame):
         )
 
         # Synthesis parameters
-        self.sample_rate = 22050
+        self.sample_rate = 44100
         self.is_speaking = False
         self.speech_thread = None
 

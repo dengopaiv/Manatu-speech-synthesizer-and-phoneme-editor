@@ -730,7 +730,7 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 		else:
 			frame=speechPlayer.Frame()
 			frame.preFormantGain=1.0
-			frame.outputGain=2.0
+			frame.outputGain=1.0
 			applyPhonemeToFrame(frame,phoneme)
 
 			# Apply voice type modifications
