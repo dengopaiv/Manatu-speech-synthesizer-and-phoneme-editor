@@ -583,6 +583,9 @@ class ZDFResonator {
 		}
 	}
 
+	void decay(double factor) { ic1eq *= factor; ic2eq *= factor; }
+	void reset() { ic1eq = 0; ic2eq = 0; }
+
 	void setSampleRate(int sr) {
 		sampleRate = sr;
 		setOnce = false;  // Force coefficient recalculation
@@ -612,6 +615,9 @@ class ZDFResonator4thOrder {
 		double out = stage1.resonate(in, frequency, bwAdjusted);
 		return stage2.resonate(out, frequency, bwAdjusted);
 	}
+
+	void decay(double factor) { stage1.decay(factor); stage2.decay(factor); }
+	void reset() { stage1.reset(); stage2.reset(); }
 
 	void setSampleRate(int sr) {
 		sampleRate = sr;
@@ -664,9 +670,14 @@ class CascadeFormantGenerator {
 	ZDFResonator4thOrder r1, r2, r3;
 	// F4-F6: 2nd-order ZDF resonators with allPole (lowpass) for cascade topology
 	ZDFResonator r4, r5, r6, rN0, rNP;
+	// Smooth glottal blend for pitch-synchronous F1 modulation
+	double smoothGlottalBlend;
+	double glottalAlpha;  // ~2ms smoothing constant
 
 	public:
-	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true) {};
+	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true), smoothGlottalBlend(0) {
+		glottalAlpha = 1.0 - exp(-1.0 / (0.002 * sr));  // 2ms time constant
+	};
 
 	double getNext(const speechPlayer_frame_t* frame, bool glottisOpen, double input) {
 		input/=2.0;
@@ -680,14 +691,25 @@ class CascadeFormantGenerator {
 		output=r2.resonate(output, frame->cf2, frame->cb2);
 		// Pitch-synchronous F1 modulation: during glottal open phase,
 		// F1 rises and B1 widens due to subglottal coupling (Klatt 1990)
-		double f1 = frame->cf1;
-		double b1 = frame->cb1;
-		if (glottisOpen) {
-			f1 += frame->deltaF1;
-			b1 += frame->deltaB1;
-		}
+		// Smooth the glottis-open flag with ~2ms exponential transition
+		// to eliminate discontinuity at glottal boundaries
+		double glottalTarget = glottisOpen ? 1.0 : 0.0;
+		smoothGlottalBlend += glottalAlpha * (glottalTarget - smoothGlottalBlend);
+		double f1 = frame->cf1 + frame->deltaF1 * smoothGlottalBlend;
+		double b1 = frame->cb1 + frame->deltaB1 * smoothGlottalBlend;
 		output=r1.resonate(output, f1, b1);
 		return output;
+	}
+
+	void decay(double factor) {
+		r1.decay(factor); r2.decay(factor); r3.decay(factor);
+		r4.decay(factor); r5.decay(factor); r6.decay(factor);
+		rN0.decay(factor); rNP.decay(factor);
+	}
+	void reset() {
+		r1.reset(); r2.reset(); r3.reset();
+		r4.reset(); r5.reset(); r6.reset();
+		rN0.reset(); rNP.reset();
 	}
 
 };
@@ -751,15 +773,74 @@ class ParallelFormantGenerator {
 	double getNext(const speechPlayer_frame_t* frame, double input) {
 		input/=2.0;
 		double output=0;
-		output+=(r1.resonate(input,frame->pf1,frame->pb1)-input)*frame->pa1;
-		output+=(r2.resonate(input,frame->pf2,frame->pb2)-input)*frame->pa2;
-		output+=(r3.resonate(input,frame->pf3,frame->pb3)-input)*frame->pa3;
-		output+=(r4.resonate(input,frame->pf4,frame->pb4)-input)*frame->pa4;
-		output+=(r5.resonate(input,frame->pf5,frame->pb5)-input)*frame->pa5;
-		output+=(r6.resonate(input,frame->pf6,frame->pb6)-input)*frame->pa6;
+		// ZDF SVF resonate() already returns native bandpass (v1) for parallel resonators,
+		// so no input subtraction needed. The old "resonate() - input" was a leftover from
+		// when resonate() returned allpole (lowpass) output and subtraction approximated bandpass.
+		output+=r1.resonate(input,frame->pf1,frame->pb1)*frame->pa1;
+		output+=r2.resonate(input,frame->pf2,frame->pb2)*frame->pa2;
+		output+=r3.resonate(input,frame->pf3,frame->pb3)*frame->pa3;
+		output+=r4.resonate(input,frame->pf4,frame->pb4)*frame->pa4;
+		output+=r5.resonate(input,frame->pf5,frame->pb5)*frame->pa5;
+		output+=r6.resonate(input,frame->pf6,frame->pb6)*frame->pa6;
 		return calculateValueAtFadePosition(output,input,frame->parallelBypass);
 	}
 
+	void decay(double factor) {
+		r1.decay(factor); r2.decay(factor); r3.decay(factor);
+		r4.decay(factor); r5.decay(factor); r6.decay(factor);
+	}
+	void reset() {
+		r1.reset(); r2.reset(); r3.reset();
+		r4.reset(); r5.reset(); r6.reset();
+	}
+
+};
+
+// Cascade Ducking Tracker
+// Reduces cascade output during voiceless bursts/frication to prevent amplitude spikes
+// at stop-vowel boundaries where cascade resonators still ring from previous vowel
+class CascadeDuckTracker {
+private:
+	double smoothDuck;
+	double alpha;  // ~1ms smoothing constant
+public:
+	CascadeDuckTracker(int sr) : smoothDuck(1.0) {
+		alpha = 1.0 - exp(-1.0 / (0.001 * sr));  // 1ms time constant
+	}
+	double getDuck(double burstAmp, double fricAmp, double voiceAmp) {
+		// Duck cascade when burst/fric is active and voicing is low
+		double burstEnv = max(burstAmp, fricAmp);
+		double target = 1.0 - 0.7 * burstEnv * (1.0 - voiceAmp);
+		smoothDuck += alpha * (target - smoothDuck);
+		return smoothDuck;
+	}
+};
+
+// Peak Limiter with fast attack and slow release
+// Transparent below threshold (-3 dB), only compresses peaks
+// Replaces tanh soft clip which always applied nonlinear distortion
+class PeakLimiter {
+private:
+	double gain;
+	double attackAlpha, releaseAlpha;
+	double threshold;
+public:
+	PeakLimiter(int sr, double thresholdDb = -3.0) {
+		gain = 1.0;
+		threshold = 32767.0 * pow(10.0, thresholdDb / 20.0);  // ~23197
+		attackAlpha = 1.0 - exp(-1.0 / (0.0001 * sr));   // 0.1ms attack
+		releaseAlpha = 1.0 - exp(-1.0 / (0.050 * sr));    // 50ms release
+	}
+	double limit(double input) {
+		double absIn = fabs(input);
+		if (absIn > threshold) {
+			double targetGain = threshold / absIn;
+			gain += attackAlpha * (targetGain - gain);
+		} else {
+			gain += releaseAlpha * (1.0 - gain);
+		}
+		return input * gain;
+	}
 };
 
 class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
@@ -773,17 +854,19 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	BurstGenerator burstGen;  // KLSYN88: stop burst envelopes
 	CascadeFormantGenerator cascade;
 	ParallelFormantGenerator parallel;
+	CascadeDuckTracker cascadeDuck;  // Reduce cascade during voiceless bursts
+	PeakLimiter peakLimiter;  // Transparent peak limiter (replaces tanh)
+	double prevPreGain;  // Track preFormantGain for silence detection
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), cascade(sr), parallel(sr), cascadeDuck(sr), peakLimiter(sr), prevPreGain(0), frameManager(NULL) {
 		// Enable denormal suppression to prevent CPU stalls from subnormal floats
 		enableDenormalSuppression();
 	}
 
 	unsigned int generate(const unsigned int sampleCount, sample* sampleBuf) {
-		if(!frameManager) return 0; 
-		double val=0;
+		if(!frameManager) return 0;
 		for(unsigned int i=0;i<sampleCount;++i) {
 			const speechPlayer_frame_t* frame=frameManager->getCurrentFrame();
 			if(frame) {
@@ -791,19 +874,32 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				voice=dcBlock.filter(voice);  // Remove DC offset from LF glottal source
 				voice=tiltFilter.filter(voice,frame->spectralTilt);  // KLSYN88: apply spectral tilt
 				voice=trachealRes.resonate(voice,frame);  // KLSYN88: apply tracheal resonances
-				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*frame->preFormantGain);
+				// Resonator drain/reset during silence
+				double preGain = frame->preFormantGain;
+				if (preGain < 0.01) {
+					cascade.decay(0.95);   // ~1ms exponential drain
+					parallel.decay(0.95);
+				}
+				if (prevPreGain < 0.005 && preGain > 0.01) {
+					cascade.reset();  // Hard reset on voice onset after silence
+					parallel.reset();
+				}
+				prevPreGain = preGain;
+				double cascadeOut=cascade.getNext(frame,voiceGenerator.glottisOpen,voice*preGain);
+				// Duck cascade during voiceless bursts to prevent amplitude spikes
+				double duck = cascadeDuck.getDuck(frame->burstAmplitude, frame->fricationAmplitude, frame->voiceAmplitude);
+				cascadeOut *= duck;
 				// Colored noise for fricatives (bandpass filtered based on place of articulation)
 				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
 				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration);  // KLSYN88: stop burst
-				double parallelInput=(fric+burst)*frame->preFormantGain;
-			parallelInput+=voice*frame->parallelVoiceMix*frame->preFormantGain;
-			double parallelOut=parallel.getNext(frame,parallelInput);
+				double parallelInput=(fric+burst)*preGain;
+				parallelInput+=voice*frame->parallelVoiceMix*preGain;
+				double parallelOut=parallel.getNext(frame,parallelInput);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;
-				// Soft limiting using tanh for smoother clipping
+				// Peak limiter: transparent below -3dB, fast attack for transients
 				double scaled = out * 4000;
-				double limited = tanh(scaled / 32000.0) * 32000.0;  // Soft limit
-				// Use rounding instead of truncation to reduce quantization distortion
-				sampleBuf[i].value = (short)lrint(limited);
+				double limited = peakLimiter.limit(scaled);
+				sampleBuf[i].value = (short)lrint(max(-32767.0, min(32767.0, limited)));
 			} else {
 				return i;
 			}
