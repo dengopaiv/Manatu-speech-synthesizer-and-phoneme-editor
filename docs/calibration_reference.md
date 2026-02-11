@@ -70,7 +70,7 @@ The F2 locus is where formant transitions "point to" during CV coarticulation:
 | Retroflex | 1800 | ʈ, ɖ | 60 ms (slow) |
 | Velar | 1500 | k, ɡ | 40 ms |
 
-**Usage**: When a stop precedes a vowel, the vowel's F2 starts partway between the locus and its target (Klatt locus equation).
+**Usage**: When a stop precedes a vowel, the vowel's F2 starts partway between the locus and its target (Klatt locus equation). Stop cf2 values are set to match their place locus (e.g., bilabial cf2=900), with onset frames handling the transition to vowel targets.
 
 ---
 
@@ -97,10 +97,10 @@ The nasal zero (anti-resonance) frequency varies by place:
 
 | Place | cfN0 (Hz) | Reference Nasal | Nasal Formant |
 |-------|-----------|-----------------|---------------|
-| Bilabial | 750 | m | Low zero |
-| Alveolar | 1450 | n | Mid zero |
-| Retroflex | 1500 | ɳ | Slightly higher |
-| Velar | 3000 | ŋ | High zero |
+| Bilabial | 1000 | m | Low zero (Stevens §9.1.3) |
+| Alveolar | 1600 | n | Mid zero (Stevens §9.1.3) |
+| Retroflex | 1700 | ɳ | Slightly higher (Stevens §9.1.3) |
+| Velar | 3000 | ŋ | High zero (Stevens §9.1.3) |
 
 **Usage**: The nasal zero cancels energy near its frequency, creating the characteristic nasal timbre.
 

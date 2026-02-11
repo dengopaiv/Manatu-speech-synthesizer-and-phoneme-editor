@@ -11,6 +11,75 @@ Each entry documents:
 
 ---
 
+## [2026-02-11] - Engine Improvements for Plosive Burst Audibility
+
+### Summary
+Two C++ engine changes to improve stop burst audibility, particularly for bilabial /p/ which has the least energy margin among plosives.
+
+### What Changed
+- `src/speechWaveGenerator.cpp` (BurstGenerator): Onset transient duration now scales with burst filter frequency. Low-frequency bursts (/p/ at 1500 Hz) get 2.0ms instead of the previous 1.5ms, giving the ZDF bandpass filter enough cycles to ring up. High-frequency bursts (/t/, /k/) are unchanged (1.5ms floor).
+- `src/speechWaveGenerator.cpp` (PeakLimiter): Added fast-release mode (5ms time constant) that activates during silence (preGain < 0.01). During stop closure gaps, the limiter now recovers ~91% of gain reduction vs ~21% with the standard 50ms release. Bursts arrive at near-unity limiter gain. No effect during normal speech.
+
+### How Phonemes Are Handled Differently
+- /p/,/b/ bursts: onset transient 1.5ms → 2.0ms (filter fully rings up before onset fades)
+- /q/,/ɢ/ bursts: onset transient 1.5ms → 2.5ms (lowest filter frequency)
+- /t/,/d/,/k/,/g/ bursts: unchanged (high filter frequency, 1.5ms floor sufficient)
+- All stops after vowels: limiter recovers during closure gap, burst not attenuated
+
+### Files Modified
+- `src/speechWaveGenerator.cpp`
+
+---
+
+## [2026-02-11] - Unify Stops with Phase System
+
+### Summary
+Generalized the affricate `_phases` system to work for all stop consonants, enabling ejectives, geminates, and Estonian quantity distinctions as pure data additions.
+
+### What Changed
+- `ipa.py`: Renamed `_isAffricatePhase` → `_isPhase` throughout timing logic
+- `ipa.py`: Reordered timing checks so `_isPhase` is checked before `_isStop` (taps/flaps without `_phases` fall through to `_isStop` fallback)
+- `ipa.py`: Gap duration now data-driven via `_closureDuration` (defaults to 12ms)
+- `ipa.py`: `_closureDuration` propagated from phoneme data into pre-stop gap frames
+- `data/stops.py`: Added `_phases` to all 14 stops — voiceless 10ms/3ms fade, voiced 8ms/3ms fade (reflecting natural VOT differences)
+
+### How Phonemes Are Handled Differently
+- Stops now use the same `_phases` expansion path as affricates instead of hardcoded single-frame timing
+- Closure duration is configurable per-phoneme via `_closureDuration` (e.g., `180` for Estonian overlong)
+- Taps/flaps (ɾ, ɽ, ⱱ) are unaffected — they have `_isStop` but no `_phases`, so they use the fallback path
+- Auto-aspiration continues to work: last phase frame inherits `_isStop`/`_isVoiced` from base data
+
+### Enables (future, no code changes needed)
+- Ejectives (pʼ, tʼ, kʼ): multi-phase stop + glottal closure as pure data
+- Estonian three-way quantity: short/long/overlong via `_closureDuration`
+- Geminates: extended closure duration as data
+
+---
+
+## [2026-02-11] - Self-Sustaining Burst & Stop Latency Reduction
+
+### Summary
+Made BurstGenerator self-sustaining so burst envelopes complete independently of frame transitions. Removed fadeOut workaround frame and tightened stop timing for lower latency.
+
+### What Changed
+- `src/speechWaveGenerator.cpp`: BurstGenerator now captures burst parameters (amplitude, duration, filter freq/bw) at trigger time and uses stored values for the entire envelope, preventing frame interpolation from corrupting mid-burst parameters
+- `ipa.py`: Removed `_fadeOutToSilence` frame insertion before stop gaps — no longer needed since burst is self-sustaining
+- `ipa.py`: Tightened stop timing: pre-stop gap 20ms→12ms, aspiration 20ms→15ms, burst fade 5ms→3ms
+
+### Gap Analysis (Klatt Literature Review)
+Compared our labial plosive implementation against Klatt 1980, Stevens Ch.7, and DECtalk:
+- **Well-covered**: bypass path for diffuse bilabial character, diffuse-falling parallel formant weighting, onset transient, lip turbulence, instant-step for burst parameters
+- **Systemic gaps for future work** (all stops, not bilabial-specific):
+  - F1 cutback: per-formant interpolation timing during burst-to-vowel transition
+  - Vowel-dependent burst spectrum: coarticulated burst filter frequencies (mainly affects velars)
+
+### How Phonemes Are Handled Differently
+- Stop bursts now run to completion even when frame transitions occur mid-burst
+- One fewer frame per stop sequence (fadeOut removed), reducing total stop duration
+- Tighter timing improves responsiveness at high speech rates
+
+---
+
 ## [2026-02-11] - Phase 3: Extended Consonant Validation & Testing
 
 ### Summary
@@ -198,7 +267,7 @@ Applied original Klatt Table III values for fricative parallel formant amplitude
 
 ### Phase 3: Extended Sound Classes
 - Retroflex consonants using Agrawal & Stevens 1992 KLSYN88 parameters
-- Ejective timing rules (shortened stop + glottal closure)
+- ~~Ejective timing rules~~ — architecture ready via phase system (data needs adding)
 - Implosive parameter derivation (reversed amplitude curves)
 - Prenasalized stop expansion
 

@@ -405,6 +405,87 @@ def test_extended_approximants():
     )
 
 
+# --- CV transition tests (full IPA pipeline with onset frames) ---
+
+def _synthesize_cv_ipa(ipa_text, pitch=120, formantScale=1.0):
+    """Synthesize CV text using the full ipa.py pipeline (exercises onset frames)."""
+    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
+    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+        ipa_text, speed=1, basePitch=pitch, inflection=0,
+        formantScale=formantScale
+    ):
+        if frame is not None:
+            sp.queueFrame(frame, min_dur, fade_dur)
+    return collect_samples(sp)
+
+
+def test_cv_transitions():
+    """Test CV transitions using the full IPA pipeline (onset frames + locus equations).
+
+    Unlike direct frame queueing, this exercises:
+    - Onset frame generation from locus equations (transitions.py)
+    - Two-stage transition: consonant → onset → vowel target
+    - formantScale application to onset formants
+    """
+    print("\n=== Test: CV Transitions (IPA Pipeline) ===")
+
+    cv_pairs = [
+        ('mɑ', 'bilabial nasal → open vowel'),
+        ('bɑ', 'voiced bilabial stop → open vowel'),
+        ('nɑ', 'alveolar nasal → open vowel'),
+        ('dɑ', 'voiced alveolar stop → open vowel'),
+        ('ɡɑ', 'voiced velar stop → open vowel'),
+    ]
+
+    all_samples = []
+    for ipa_text, desc in cv_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text)
+        all_samples.extend(samples)
+        # Brief silence between items
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.1))
+
+    save_wav("consonant_cv_transitions.wav", all_samples)
+    print(f"  Generated {len(cv_pairs)} CV transitions")
+    print("  PASSED")
+    return True
+
+
+def test_cv_formant_scaling():
+    """Test that CV transitions are consistent across formantScale values.
+
+    Verifies onset frames are properly scaled for female/child voice types.
+    Both male and female versions should produce non-silent output.
+    """
+    print("\n=== Test: CV Formant Scaling ===")
+
+    scales = [
+        (1.0, 'male'),
+        (1.17, 'female'),
+    ]
+
+    all_passed = True
+    for scale, label in scales:
+        samples = _synthesize_cv_ipa('mɑ', formantScale=scale)
+        has_signal = len(samples) > 0 and any(abs(s) > 10 for s in samples)
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        rms = 0
+        if samples:
+            arr = np.array(samples, dtype=np.float64)
+            rms = np.sqrt(np.mean(arr ** 2))
+        print(f"  /mɑ/ {label} (scale={scale}): RMS={rms:.0f} {status}")
+
+    assert all_passed, "Some formantScale values produced silent output"
+    save_wav("consonant_cv_formant_scaling.wav",
+             _synthesize_cv_ipa('mɑ', formantScale=1.0) +
+             [0] * int(SAMPLE_RATE * 0.15) +
+             _synthesize_cv_ipa('mɑ', formantScale=1.17))
+    print("  PASSED")
+    return True
+
+
 # --- Spectral assertion tests (using actual phoneme data + spectral analysis) ---
 
 def _synthesize_ipa_phoneme(ipa_text, duration_ms=300, pitch=120):
@@ -464,11 +545,10 @@ def test_voicing_contrast():
 
 
 def test_fricative_spectral_centroid():
-    """Assert /s/ has highest spectral centroid among fricatives.
+    """Assert /s/ has higher spectral centroid than /ʃ/ (sibilant separation).
 
-    /s/ (alveolar) should have a distinctly higher centroid than /ʃ/ and /f/.
-    The ordering between /ʃ/ and /f/ is not strictly enforced since both
-    have relatively diffuse spectra at similar centroid frequencies.
+    /s/ (alveolar) should have a distinctly higher centroid than /ʃ/ (postalveolar).
+    /f/ uses broadband pink noise (non-sibilant) so is not compared to sibilants.
     """
     print("\n=== Test: Fricative Spectral Centroid ===")
 
@@ -492,13 +572,12 @@ def test_fricative_spectral_centroid():
         print("  SKIP: /s/ not available")
         return True
 
-    # /s/ should have highest centroid (alveolar sibilant = concentrated high-freq energy)
-    for char in ['ʃ', 'f']:
-        if char in centroids:
-            assert centroids['s'] > centroids[char], \
-                f"/s/ centroid ({centroids['s']:.0f}) should be > /{char}/ ({centroids[char]:.0f})"
+    # /s/ should have higher centroid than /ʃ/ (sibilant separation)
+    if 'ʃ' in centroids:
+        assert centroids['s'] > centroids['ʃ'], \
+            f"/s/ centroid ({centroids['s']:.0f}) should be > /ʃ/ ({centroids['ʃ']:.0f})"
 
-    print("  Verified: /s/ has highest centroid")
+    print("  Verified: /s/ centroid > /ʃ/ centroid")
     print("  PASSED")
     return True
 
@@ -740,6 +819,9 @@ def run_all_tests():
         test_trills,
         test_extended_laterals,
         test_extended_approximants,
+        # CV transition tests (full IPA pipeline)
+        test_cv_transitions,
+        test_cv_formant_scaling,
         # Spectral assertion tests
         test_voicing_contrast,
         test_fricative_spectral_centroid,

@@ -789,9 +789,11 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 		if phoneme.get('_silence') and not phoneme.get('_preStopGap'):
 			yield None,frameDuration,fadeDuration
 		else:
-			# Extract onset values (pop removes them so applyPhonemeToFrame won't see them)
+			# Extract onset/offset values (pop removes them so applyPhonemeToFrame won't see them)
 			onset_cf2 = phoneme.pop('_onset_cf2', None)
 			onset_cf3 = phoneme.pop('_onset_cf3', None)
+			offset_cf2 = phoneme.pop('_offset_cf2', None)
+			offset_cf3 = phoneme.pop('_offset_cf3', None)
 
 			if onset_cf2 is not None:
 				# Create onset waypoint frame (copy of vowel with locus-derived formants)
@@ -832,3 +834,23 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 				frame.flutter = flutter
 
 			yield frame,frameDuration,fadeDuration
+
+			if offset_cf2 is not None:
+				# Create offset waypoint frame (copy of vowel with locus-derived formants)
+				offset_frame = speechPlayer.Frame()
+				offset_frame.preFormantGain = 1.0
+				offset_frame.outputGain = 1.0
+				applyPhonemeToFrame(offset_frame, phoneme)
+				applyFormantScaling(offset_frame, formantScale)
+				if spectralTilt is not None:
+					offset_frame.spectralTilt = spectralTilt
+				if voiceTurbulence is not None:
+					offset_frame.voiceTurbulenceAmplitude = voiceTurbulence
+				if flutter is not None:
+					offset_frame.flutter = flutter
+				# Override formants with locus-derived offset values
+				offset_frame.cf2 = offset_cf2 * formantScale
+				if offset_cf3 is not None:
+					offset_frame.cf3 = offset_cf3 * formantScale
+				# Yield offset waypoint: 1ms hold, 30ms fade (VC transition)
+				yield offset_frame, 1.0, 30.0

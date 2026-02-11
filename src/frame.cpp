@@ -50,10 +50,10 @@ class FrameManagerImpl: public FrameManager {
 			} else {
 				double curFadeRatio=(double)sampleCounter/(newFrameRequest->numFadeSamples);
 				for(int i=0;i<speechPlayer_frame_numParams;++i) {
-					// Burst parameters (indices 26-27) and preFormantGain (index 68) should step instantly
-					// This ensures stop bursts trigger at full amplitude and prevents
-					// preFormantGain from silencing output during transitions
-					if (i == 26 || i == 27 || i == 68 || i == 74 || i == 75) {
+					// Burst params (26-27), noise filter (46-47), preFormantGain (68),
+					// and burst noise params (74-75) step instantly to avoid audible
+					// filter sweeps and ensure correct onset timing
+					if (i == 26 || i == 27 || i == 46 || i == 47 || i == 68 || i == 74 || i == 75) {
 						// Use target value immediately
 						((speechPlayer_frameParam_t*)&curFrame)[i] = ((speechPlayer_frameParam_t*)&(newFrameRequest->frame))[i];
 					} else {

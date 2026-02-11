@@ -89,7 +89,7 @@ PARAM_GROUPS = {
     ],
     'Parallel Mix': [
         ('parallelVoiceMix', 0, 100, 0, '%', 'Voice signal into parallel bank'),
-        ('parallelBypass', 0, 105, 0, '%', 'Unfiltered noise bypass'),
+        ('parallelBypass', 0, 100, 0, '%', 'Unfiltered noise bypass'),
     ],
     'Voice Quality (KLSYN88)': [
         ('spectralTilt', 0, 41, 0, 'dB', 'High-freq attenuation (breathy)'),
@@ -127,7 +127,7 @@ PARAM_GROUPS = {
 PERCENT_PARAMS = {
     'voiceAmplitude', 'voiceTurbulenceAmplitude', 'aspirationAmplitude',
     'fricationAmplitude', 'caNP', 'pa1', 'pa2', 'pa3', 'pa4', 'pa5', 'pa6',
-    'glottalOpenQuotient', 'vibratoPitchOffset', 'parallelVoiceMix',
+    'glottalOpenQuotient', 'vibratoPitchOffset', 'parallelVoiceMix', 'parallelBypass',
     'flutter', 'openQuotientShape', 'speedQuotient', 'diplophonia',
     'burstAmplitude', 'burstDuration', 'sinusoidalVoicingAmplitude',
     'burstNoiseColor',
@@ -137,7 +137,7 @@ PERCENT_PARAMS = {
 GAIN_PARAMS = {'preFormantGain', 'outputGain'}
 
 # Parameters that need /10 scaling
-TENTH_PARAMS = {'vibratoSpeed', 'parallelBypass', 'lfRd'}
+TENTH_PARAMS = {'vibratoSpeed', 'lfRd'}
 
 # KLSYN88 default values
 KLSYN88_DEFAULTS = {
@@ -168,6 +168,7 @@ KLSYN88_DEFAULTS = {
 
 # IPA descriptions
 IPA_DESCRIPTIONS = {
+    # Vowels
     'i': 'close front unrounded', 'y': 'close front rounded',
     'ɨ': 'close central unrounded', 'ʉ': 'close central rounded',
     'ɯ': 'close back unrounded', 'u': 'close back rounded',
@@ -184,17 +185,73 @@ IPA_DESCRIPTIONS = {
     'a': 'open front unrounded', 'ɶ': 'open front rounded',
     'ä': 'open central unrounded', 'ɑ': 'open back unrounded', 'ɒ': 'open back rounded',
     'ɝ': 'r-colored mid central', 'ɚ': 'r-colored schwa',
+    # Nasalized vowels
+    'ã': 'nasalized open front unrounded',
+    'ɛ̃': 'nasalized open-mid front unrounded',
+    'ɔ̃': 'nasalized open-mid back rounded',
+    'œ̃': 'nasalized open-mid front rounded',
+    # Stops
     'p': 'voiceless bilabial plosive', 'b': 'voiced bilabial plosive',
     't': 'voiceless alveolar plosive', 'd': 'voiced alveolar plosive',
+    'ʈ': 'voiceless retroflex plosive', 'ɖ': 'voiced retroflex plosive',
+    'c': 'voiceless palatal plosive', 'ɟ': 'voiced palatal plosive',
     'k': 'voiceless velar plosive', 'g': 'voiced velar plosive',
-    'm': 'bilabial nasal', 'n': 'alveolar nasal', 'ŋ': 'velar nasal',
+    'ɡ': 'voiced velar plosive',
+    'q': 'voiceless uvular plosive', 'ɢ': 'voiced uvular plosive',
+    'ʔ': 'glottal stop',
+    # Nasals
+    'm': 'bilabial nasal', 'ɱ': 'labiodental nasal',
+    'n': 'alveolar nasal', 'ɳ': 'retroflex nasal',
+    'ɲ': 'palatal nasal', 'ŋ': 'velar nasal', 'ɴ': 'uvular nasal',
+    # Fricatives
+    'ɸ': 'voiceless bilabial fricative', 'β': 'voiced bilabial fricative',
     'f': 'voiceless labiodental fricative', 'v': 'voiced labiodental fricative',
     'θ': 'voiceless dental fricative', 'ð': 'voiced dental fricative',
     's': 'voiceless alveolar fricative', 'z': 'voiced alveolar fricative',
     'ʃ': 'voiceless postalveolar fricative', 'ʒ': 'voiced postalveolar fricative',
-    'h': 'voiceless glottal fricative',
-    'l': 'alveolar lateral approximant', 'ɹ': 'alveolar approximant',
+    'ʂ': 'voiceless retroflex fricative', 'ʐ': 'voiced retroflex fricative',
+    'ç': 'voiceless palatal fricative', 'ʝ': 'voiced palatal fricative',
+    'x': 'voiceless velar fricative', 'ɣ': 'voiced velar fricative',
+    'χ': 'voiceless uvular fricative', 'ʁ': 'voiced uvular fricative',
+    'ħ': 'voiceless pharyngeal fricative', 'ʕ': 'voiced pharyngeal fricative',
+    'h': 'voiceless glottal fricative', 'ɦ': 'voiced glottal fricative',
+    'ɬ': 'voiceless lateral fricative', 'ɮ': 'voiced lateral fricative',
+    'ʍ': 'voiceless labial-velar fricative',
+    # Affricates
+    't͡ʃ': 'voiceless postalveolar affricate',
+    'd͡ʒ': 'voiced postalveolar affricate',
+    't͡s': 'voiceless alveolar affricate',
+    'd͡z': 'voiced alveolar affricate',
+    't͡ɬ': 'voiceless lateral affricate',
+    'p͡f': 'voiceless labiodental affricate',
+    # Liquids & Glides
+    'l': 'alveolar lateral approximant', 'ɭ': 'retroflex lateral approximant',
+    'ʎ': 'palatal lateral approximant', 'ʟ': 'velar lateral approximant',
+    'ɹ': 'alveolar approximant', 'ɻ': 'retroflex approximant',
+    'ʋ': 'labiodental approximant', 'ɰ': 'velar approximant',
     'j': 'palatal approximant', 'w': 'labial-velar approximant',
+    'ɾ': 'alveolar tap', 'ɽ': 'retroflex flap', 'ⱱ': 'labiodental tap',
+    'r': 'alveolar trill', 'ʀ': 'uvular trill', 'ʙ': 'bilabial trill',
+    # Diphthongs — English
+    'aɪ': 'PRICE diphthong', 'aʊ': 'MOUTH diphthong',
+    'eɪ': 'FACE diphthong', 'oʊ': 'GOAT diphthong',
+    'ɔɪ': 'CHOICE diphthong',
+    'ɪə': 'NEAR diphthong', 'eə': 'SQUARE diphthong', 'ʊə': 'CURE diphthong',
+    # Diphthongs — legacy / cross-linguistic
+    'ɑj': 'open back to palatal', 'ɑw': 'open back to labiovelar',
+    'ɔj': 'open-mid back to palatal',
+    # Diphthongs — Estonian
+    'aj': 'open front to palatal', 'ej': 'close-mid front to palatal',
+    'oj': 'close-mid back to palatal', 'uj': 'close back to palatal',
+    'iʊ': 'close front to near-close back',
+    'yj': 'close front rounded to palatal',
+    'ɤj': 'close-mid back unrounded to palatal',
+    # Diphthongs — Finnish
+    'øy': 'close-mid front rounded to close front rounded',
+    'uo': 'close back to close-mid back',
+    'yø': 'close front rounded to close-mid front rounded',
+    # Triphthong
+    'uoi': 'close back → close-mid back → close front',
 }
 
 # Duration defaults for test sequences

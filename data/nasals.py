@@ -10,6 +10,9 @@ Voice quality is controlled by lfRd parameter (LF model):
 - lfRd = 0: No voicing (voiceless consonants only)
 """
 
+# Note: Parallel formant params (pf1-pf6, pb1-pb6, pa1-pa6) are present but unused
+# for nasals because parallelVoiceMix defaults to 0 and fricationAmplitude/burstAmplitude
+# are 0, so no signal enters the parallel path. They are retained as placeholders.
 NASALS = {
 	'm': {  # Bilabial nasal
 		'_isNasal': True,
@@ -20,13 +23,13 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 1000,  # Lower F2 for bilabial place
+		'cf2': 900,   # Bilabial F2 locus; separated from cfN0=1000 to avoid pole-zero cancellation
 		'cf3': 2130,
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,  # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 750,  # Bilabial nasal zero ~750 Hz (Stevens Ch.9)
+		'cfN0': 1000,  # Bilabial nasal zero ~1000 Hz (Stevens §9.1.3, front cavity 14-17 cm)
 		'cb1': 44,
 		'cb2': 200,   # Wider — more muffled bilabial quality
 		'cb3': 150,
@@ -84,7 +87,7 @@ NASALS = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 1450,  # Alveolar nasal zero ~1450 Hz (Stevens Ch.9)
+		'cfN0': 1600,  # Alveolar nasal zero ~1600 Hz (Stevens §9.1.3, front cavity 5-8 cm)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,
@@ -144,7 +147,7 @@ NASALS = {
 		'cf5': 4200,
 		'cf6': 4900,
 		'cfNP': 280,   # Nasal pole
-		'cfN0': 1500,  # Retroflex nasal zero (higher than alveolar)
+		'cfN0': 1700,  # Retroflex nasal zero ~1700 Hz (Stevens §9.1.3, shorter front cavity than alveolar)
 		'cb1': 50,
 		'cb2': 150,
 		'cb3': 180,
@@ -152,7 +155,7 @@ NASALS = {
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 90,
+		'cbN0': 150,   # Retroflex zero bandwidth (consistent with alveolar/bilabial range)
 		'caNP': 1,
 		'spectralTilt': 4,
 		'flutter': 0.15,
@@ -200,7 +203,7 @@ NASALS = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 800,   # Slightly higher than m's 750 (labiodental)
+		'cfN0': 1050,  # Labiodental nasal zero ~1050 Hz (Stevens §9.1.3, front cavity ~13-15 cm)
 		'cb1': 44,
 		'cb2': 200,
 		'cb3': 150,
@@ -256,7 +259,7 @@ NASALS = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 2000,  # Palatal zero — between alveolar 1450 and velar 3000
+		'cfN0': 2000,  # Palatal nasal zero ~2000 Hz (Stevens §9.1.3, short front cavity)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,
@@ -306,13 +309,13 @@ NASALS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 300,
-		'cf2': 2100,   # Higher F2 for velar place
-		'cf3': 2900,
+		'cf2': 1800,   # Velar murmur F2 ~1500-1800 (lowered for F2-F3 velar pinch)
+		'cf3': 2300,   # Velar murmur F3 — 500 Hz gap to cf2 enables velar pinch on transitions
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 3000,  # Velar nasal zero ~3000 Hz (Stevens Ch.9)
+		'cfN0': 3000,  # Velar nasal zero ~3000 Hz (Stevens §9.1.3)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,
@@ -370,7 +373,7 @@ NASALS = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 270,   # Nasal pole ~270 Hz (Stevens)
-		'cfN0': 3500,  # Uvular zero — above velar 3000
+		'cfN0': 3500,  # Uvular nasal zero ~3500 Hz (Stevens §9.1.3, minimal front cavity)
 		'cb1': 44,
 		'cb2': 225,
 		'cb3': 225,

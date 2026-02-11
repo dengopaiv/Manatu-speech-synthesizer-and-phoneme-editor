@@ -211,6 +211,50 @@ def calculate_formant_onset(consonant, vowel, k=0.75):
     return onset
 
 
+def calculate_formant_offset(consonant, vowel, k=0.5):
+    """
+    Apply Klatt locus equation to calculate vowel offset formants (VC direction).
+
+    F_offset = F_locus + k * (F_vowel - F_locus)
+
+    k=0.5 means the vowel formant has descended halfway toward the consonant
+    locus by the time of closure. VC transitions show less undershoot than CV
+    (Klatt 1987), hence lower k than onset (0.75).
+
+    Args:
+        consonant: dict with consonant parameters (the following consonant)
+        vowel: dict with vowel parameters (the preceding vowel)
+        k: undershoot factor (0.0 = at locus, 1.0 = at vowel target)
+
+    Returns:
+        dict: offset formant values with '_offset_' prefix
+    """
+    offset = {}
+
+    place = get_consonant_place(consonant)
+    if not place or place == 'glottal':
+        return offset
+
+    f2_locus = F2_LOCUS.get(place)
+    if not f2_locus:
+        return offset
+
+    # Calculate F2 offset
+    vowel_f2 = vowel.get('cf2', 0)
+    if vowel_f2:
+        offset_f2 = f2_locus + k * (vowel_f2 - f2_locus)
+        offset['_offset_cf2'] = offset_f2
+
+    # F3 offset using consonant's F3 as pseudo-locus
+    consonant_f3 = consonant.get('cf3', 0)
+    vowel_f3 = vowel.get('cf3', 0)
+    if consonant_f3 and vowel_f3:
+        offset_f3 = consonant_f3 + 0.85 * (vowel_f3 - consonant_f3)
+        offset['_offset_cf3'] = offset_f3
+
+    return offset
+
+
 def get_transition_duration(from_phoneme, to_phoneme, speed=1.0):
     """
     Get fade duration based on phoneme class pair.
@@ -254,7 +298,6 @@ def apply_coarticulation(phonemeList, baseSpeed=1.0):
             continue
 
         prev = phonemeList[i - 1] if i > 0 else None
-        # next_ph = phonemeList[i + 1] if i < final_index else None  # For future use
 
         # Skip if no previous phoneme or previous is silence
         if not prev or prev.get('_silence'):
@@ -283,3 +326,24 @@ def apply_coarticulation(phonemeList, baseSpeed=1.0):
         # Update transition duration based on phoneme class pair
         duration = get_transition_duration(prev, phoneme, baseSpeed)
         phoneme['_fadeDuration'] = duration
+
+    # VC transitions: Apply locus equation to vowel offset (before stop closure)
+    for i, phoneme in enumerate(phonemeList):
+        if not phoneme.get('_isVowel'):
+            continue
+
+        # Look ahead past gap to find the following consonant
+        next_consonant = None
+        for j in range(i + 1, min(i + 3, len(phonemeList))):
+            candidate = phonemeList[j]
+            if candidate.get('_preStopGap'):
+                continue  # Skip the silent gap
+            if candidate.get('_isStop') or candidate.get('_isAfricate'):
+                next_consonant = candidate
+            break
+
+        if next_consonant:
+            next_class = get_phoneme_class(next_consonant)
+            if next_class in ('stop', 'fricative', 'nasal'):
+                offset = calculate_formant_offset(next_consonant, phoneme)
+                phoneme.update(offset)

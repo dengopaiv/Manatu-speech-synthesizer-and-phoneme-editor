@@ -51,23 +51,23 @@ STOPS = {
 		'pb4': 180,
 		'pb5': 150,
 		'pb6': 400,
-		'pa1': 0.55,   # Labials: diffuse-falling spectrum (Klatt 1980)
-		'pa2': 0.50,   # Stronger F2 (main bilabial energy region)
-		'pa3': 0.30,   # Slight F3 boost for audible transient
+		'pa1': 0.75,   # Labials: diffuse-falling spectrum (Klatt 1980)
+		'pa2': 0.70,   # Stronger F2 (main bilabial energy region)
+		'pa3': 0.45,   # Slight F3 boost for audible transient
 		'pa4': 0.15,
 		'pa5': 0.1,
 		'pa6': 0.05,
-		'parallelBypass': 0.5,  # Increased for more diffuse bilabial character (ɸ uses 0.98)
+		'parallelBypass': 0.15,  # Reduced from 0.5 — burst needs formant resonance for audibility
 		# Lip turbulence: brief fricative-like noise models bilabial release
-		'fricationAmplitude': 0.35,
+		'fricationAmplitude': 0.10,  # Minimal — let burst dominate the release
 		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
 		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
 		# KLSYN88: Stop burst - labial weakest (Stevens Ch.7)
-		'burstAmplitude': 0.55,    # Reduced since frication adds energy
+		'burstAmplitude': 0.90,    # Near /k/ level — bilabial diffuseness still makes it sound weaker
 		'burstDuration': 0.4,  # Voiceless longer release
-		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
+		'burstFilterFreq': 2500,  # Higher for more audible transient energy
 		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
-		'burstNoiseColor': 1.0,   # Pink noise: bilabial diffuse-falling spectrum (no cavity)
+		'burstNoiseColor': 0.2,   # Mostly white: strong transient pop, slight pink for diffuse character
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -121,23 +121,23 @@ STOPS = {
 		'pb4': 180,
 		'pb5': 150,
 		'pb6': 400,
-		'pa1': 0.45,   # Labials: diffuse-falling spectrum (Klatt 1980)
-		'pa2': 0.45,   # Stronger F2 (main bilabial energy region)
-		'pa3': 0.25,   # Slight F3 boost for audible transient
+		'pa1': 0.60,   # Labials: diffuse-falling spectrum (Klatt 1980)
+		'pa2': 0.60,   # Stronger F2 (main bilabial energy region)
+		'pa3': 0.35,   # Slight F3 boost for audible transient
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.4,  # Increased for more diffuse bilabial character
+		'parallelBypass': 0.12,  # Reduced from 0.4 — burst needs formant resonance for audibility
 		# Lip turbulence: brief fricative-like noise models bilabial release
-		'fricationAmplitude': 0.25,
+		'fricationAmplitude': 0.08,  # Minimal — let burst dominate the release
 		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
 		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
 		# KLSYN88: Stop burst - labial weakest, voiced shorter
-		'burstAmplitude': 0.45,    # Reduced since frication adds energy
+		'burstAmplitude': 0.75,    # Near /d/ level — bilabial diffuseness still makes it sound weaker
 		'burstDuration': 0.2,  # Voiced shorter release
-		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
+		'burstFilterFreq': 2500,  # Higher for more audible transient energy
 		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
-		'burstNoiseColor': 1.0,   # Pink noise: bilabial diffuse-falling spectrum (no cavity)
+		'burstNoiseColor': 0.2,   # Mostly white: strong transient pop, slight pink for diffuse character
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
