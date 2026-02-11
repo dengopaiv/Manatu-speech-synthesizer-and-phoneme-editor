@@ -45,7 +45,7 @@ class AccessibleSlider(wx.Slider):
     - Home: Jump to minimum
     - End: Jump to maximum
     - F2: Open edit dialog for exact value
-    - D: Restore to saved value
+    - D: Reset to parameter default
     - Shift+D: Restore to original loaded value
     """
 
@@ -61,6 +61,11 @@ class AccessibleSlider(wx.Slider):
         self.Bind(wx.EVT_KEY_DOWN, self._on_key_down)
 
     def _on_key_down(self, event):
+        # Let Alt/Ctrl combinations propagate to menus and parent handlers
+        if event.AltDown() or event.ControlDown():
+            event.Skip()
+            return
+
         key = event.GetKeyCode()
         shift = event.ShiftDown()
         range_size = self.max_val - self.min_val
@@ -95,8 +100,8 @@ class AccessibleSlider(wx.Slider):
                 # Restore to original loaded value
                 self._restore_original()
             else:
-                # Restore to saved value
-                self._restore_saved()
+                # Reset to parameter default
+                self._restore_default()
             return
         else:
             event.Skip()
@@ -133,15 +138,11 @@ class AccessibleSlider(wx.Slider):
                 )
         dlg.Destroy()
 
-    def _restore_saved(self):
-        """Restore to most recent saved value."""
-        if self.param_name in self.params_panel._saved_values:
-            value = self.params_panel._saved_values[self.param_name]
-            self.SetValue(value)
-            self.params_panel._on_slider_change(self.param_name)
-            self.params_panel._set_status(f"Restored {self.param_name} to saved value: {value}")
-        else:
-            self.params_panel._set_status(f"No saved value for {self.param_name}")
+    def _restore_default(self):
+        """Reset to parameter default value."""
+        self.SetValue(self.default)
+        self.params_panel._on_slider_change(self.param_name)
+        self.params_panel._set_status(f"Reset {self.param_name} to default: {self.default}")
 
     def _restore_original(self):
         """Restore to original loaded value."""
@@ -285,11 +286,9 @@ class HeaderPanel(wx.Panel):
                 pitch = int(profile['basePitch'])
                 params_panel.sliders['voicePitch'].SetValue(pitch)
                 params_panel.value_labels['voicePitch'].SetLabel(f"{pitch}")
-                self.editor.params['voicePitch'] = pitch
             if 'endVoicePitch' in params_panel.sliders:
                 params_panel.sliders['endVoicePitch'].SetValue(pitch)
                 params_panel.value_labels['endVoicePitch'].SetLabel(f"{pitch}")
-                self.editor.params['endVoicePitch'] = pitch
         self.editor.set_status(f"Preview voice: {preset_name} (pitch={profile.get('basePitch', 100)}Hz)")
 
 
