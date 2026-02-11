@@ -111,19 +111,19 @@ STOPS = {
 		'pb4': 180,
 		'pb5': 150,
 		'pb6': 400,
-		'pa1': 0.4,   # Labials: diffuse-falling spectrum (Klatt 1980)
-		'pa2': 0.35,
-		'pa3': 0.2,
+		'pa1': 0.45,   # Labials: diffuse-falling spectrum (Klatt 1980)
+		'pa2': 0.45,   # Stronger F2 (main bilabial energy region)
+		'pa3': 0.25,   # Slight F3 boost for audible transient
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.45,  # Reduced from 1.05 — let resonators shape burst
+		'parallelBypass': 0.25,  # Route more through formants for spectral shaping
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - labial weakest, voiced shorter
-		'burstAmplitude': 0.6,
+		'burstAmplitude': 0.65,
 		'burstDuration': 0.2,  # Voiced shorter release
-		'burstFilterFreq': 600,   # Low, muffled bilabial burst
-		'burstFilterBw': 800,
+		'burstFilterFreq': 900,   # Raised from 600 — centers in F1-F2 region
+		'burstFilterBw': 1400,    # Wider = diffuse spread (bilabial place cue)
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
