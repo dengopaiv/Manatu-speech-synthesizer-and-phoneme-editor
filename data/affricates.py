@@ -367,7 +367,7 @@ AFFRICATES = {
 				'burstAmplitude': 0,
 				'fricationAmplitude': 0.7,
 				'noiseFilterFreq': 2500,
-				'noiseFilterBw': 6000,
+				'noiseFilterBw': 4000,
 			},
 		],
 		'voiceAmplitude': 0,

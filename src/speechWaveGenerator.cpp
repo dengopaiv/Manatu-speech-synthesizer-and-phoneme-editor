@@ -143,66 +143,176 @@ class NoiseGenerator {
 	}
 };
 
+// Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
+// Reference: Vadim Zavalishin (2012), "The Art of VA Filter Design", Chapter 3.10
+//
+// Advantages over traditional IIR:
+// - Smooth parameter modulation without zipper noise or discontinuities
+// - Inherently stable for all positive g and d values (no pole clamping needed)
+// - Handles pitch-synchronous modulation cleanly (deltaF1/deltaB1)
+// - Zero-delay feedback via implicit integration (trapezoidal rule)
+//
+// Algorithm (Zavalishin's canonical SVF):
+// v3 = in - ic2eq
+// v1 = a1*ic1eq + a2*v3       // Bandpass output
+// v2 = ic2eq + a2*ic1eq + a3*v3  // Lowpass output (unity DC gain)
+// ic1eq = 2*v1 - ic1eq        // Update integrator 1
+// ic2eq = 2*v2 - ic2eq        // Update integrator 2
+//
+// Where: g = tan(π*f/fs), d = BW/f (damping = 1/Q)
+//        a1 = 1/(1 + g*(g+d)), a2 = g*a1, a3 = g*a2
+class ZDFResonator {
+	private:
+	// Configuration
+	int sampleRate;
+	double frequency;
+	double bandwidth;
+	bool anti;    // Anti-resonator mode (zero instead of pole)
+	bool allPole; // All-pole (lowpass) mode for cascade topology
+
+	// ZDF state variables (integrator states)
+	double ic1eq, ic2eq;
+
+	// Cached coefficients (updated only when parameters change)
+	bool setOnce;
+	double g;   // Frequency warping: tan(π*f/fs)
+	double a1;  // 1 / (1 + g*(g+d))
+	double a2;  // g * a1
+	double a3;  // g * a2
+
+	public:
+	ZDFResonator(int sampleRate, bool anti=false, bool allPole=false) {
+		this->sampleRate = sampleRate;
+		this->anti = anti;
+		this->allPole = allPole;
+		this->setOnce = false;
+		this->ic1eq = 0;
+		this->ic2eq = 0;
+		this->g = 0;
+		this->a1 = 1.0;
+		this->a2 = 0;
+		this->a3 = 0;
+	}
+
+	void setParams(double frequency, double bandwidth) {
+		// Only recalculate coefficients if parameters changed
+		if(!setOnce || (frequency != this->frequency) || (bandwidth != this->bandwidth)) {
+			this->frequency = frequency;
+			this->bandwidth = bandwidth;
+
+			// Edge case: zero frequency or bandwidth means bypass
+			if (frequency <= 0 || bandwidth <= 0) {
+				g = 0;
+				a1 = 1.0;
+				a2 = 0;
+				a3 = 0;
+				setOnce = true;
+				return;
+			}
+
+			// g: frequency warping via bilinear transform
+			double omega = M_PI * frequency / sampleRate;
+			g = tan(omega);
+
+			// Clamp g for numerical stability at very high frequencies
+			if (g > 10.0) {
+				g = 10.0;
+			}
+
+			// d: damping coefficient (1/Q where Q = frequency/bandwidth)
+			double d = bandwidth / frequency;
+
+			// Zavalishin's SVF coefficients
+			a1 = 1.0 / (1.0 + g * (g + d));
+			a2 = g * a1;
+			a3 = g * a2;
+
+			setOnce = true;
+		}
+	}
+
+	double resonate(double in, double frequency, double bandwidth) {
+		setParams(frequency, bandwidth);
+
+		// Bypass mode if frequency or bandwidth is zero
+		if (g == 0) {
+			return in;
+		}
+
+		// Zavalishin's canonical ZDF SVF algorithm
+		double v3 = in - ic2eq;
+		double v1 = a1 * ic1eq + a2 * v3;             // Bandpass
+		double v2 = ic2eq + a2 * ic1eq + a3 * v3;     // Lowpass
+
+		// Update integrator states
+		ic1eq = 2.0 * v1 - ic1eq;
+		ic2eq = 2.0 * v2 - ic2eq;
+
+		// Output selection
+		if (anti) {
+			// Anti-resonator: subtract bandpass from input to create notch
+			return in - v1;
+		} else if (allPole) {
+			// Lowpass mode for cascade topology (unity DC gain)
+			return v2;
+		} else {
+			// Bandpass mode for parallel topology
+			return v1;
+		}
+	}
+
+	void decay(double factor) { ic1eq *= factor; ic2eq *= factor; }
+	void reset() { ic1eq = 0; ic2eq = 0; }
+
+	void setSampleRate(int sr) {
+		sampleRate = sr;
+		setOnce = false;  // Force coefficient recalculation
+	}
+};
+
 // Colored Noise Generator with configurable bandpass filtering
 // For place-specific fricative spectra: /s/ high-freq, /ʃ/ mid-freq, /f/ flat
+// Uses 4th-order ZDF SVF bandpass (two cascaded stages) for proper spectral
+// shaping with 24 dB/oct rolloff — needed especially for wide-BW non-sibilants
+// where a single 2nd-order stage barely filters the noise.
 class ColoredNoiseGenerator {
 	private:
 	int sampleRate;
 	NoiseGenerator white;
-	// Simple 2nd-order bandpass state variables
-	double bp1, bp2;
-	double lastFreq, lastBw;
-	double a0, a1, a2, b1, b2;
-
-	void updateCoeffs(double freq, double bw) {
-		if (freq == lastFreq && bw == lastBw) return;
-		lastFreq = freq;
-		lastBw = bw;
-
-		// Compute 2nd-order bandpass coefficients
-		double omega = PITWO * freq / sampleRate;
-		double alpha = sin(omega) * sinh(log(2.0) / 2.0 * bw / freq * omega / sin(omega));
-
-		double b0 = alpha;
-		double b1_raw = 0.0;
-		double b2_raw = -alpha;
-		double a0_raw = 1.0 + alpha;
-		double a1_raw = -2.0 * cos(omega);
-		double a2_raw = 1.0 - alpha;
-
-		// Normalize coefficients
-		a0 = b0 / a0_raw;
-		a1 = b1_raw / a0_raw;
-		a2 = b2_raw / a0_raw;
-		b1 = a1_raw / a0_raw;
-		b2 = a2_raw / a0_raw;
-	}
+	ZDFResonator bandpass;    // ZDF SVF bandpass stage 1
+	ZDFResonator bandpass2;   // ZDF SVF bandpass stage 2 (4th-order cascade)
 
 	public:
-	ColoredNoiseGenerator(int sr): sampleRate(sr), white(), bp1(0), bp2(0), lastFreq(0), lastBw(0) {}
+	ColoredNoiseGenerator(int sr): sampleRate(sr), white(),
+		bandpass(sr, false, false),     // bandpass mode
+		bandpass2(sr, false, false) {}  // bandpass mode
 
 	double getNext(double filterFreq, double filterBw) {
-		// If filterFreq is too low, return pink noise for natural aspiration
-		// Pink (1/f) spectrum better matches natural breathiness
-		// Threshold of 100 Hz prevents numerical instability from sinh() overflow
-		// during parameter interpolation when transitioning to/from filtered noise
+		// Below 100 Hz: pink noise for natural aspiration
 		if (filterFreq < 100) return white.getNextPink();
 
-		double noise = white.getNext();
-
-		// Clamp bandwidth to reasonable values
+		// Use RAW white noise — full spectrum input for bandpass shaping
+		// (previous 70/30 smoothing was a crude ~6 kHz lowpass that killed
+		// high-frequency energy needed for sibilants like /s/)
+		double noise = white.getWhite();
 		if (filterBw < 100) filterBw = 100;
 
-		// Update coefficients if needed
-		updateCoeffs(filterFreq, filterBw);
+		// Widen per-stage BW to compensate for cascade narrowing
+		// (same factor as ZDFResonator4thOrder: 1.554x per stage)
+		double bwAdjusted = filterBw * 1.554;
 
-		// Apply bandpass filter (direct form II transposed)
-		double out = a0 * noise + a1 * bp1 + a2 * bp2 - b1 * bp1 - b2 * bp2;
-		bp2 = bp1;
-		bp1 = out;
+		// 4th-order bandpass (two cascaded 2nd-order ZDF stages)
+		// 24 dB/oct rolloff properly shapes spectrum for both narrow sibilants
+		// and wide non-sibilants like /f/ (where 2nd-order barely filters)
+		double out = bandpass.resonate(noise, filterFreq, bwAdjusted);
+		out = bandpass2.resonate(out, filterFreq, bwAdjusted);
 
-		// Boost output to compensate for narrow bandpass attenuation
-		return out * 3.0;
+		// Bandwidth-dependent gain compensation
+		// Narrow sibilant filters (BW~1800) lose more energy than wide fricative
+		// filters (BW~6000), so we boost proportionally.
+		// BW=6000 → gain≈1.0, BW=1800 → gain≈3.3, BW=1500 → gain≈4.0
+		double gainComp = 6000.0 / max(filterBw, 100.0);
+		return out * gainComp;
 	}
 };
 
@@ -483,133 +593,6 @@ class VoiceGenerator {
 
 };
 
-// Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
-// Reference: Vadim Zavalishin (2012), "The Art of VA Filter Design", Chapter 3.10
-//
-// Advantages over traditional IIR:
-// - Smooth parameter modulation without zipper noise or discontinuities
-// - Inherently stable for all positive g and d values (no pole clamping needed)
-// - Handles pitch-synchronous modulation cleanly (deltaF1/deltaB1)
-// - Zero-delay feedback via implicit integration (trapezoidal rule)
-//
-// Algorithm (Zavalishin's canonical SVF):
-// v3 = in - ic2eq
-// v1 = a1*ic1eq + a2*v3       // Bandpass output
-// v2 = ic2eq + a2*ic1eq + a3*v3  // Lowpass output (unity DC gain)
-// ic1eq = 2*v1 - ic1eq        // Update integrator 1
-// ic2eq = 2*v2 - ic2eq        // Update integrator 2
-//
-// Where: g = tan(π*f/fs), d = BW/f (damping = 1/Q)
-//        a1 = 1/(1 + g*(g+d)), a2 = g*a1, a3 = g*a2
-class ZDFResonator {
-	private:
-	// Configuration
-	int sampleRate;
-	double frequency;
-	double bandwidth;
-	bool anti;    // Anti-resonator mode (zero instead of pole)
-	bool allPole; // All-pole (lowpass) mode for cascade topology
-
-	// ZDF state variables (integrator states)
-	double ic1eq, ic2eq;
-
-	// Cached coefficients (updated only when parameters change)
-	bool setOnce;
-	double g;   // Frequency warping: tan(π*f/fs)
-	double a1;  // 1 / (1 + g*(g+d))
-	double a2;  // g * a1
-	double a3;  // g * a2
-
-	public:
-	ZDFResonator(int sampleRate, bool anti=false, bool allPole=false) {
-		this->sampleRate = sampleRate;
-		this->anti = anti;
-		this->allPole = allPole;
-		this->setOnce = false;
-		this->ic1eq = 0;
-		this->ic2eq = 0;
-		this->g = 0;
-		this->a1 = 1.0;
-		this->a2 = 0;
-		this->a3 = 0;
-	}
-
-	void setParams(double frequency, double bandwidth) {
-		// Only recalculate coefficients if parameters changed
-		if(!setOnce || (frequency != this->frequency) || (bandwidth != this->bandwidth)) {
-			this->frequency = frequency;
-			this->bandwidth = bandwidth;
-
-			// Edge case: zero frequency or bandwidth means bypass
-			if (frequency <= 0 || bandwidth <= 0) {
-				g = 0;
-				a1 = 1.0;
-				a2 = 0;
-				a3 = 0;
-				setOnce = true;
-				return;
-			}
-
-			// g: frequency warping via bilinear transform
-			double omega = M_PI * frequency / sampleRate;
-			g = tan(omega);
-
-			// Clamp g for numerical stability at very high frequencies
-			if (g > 10.0) {
-				g = 10.0;
-			}
-
-			// d: damping coefficient (1/Q where Q = frequency/bandwidth)
-			double d = bandwidth / frequency;
-
-			// Zavalishin's SVF coefficients
-			a1 = 1.0 / (1.0 + g * (g + d));
-			a2 = g * a1;
-			a3 = g * a2;
-
-			setOnce = true;
-		}
-	}
-
-	double resonate(double in, double frequency, double bandwidth) {
-		setParams(frequency, bandwidth);
-
-		// Bypass mode if frequency or bandwidth is zero
-		if (g == 0) {
-			return in;
-		}
-
-		// Zavalishin's canonical ZDF SVF algorithm
-		double v3 = in - ic2eq;
-		double v1 = a1 * ic1eq + a2 * v3;             // Bandpass
-		double v2 = ic2eq + a2 * ic1eq + a3 * v3;     // Lowpass
-
-		// Update integrator states
-		ic1eq = 2.0 * v1 - ic1eq;
-		ic2eq = 2.0 * v2 - ic2eq;
-
-		// Output selection
-		if (anti) {
-			// Anti-resonator: subtract bandpass from input to create notch
-			return in - v1;
-		} else if (allPole) {
-			// Lowpass mode for cascade topology (unity DC gain)
-			return v2;
-		} else {
-			// Bandpass mode for parallel topology
-			return v1;
-		}
-	}
-
-	void decay(double factor) { ic1eq *= factor; ic2eq *= factor; }
-	void reset() { ic1eq = 0; ic2eq = 0; }
-
-	void setSampleRate(int sr) {
-		sampleRate = sr;
-		setOnce = false;  // Force coefficient recalculation
-	}
-};
-
 // 4th-order ZDF resonator (cascade of two 2nd-order ZDF sections)
 // Provides sharper formants with 24 dB/octave rolloff vs 12 dB/octave for 2nd-order
 // Better vowel clarity and more focused formant peaks
@@ -761,6 +744,9 @@ class BurstGenerator {
 		lastBurstAmp = burstAmplitude;
 
 		if (burstPhase >= 1.0) {
+			// Drain burst filter energy to prevent clicks
+			// (filter may still ring after envelope reaches zero)
+			burstFilter.decay(0.9);
 			return 0;  // Burst complete
 		}
 
@@ -777,11 +763,20 @@ class BurstGenerator {
 		burstPhase += 1.0 / durationSamples;
 		if (burstPhase > 1.0) burstPhase = 1.0;
 
-		// Generate burst noise with optional pre-filtering for place coloring
-		double noise = noiseGen.getNext();
+		// Generate burst noise with place-specific spectral coloring
+		double raw = noiseGen.getWhite();
+		double filtered = raw;
 		if (filterFreq > 0 && filterBw > 0) {
-			noise = burstFilter.resonate(noise, filterFreq, filterBw) * 3.0;
+			filtered = burstFilter.resonate(raw, filterFreq, filterBw) * 3.0;
 		}
+		// Onset transient: add unfiltered noise during first ~1.5ms while the
+		// burst bandpass filter rings up. Low-frequency filters (bilabials at
+		// 900 Hz) need ~5ms to reach steady state; without this transient,
+		// the quadratic envelope decays before the filter produces useful output.
+		double onsetMs = 1.5;
+		double onsetSamples = (onsetMs / 1000.0) * sampleRate;
+		double onsetPhase = min(burstPhase * durationSamples / onsetSamples, 1.0);
+		double noise = filtered + raw * (1.0 - onsetPhase);
 		return noise * envelope * burstAmplitude;
 	}
 

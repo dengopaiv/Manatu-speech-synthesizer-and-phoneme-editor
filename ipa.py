@@ -359,8 +359,19 @@ def IPAToPhonemes(ipaText):
 					fadeOut['_fadeOutToSilence'] = True
 					fadeOut['_char'] = None
 					phonemeList.append(fadeOut)
-				# Then add the silence gap
-				gap=dict(_silence=True,_preStopGap=True)
+				# Pre-stop closure frame: stop's formant targets with all sound silenced.
+				# Formants interpolate toward stop values during closure, so they're
+				# at target by burst onset (matches natural articulatory behavior).
+				gap = {k: v for k, v in phoneme.items() if not k.startswith('_')}
+				gap['_silence'] = True          # Keep: coarticulation skips _silence phonemes
+				gap['_preStopGap'] = True       # Keep: calculatePhonemeTimes uses this for 20ms duration
+				gap['preFormantGain'] = 0       # No sound output during closure
+				gap['burstAmplitude'] = 0       # No burst during closure
+				gap['fricationAmplitude'] = 0   # No frication
+				gap['voiceAmplitude'] = 0       # No voicing
+				gap['aspirationAmplitude'] = 0  # No aspiration
+				gap['voiceTurbulenceAmplitude'] = 0
+				gap['sinusoidalVoicingAmplitude'] = 0
 				phonemeList.append(gap)
 			# Phase expansion for affricates with _phases
 			phases = phoneme.get('_phases')
@@ -776,7 +787,7 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 	for phoneme in phonemeList:
 		frameDuration=phoneme.pop('_duration')
 		fadeDuration=phoneme.pop('_fadeDuration')
-		if phoneme.get('_silence'):
+		if phoneme.get('_silence') and not phoneme.get('_preStopGap'):
 			yield None,frameDuration,fadeDuration
 		else:
 			frame=speechPlayer.Frame()

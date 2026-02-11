@@ -58,8 +58,9 @@ FRICATIVES = {
 		'parallelBypass': 0.98,  # Essentially all bypass — diffuse spectrum
 		'fricationAmplitude': 0.7,  # Non-sibilants are weaker
 		# Labiodental: lower center, flatter diffuse spectrum
+		# BW reduced from 6000 for 4th-order ZDF noise filter accuracy
 		'noiseFilterFreq': 2500,
-		'noiseFilterBw': 6000,
+		'noiseFilterBw': 4000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -121,7 +122,7 @@ FRICATIVES = {
 		'spectralTilt': 7,
 		# Labiodental: mirror /f/ spectral shape
 		'noiseFilterFreq': 2500,
-		'noiseFilterBw': 6000,
+		'noiseFilterBw': 4000,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -701,7 +702,7 @@ FRICATIVES = {
 		'parallelBypass': 0.98,
 		'fricationAmplitude': 0.5,  # Weaker than labiodental
 		'noiseFilterFreq': 1500,    # Lower, more diffuse than labiodental
-		'noiseFilterBw': 6000,
+		'noiseFilterBw': 4000,
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -759,7 +760,7 @@ FRICATIVES = {
 		'fricationAmplitude': 0.35,  # Voiced, weaker
 		'spectralTilt': 7,
 		'noiseFilterFreq': 1500,
-		'noiseFilterBw': 6000,
+		'noiseFilterBw': 4000,
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,
