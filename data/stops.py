@@ -17,6 +17,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.35,  # Aspiration for voiceless (Stevens Ch.8)
 		'cf1': 400,
@@ -83,6 +86,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
@@ -149,6 +155,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.5,  # Updated from JSON
 		'cf1': 400,
@@ -212,6 +221,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 200,
@@ -276,6 +288,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.45,  # From Agrawal Table III: AH=45
 		# Formants from Agrawal Table II - KEY: F2 higher than alveolar
@@ -337,6 +352,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		# Lower F1 for voiced, same F2/F3/F4 pattern
@@ -398,6 +416,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.4,  # Aspiration for voiceless (Stevens Ch.8)
 		'cf1': 300,
@@ -461,6 +482,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
@@ -524,6 +548,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
@@ -588,6 +615,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.4,
 		'cf1': 300,
@@ -648,6 +678,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 200,
@@ -709,6 +742,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.4,
 		'cf1': 350,    # Uvular raises F1 slightly
@@ -769,6 +805,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': True,
+		'_phases': [
+			{'_phaseDuration': 8, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 250,
@@ -829,6 +868,9 @@ STOPS = {
 		'_isLiquid': False,
 		'_isVowel': False,
 		'_isVoiced': False,
+		'_phases': [
+			{'_phaseDuration': 10, '_phaseFade': 3},
+		],
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.75,
 		'cf1': 500,   # Neutral formants (schwa-like, will transition from vowel)

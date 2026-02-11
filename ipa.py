@@ -355,12 +355,6 @@ def IPAToPhonemes(ipaText):
 			if stress:
 				syllableStartPhoneme['_stress']=stress
 			elif phoneme.get('_isStop') or phoneme.get('_isAfricate'):
-				# Add fade-out frame before gap to avoid clicks
-				if lastPhoneme and lastPhoneme.get('_isVoiced'):
-					fadeOut = lastPhoneme.copy()
-					fadeOut['_fadeOutToSilence'] = True
-					fadeOut['_char'] = None
-					phonemeList.append(fadeOut)
 				# Pre-stop closure frame: stop's formant targets with all sound silenced.
 				# Formants interpolate toward stop values during closure, so they're
 				# at target by burst onset (matches natural articulatory behavior).
@@ -374,14 +368,16 @@ def IPAToPhonemes(ipaText):
 				gap['aspirationAmplitude'] = 0  # No aspiration
 				gap['voiceTurbulenceAmplitude'] = 0
 				gap['sinusoidalVoicingAmplitude'] = 0
+				if phoneme.get('_closureDuration'):
+					gap['_closureDuration'] = phoneme['_closureDuration']
 				phonemeList.append(gap)
-			# Phase expansion for affricates with _phases
+			# Phase expansion for phonemes with _phases (stops, affricates, ejectives)
 			phases = phoneme.get('_phases')
 			if phases:
 				for i, phase in enumerate(phases):
 					phaseFrame = {k: v for k, v in phoneme.items() if k != '_phases'}
 					phaseFrame.update(phase)
-					phaseFrame['_isAffricatePhase'] = True
+					phaseFrame['_isPhase'] = True
 					phaseFrame['_phaseIndex'] = i
 					phaseFrame['_phaseCount'] = len(phases)
 					phonemeList.append(phaseFrame)
@@ -427,20 +423,16 @@ def calculatePhonemeTimes(phonemeList,baseSpeed):
 				speed=baseSpeed
 		phonemeDuration=60.0/speed
 		phonemeFadeDuration=10.0/speed
-		if phoneme.get('_fadeOutToSilence'):
-			# Fade-out frame before gap - smooth transition to silence
-			phonemeDuration=10.0/speed
-			phonemeFadeDuration=10.0/speed
-		elif phoneme.get('_preStopGap'):
-			phonemeDuration=20.0/speed  # Was 41ms - reduced to minimize click window
+		if phoneme.get('_preStopGap'):
+			phonemeDuration=phoneme.get('_closureDuration', 12.0) / speed
 		elif phoneme.get('_postStopAspiration'):
-			phonemeDuration=20.0/speed
-		elif phoneme.get('_isStop'):
-			phonemeDuration=min(10.0/speed,10.0)  # 10ms lets burst resonators develop spectral character
-			phonemeFadeDuration=5.0/speed
-		elif phoneme.get('_isAffricatePhase'):
+			phonemeDuration=15.0/speed
+		elif phoneme.get('_isPhase'):
 			phonemeDuration=phoneme.get('_phaseDuration', 30) / speed
 			phonemeFadeDuration=phoneme.get('_phaseFade', 5) / speed
+		elif phoneme.get('_isStop'):
+			phonemeDuration=10.0/speed
+			phonemeFadeDuration=3.0/speed
 		elif phoneme.get('_isAfricate'):
 			phonemeDuration=24.0/speed
 			phonemeFadeDuration=5.0/speed  # Was 0.001 - caused clicks
