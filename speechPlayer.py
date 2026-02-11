@@ -73,6 +73,7 @@ class Frame(Structure):
 		# Burst pre-filter
 		'burstFilterFreq',    # Burst pre-filter center freq Hz (0=unfiltered)
 		'burstFilterBw',      # Burst pre-filter bandwidth Hz
+		'burstNoiseColor',    # Burst noise: 0=white, 1=pink (-3dB/oct)
 	]]
 
 dllPath=os.path.join(os.path.dirname(__file__),'speechPlayer.dll')

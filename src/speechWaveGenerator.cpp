@@ -716,6 +716,8 @@ class CascadeFormantGenerator {
 };
 
 // KLSYN88: Stop burst envelope generator for plosive transients
+// Self-sustaining: once triggered, the burst completes its envelope independently
+// of frame changes, using stored parameters from the triggering frame.
 class BurstGenerator {
 	private:
 	int sampleRate;
@@ -723,65 +725,68 @@ class BurstGenerator {
 	ZDFResonator burstFilter;  // Place-specific spectral coloring
 	double burstPhase;  // 0 = burst start, 1 = burst end
 	double lastBurstAmp;  // Track amplitude to detect burst start
+	bool burstActive;
+	double activeBurstAmp;
+	double activeBurstDuration;
+	double activeFilterFreq;
+	double activeFilterBw;
+	double activeNoiseColor;
 
 	public:
-	BurstGenerator(int sr): sampleRate(sr), noiseGen(), burstFilter(sr), burstPhase(1.0), lastBurstAmp(0) {}
+	BurstGenerator(int sr): sampleRate(sr), noiseGen(), burstFilter(sr),
+		burstPhase(1.0), lastBurstAmp(0), burstActive(false),
+		activeBurstAmp(0), activeBurstDuration(0),
+		activeFilterFreq(0), activeFilterBw(0), activeNoiseColor(0) {}
 
-	double getNext(double burstAmplitude, double burstDuration, double filterFreq, double filterBw) {
-		if (burstAmplitude <= 0) {
-			lastBurstAmp = 0;
-			burstPhase = 1.0;
-			return 0;
-		}
-
-		// Detect new burst (amplitude just became non-zero)
-		// Note: burstAmplitude is NOT interpolated during frame fade (handled in frame.cpp)
-		// so this triggers immediately at full amplitude
+	double getNext(double burstAmplitude, double burstDuration, double filterFreq, double filterBw, double noiseColor) {
+		// Detect new burst trigger (amplitude jumps from 0 to non-zero)
 		if (lastBurstAmp <= 0 && burstAmplitude > 0) {
-			burstPhase = 0;  // Reset burst to start
-			burstFilter.reset();  // Reset filter state for clean burst onset
+			burstPhase = 0;
+			burstFilter.reset();
+			burstActive = true;
+			activeBurstAmp = burstAmplitude;
+			activeBurstDuration = burstDuration;
+			activeFilterFreq = filterFreq;
+			activeFilterBw = filterBw;
+			activeNoiseColor = noiseColor;
 		}
 		lastBurstAmp = burstAmplitude;
 
-		if (burstPhase >= 1.0) {
-			// Drain burst filter energy to prevent clicks
-			// (filter may still ring after envelope reaches zero)
+		if (!burstActive || burstPhase >= 1.0) {
+			burstActive = false;
 			burstFilter.decay(0.9);
-			return 0;  // Burst complete
+			return 0;
 		}
 
-		// Calculate envelope: quadratic decay from 1 to 0 over burst duration
-		// burstDuration 0-1 maps to ~5-20ms (normalized)
-		double maxDurationMs = 20.0;
-		double minDurationMs = 5.0;
-		double durationMs = minDurationMs + burstDuration * (maxDurationMs - minDurationMs);
+		// Envelope using STORED parameters (not current frame)
+		double durationMs = 5.0 + activeBurstDuration * (20.0 - 5.0);
 		double durationSamples = (durationMs / 1000.0) * sampleRate;
-
-		double envelope = pow(1.0 - burstPhase, 2.0);  // Quadratic decay
-
-		// Advance phase
+		double envelope = pow(1.0 - burstPhase, 2.0);
 		burstPhase += 1.0 / durationSamples;
 		if (burstPhase > 1.0) burstPhase = 1.0;
 
 		// Generate burst noise with place-specific spectral coloring
-		double raw = noiseGen.getWhite();
+		// Blend white/pink noise based on burstNoiseColor (0=white, 1=pink)
+		double white = noiseGen.getWhite();
+		double raw = white * (1.0 - activeNoiseColor) + noiseGen.getNextPink() * activeNoiseColor;
 		double filtered = raw;
-		if (filterFreq > 0 && filterBw > 0) {
-			filtered = burstFilter.resonate(raw, filterFreq, filterBw) * 3.0;
+		if (activeFilterFreq > 0 && activeFilterBw > 0) {
+			filtered = burstFilter.resonate(raw, activeFilterFreq, activeFilterBw) * 3.0;
 		}
-		// Onset transient: add unfiltered noise during first ~1.5ms while the
-		// burst bandpass filter rings up. Low-frequency filters (bilabials at
-		// 900 Hz) need ~5ms to reach steady state; without this transient,
-		// the quadratic envelope decays before the filter produces useful output.
-		double onsetMs = 1.5;
+		// Onset transient: add unfiltered noise while bandpass filter rings up
+		// Duration scales with filter frequency: low-freq filters need ~3 cycles to reach steady state
+		// /p/ at 1500Hz → 2.0ms, /t/ at 4000Hz → 1.5ms (floor), /q/ at 1200Hz → 2.5ms
+		double onsetMs = (activeFilterFreq > 0)
+			? max(1.5, 3.0 / (activeFilterFreq / 1000.0))
+			: 1.5;
 		double onsetSamples = (onsetMs / 1000.0) * sampleRate;
 		double onsetPhase = min(burstPhase * durationSamples / onsetSamples, 1.0);
 		double noise = filtered + raw * (1.0 - onsetPhase);
-		return noise * envelope * burstAmplitude;
+		return noise * envelope * activeBurstAmp;
 	}
 
 	void decay(double factor) { burstFilter.decay(factor); }
-	void reset() { burstFilter.reset(); burstPhase = 1.0; }
+	void reset() { burstFilter.reset(); burstPhase = 1.0; burstActive = false; }
 };
 
 class ParallelFormantGenerator {
@@ -844,22 +849,28 @@ public:
 class PeakLimiter {
 private:
 	double gain;
-	double attackAlpha, releaseAlpha;
+	double attackAlpha, releaseAlpha, fastReleaseAlpha;
 	double threshold;
+	bool fastRelease;
 public:
 	PeakLimiter(int sr, double thresholdDb = -3.0) {
 		gain = 1.0;
 		threshold = 32767.0 * pow(10.0, thresholdDb / 20.0);  // ~23197
-		attackAlpha = 1.0 - exp(-1.0 / (0.0001 * sr));   // 0.1ms attack
-		releaseAlpha = 1.0 - exp(-1.0 / (0.050 * sr));    // 50ms release
+		attackAlpha = 1.0 - exp(-1.0 / (0.0001 * sr));     // 0.1ms attack
+		releaseAlpha = 1.0 - exp(-1.0 / (0.050 * sr));      // 50ms release (normal speech)
+		fastReleaseAlpha = 1.0 - exp(-1.0 / (0.005 * sr));  // 5ms release (during silence)
+		fastRelease = false;
 	}
+	// Enable fast release during silence/closure so limiter recovers before burst onset
+	void setFastRelease(bool fast) { fastRelease = fast; }
 	double limit(double input) {
 		double absIn = fabs(input);
 		if (absIn > threshold) {
 			double targetGain = threshold / absIn;
 			gain += attackAlpha * (targetGain - gain);
 		} else {
-			gain += releaseAlpha * (1.0 - gain);
+			double alpha = fastRelease ? fastReleaseAlpha : releaseAlpha;
+			gain += alpha * (1.0 - gain);
 		}
 		return input * gain;
 	}
@@ -917,12 +928,14 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				cascadeOut *= duck;
 				// Colored noise for fricatives (bandpass filtered based on place of articulation)
 				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
-				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration,frame->burstFilterFreq,frame->burstFilterBw);  // KLSYN88: stop burst
+				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration,frame->burstFilterFreq,frame->burstFilterBw,frame->burstNoiseColor);  // KLSYN88: stop burst
 				double parallelInput=(fric+burst)*preGain;
 				parallelInput+=voice*frame->parallelVoiceMix*preGain;
 				double parallelOut=parallel.getNext(frame,parallelInput);
 				double out=(cascadeOut+parallelOut)*frame->outputGain;
 				// Peak limiter: transparent below -3dB, fast attack for transients
+				// Fast release during silence so limiter recovers before stop bursts
+				peakLimiter.setFastRelease(preGain < 0.01);
 				double scaled = out * 4000;
 				double limited = peakLimiter.limit(scaled);
 				sampleBuf[i].value = (short)lrint(max(-32767.0, min(32767.0, limited)));

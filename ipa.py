@@ -36,6 +36,10 @@ def setFrame(frame,phoneme):
 
 # KLSYN88 voice quality parameter defaults (neutral/modal voice)
 # These ensure backward compatibility - existing phoneme data works unchanged
+# Note: Additional derived params (deltaF1, deltaB1, ftzFreq2, ftzBw2,
+# sinusoidalVoicingAmplitude, aspirationFilterFreq/Bw) are computed
+# dynamically by calculations.py based on phoneme context and voice quality.
+# Formant frequencies/bandwidths come from phoneme data files (data/*.py).
 KLSYN88_DEFAULTS = {
 	'lfRd': 1.0,              # Modal voice (LF model enabled)
 	'spectralTilt': 0,        # No tilt (modal voice)
@@ -55,6 +59,7 @@ KLSYN88_DEFAULTS = {
 	'trillDepth': 0,          # No trill by default
 	'burstFilterFreq': 0,     # Unfiltered burst by default
 	'burstFilterBw': 2000,    # Default bandwidth if filter enabled
+	'burstNoiseColor': 0,    # White noise (flat spectrum) by default
 	'noiseFilterFreq': 0,     # Unfiltered frication by default
 	'noiseFilterBw': 1000,    # Default bandwidth if filter enabled
 }
@@ -784,6 +789,32 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 		if phoneme.get('_silence') and not phoneme.get('_preStopGap'):
 			yield None,frameDuration,fadeDuration
 		else:
+			# Extract onset values (pop removes them so applyPhonemeToFrame won't see them)
+			onset_cf2 = phoneme.pop('_onset_cf2', None)
+			onset_cf3 = phoneme.pop('_onset_cf3', None)
+
+			if onset_cf2 is not None:
+				# Create onset waypoint frame (copy of vowel with locus-derived formants)
+				onset_frame = speechPlayer.Frame()
+				onset_frame.preFormantGain = 1.0
+				onset_frame.outputGain = 1.0
+				applyPhonemeToFrame(onset_frame, phoneme)
+				applyFormantScaling(onset_frame, formantScale)
+				if spectralTilt is not None:
+					onset_frame.spectralTilt = spectralTilt
+				if voiceTurbulence is not None:
+					onset_frame.voiceTurbulenceAmplitude = voiceTurbulence
+				if flutter is not None:
+					onset_frame.flutter = flutter
+				# Override formants with locus-derived onset values (scaled for voice type)
+				onset_frame.cf2 = onset_cf2 * formantScale
+				if onset_cf3 is not None:
+					onset_frame.cf3 = onset_cf3 * formantScale
+				# Yield onset waypoint: 1ms duration, 70% of original fade
+				yield onset_frame, 1.0, fadeDuration * 0.7
+				# Remaining 30% for onset->target
+				fadeDuration = fadeDuration * 0.3
+
 			frame=speechPlayer.Frame()
 			frame.preFormantGain=1.0
 			frame.outputGain=1.0

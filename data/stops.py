@@ -23,7 +23,7 @@ STOPS = {
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0.35,  # Aspiration for voiceless (Stevens Ch.8)
 		'cf1': 400,
-		'cf2': 1100,
+		'cf2': 900,   # Bilabial locus F2 (Stevens Ch.7: diffuse low-frequency burst)
 		'cf3': 2150,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -40,7 +40,7 @@ STOPS = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 400,
-		'pf2': 1100,
+		'pf2': 900,
 		'pf3': 2150,
 		'pf4': 3300,
 		'pf5': 3750,
@@ -67,6 +67,7 @@ STOPS = {
 		'burstDuration': 0.4,  # Voiceless longer release
 		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
 		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
+		'burstNoiseColor': 1.0,   # Pink noise: bilabial diffuse-falling spectrum (no cavity)
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -92,7 +93,7 @@ STOPS = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,  # No aspiration for voiced
 		'cf1': 200,
-		'cf2': 1100,
+		'cf2': 900,   # Bilabial locus F2 (Stevens Ch.7: diffuse low-frequency burst)
 		'cf3': 2150,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -109,7 +110,7 @@ STOPS = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 200,
-		'pf2': 1100,
+		'pf2': 900,
 		'pf3': 2150,
 		'pf4': 3300,
 		'pf5': 3750,
@@ -136,6 +137,7 @@ STOPS = {
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
 		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
+		'burstNoiseColor': 1.0,   # Pink noise: bilabial diffuse-falling spectrum (no cavity)
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -788,6 +790,7 @@ STOPS = {
 		'burstDuration': 0.4,
 		'burstFilterFreq': 1200,  # Low muffled uvular burst
 		'burstFilterBw': 1000,
+		'burstNoiseColor': 0.7,   # Partial pink: low-Q filter lets source spectrum through
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -851,6 +854,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 1200,  # Low muffled uvular burst
 		'burstFilterBw': 1000,
+		'burstNoiseColor': 0.7,   # Partial pink: low-Q filter lets source spectrum through
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
