@@ -117,6 +117,8 @@ PARAM_GROUPS = {
     'Stop Burst': [
         ('burstAmplitude', 0, 100, 0, '%', 'Burst transient intensity'),
         ('burstDuration', 0, 100, 25, '%', 'Burst length (5-20ms)'),
+        ('burstFilterFreq', 0, 8000, 0, 'Hz', 'Burst bandpass center (0=unfiltered)'),
+        ('burstFilterBw', 100, 6000, 2000, 'Hz', 'Burst bandpass width'),
     ],
 }
 

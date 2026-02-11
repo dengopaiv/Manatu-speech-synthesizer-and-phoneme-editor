@@ -55,6 +55,8 @@ KLSYN88_DEFAULTS = {
 	'trillDepth': 0,          # No trill by default
 	'burstFilterFreq': 0,     # Unfiltered burst by default
 	'burstFilterBw': 2000,    # Default bandwidth if filter enabled
+	'noiseFilterFreq': 0,     # Unfiltered frication by default
+	'noiseFilterBw': 1000,    # Default bandwidth if filter enabled
 }
 
 def applyPhonemeToFrame(frame,phoneme):

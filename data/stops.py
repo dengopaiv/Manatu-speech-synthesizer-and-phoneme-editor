@@ -54,13 +54,16 @@ STOPS = {
 		'pa4': 0.15,
 		'pa5': 0.1,
 		'pa6': 0.05,
-		'parallelBypass': 0.3,  # Route more through formants for spectral shaping
-		'fricationAmplitude': 0,
+		'parallelBypass': 0.5,  # Increased for more diffuse bilabial character (ɸ uses 0.98)
+		# Lip turbulence: brief fricative-like noise models bilabial release
+		'fricationAmplitude': 0.35,
+		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
+		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
 		# KLSYN88: Stop burst - labial weakest (Stevens Ch.7)
-		'burstAmplitude': 0.70,
+		'burstAmplitude': 0.55,    # Reduced since frication adds energy
 		'burstDuration': 0.4,  # Voiceless longer release
-		'burstFilterFreq': 900,   # Raised from 600 — centers in F1-F2 region
-		'burstFilterBw': 1400,    # Wider = diffuse spread (bilabial place cue)
+		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
+		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -117,13 +120,16 @@ STOPS = {
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.25,  # Route more through formants for spectral shaping
-		'fricationAmplitude': 0,
+		'parallelBypass': 0.4,  # Increased for more diffuse bilabial character
+		# Lip turbulence: brief fricative-like noise models bilabial release
+		'fricationAmplitude': 0.25,
+		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
+		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
 		# KLSYN88: Stop burst - labial weakest, voiced shorter
-		'burstAmplitude': 0.65,
+		'burstAmplitude': 0.45,    # Reduced since frication adds energy
 		'burstDuration': 0.2,  # Voiced shorter release
-		'burstFilterFreq': 900,   # Raised from 600 — centers in F1-F2 region
-		'burstFilterBw': 1400,    # Wider = diffuse spread (bilabial place cue)
+		'burstFilterFreq': 1500,  # Raised to ɸ-like spectrum for correct bilabial character
+		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
