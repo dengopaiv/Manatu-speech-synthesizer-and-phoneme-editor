@@ -316,67 +316,68 @@ class ColoredNoiseGenerator {
 	}
 };
 
-// KLSYN88 Spectral Tilt Filter
-// First-order lowpass that attenuates high frequencies to create breathy voice quality
+// KLSYN88 Spectral Tilt Filter — Second-order (12 dB/oct)
+// Two cascaded first-order lowpass stages for steeper high-frequency rolloff
 // tiltDB: 0 = no filtering (modal voice), up to 41 dB attenuation at 5kHz (very breathy)
-// Target raised from 3kHz to 5kHz to preserve brightness in 3-5kHz speech range
+// 12 dB/oct slope matches measured glottal spectral tilt better than 6 dB/oct
+// and preserves more midrange clarity while cutting highs more aggressively
 class SpectralTiltFilter {
 	private:
 	int sampleRate;
-	double lastOutput;
+	double lastOutput1, lastOutput2;  // Two cascaded stages
 
 	public:
-	SpectralTiltFilter(int sr): sampleRate(sr), lastOutput(0.0) {}
+	SpectralTiltFilter(int sr): sampleRate(sr), lastOutput1(0.0), lastOutput2(0.0) {}
 
 	double filter(double input, double tiltDB) {
-		// Bypass for small values - avoids unnecessary filtering
 		if (tiltDB < 1.5) return input;
 
-		// Calculate cutoff frequency for desired attenuation at 5kHz
-		// For first-order filter: |H(f)| = 1/sqrt(1+(f/fc)^2)
-		// Given target attenuation at 5kHz, solve for fc
-		// Raised from 3kHz to preserve brightness in critical 3-5kHz region
-		double targetFreq = 5000.0;
 		double attenLinear = pow(10.0, -tiltDB / 20.0);
-		// Clamp to avoid division issues at extreme values
 		if (attenLinear >= 0.999) return input;
 		if (attenLinear <= 0.001) attenLinear = 0.001;
 
-		double fc = targetFreq * attenLinear / sqrt(1.0 - attenLinear * attenLinear);
+		// For two cascaded stages: |H(f)|^2 = 1/(1+(f/fc)^2)^2
+		// At 5kHz we want |H|=attenLinear, so solve: fc = 5000/sqrt(1/atten - 1)
+		double fc = 5000.0 / sqrt(1.0 / attenLinear - 1.0);
 		double alpha = exp(-2.0 * M_PI * fc / sampleRate);
 
-		double output = (1.0 - alpha) * input + alpha * lastOutput;
-		lastOutput = output;
+		double stage1 = (1.0 - alpha) * input + alpha * lastOutput1;
+		lastOutput1 = stage1;
+		double output = (1.0 - alpha) * stage1 + alpha * lastOutput2;
+		lastOutput2 = output;
 		return output;
 	}
 };
 
-// KLSYN88 Flutter Generator
-// Adds natural pitch micro-variations using sum of low-frequency oscillators
-// Creates more natural-sounding voice by avoiding perfectly steady pitch
-class FlutterGenerator {
+// Stochastic Jitter/Shimmer Generator
+// Replaces deterministic 3-sinusoid flutter with cycle-synchronous random perturbation
+// Smoothed (α=0.7) to prevent extreme jumps — ~3.3 cycle time constant
+// matches measured vocal jitter correlation (Baken & Orlikoff 2000)
+class JitterShimmerGenerator {
 	private:
-	int sampleRate;
-	double phase1, phase2, phase3;
+	NoiseGenerator noiseGen;
+	double smoothedJitter, smoothedShimmer;
+	double heldJitter, heldShimmer;
 
 	public:
-	FlutterGenerator(int sr): sampleRate(sr), phase1(0), phase2(0), phase3(0) {}
+	JitterShimmerGenerator(): smoothedJitter(0), smoothedShimmer(0),
+		heldJitter(0), heldShimmer(0) {}
 
-	double getNext(double flutterAmount) {
-		if (flutterAmount <= 0) return 1.0;  // No modulation
+	void onNewCycle() {
+		smoothedJitter = 0.7 * smoothedJitter + 0.3 * noiseGen.getWhite();
+		smoothedShimmer = 0.7 * smoothedShimmer + 0.3 * noiseGen.getWhite();
+		heldJitter = smoothedJitter;
+		heldShimmer = smoothedShimmer;
+	}
 
-		// Three low-frequency components per KLSYN88 (~12.7, 7.1, 4.7 Hz)
-		const double freq1 = 12.7, freq2 = 7.1, freq3 = 4.7;
-		double flutter = 0.5 * sin(PITWO * phase1)
-		               + 0.3 * sin(PITWO * phase2)
-		               + 0.2 * sin(PITWO * phase3);
+	double getPitchMod(double amount) {
+		if (amount <= 0) return 1.0;
+		return 1.0 + heldJitter * amount * 0.02;  // ±2% at full amount
+	}
 
-		phase1 = fmod(phase1 + freq1 / sampleRate, 1.0);
-		phase2 = fmod(phase2 + freq2 / sampleRate, 1.0);
-		phase3 = fmod(phase3 + freq3 / sampleRate, 1.0);
-
-		// Return pitch multiplier centered at 1.0, ±2% at full flutter
-		return 1.0 + flutter * flutterAmount * 0.02;
+	double getAmpMod(double amount) {
+		if (amount <= 0) return 1.0;
+		return 1.0 + heldShimmer * amount * 0.01;  // ±1% at full amount
 	}
 };
 
@@ -446,23 +447,45 @@ class FrequencyGenerator {
 	double getDt() const { return lastDt; }
 };
 
+// Pure function for LF glottal waveform evaluation at arbitrary phase
+// Used by 2x oversampling: evaluate at current and half-sample phases
+inline double computeGlottalWave(double phase, double tp, double te,
+                                  double epsilon, double ampNorm) {
+	if (phase < tp) {
+		// Opening phase: raised cosine rise
+		return 0.5 * (1.0 - cos(M_PI * phase / tp)) * ampNorm;
+	} else if (phase < te) {
+		// Closing phase: cosinusoidal fall
+		return 0.5 * (1.0 + cos(M_PI * (phase - tp) / (te - tp))) * ampNorm;
+	} else {
+		// Return phase: exponential decay with end-of-cycle fade
+		double t_ret = (phase - te) / (1.0 - te);
+		double decay = exp(-epsilon * t_ret * (1.0 - te));
+		double fade = (t_ret > 0.7) ? 0.5 * (1.0 + cos(M_PI * (t_ret - 0.7) / 0.3)) : 1.0;
+		return 0.5 * decay * fade * ampNorm;
+	}
+}
+
 class VoiceGenerator {
 	private:
 	FrequencyGenerator pitchGen;
 	FrequencyGenerator vibratoGen;
 	FrequencyGenerator sinusoidalGen;  // AVS: pure sinusoidal voicing source
 	ColoredNoiseGenerator aspirationGen;  // Filtered aspiration noise source
-	FlutterGenerator flutterGen;  // KLSYN88: natural pitch jitter
+	JitterShimmerGenerator jitterShimmer;  // Stochastic pitch/amplitude jitter
 	double lastCyclePos;  // KLSYN88: track cycle for diplophonia
 	bool periodAlternate;  // KLSYN88: alternating period flag
+	double currentTe;       // Excitation point for PolyBLEP (0 when unvoiced)
+	double currentAmpNorm;  // LF amplitude normalization (0 when unvoiced)
+	double prevHalfSample;  // Previous half-sample for triangular decimation (2x oversampling)
 
 	public:
 	bool glottisOpen;
-	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), sinusoidalGen(sr), aspirationGen(sr), flutterGen(sr), lastCyclePos(0), periodAlternate(false), glottisOpen(false) {};
+	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), sinusoidalGen(sr), aspirationGen(sr), jitterShimmer(), lastCyclePos(0), periodAlternate(false), glottisOpen(false), currentTe(0), currentAmpNorm(0), prevHalfSample(0) {};
 
 	double getNext(const speechPlayer_frame_t* frame) {
 		double vibrato=(sin(vibratoGen.getNext(frame->vibratoSpeed)*PITWO)*0.06*frame->vibratoPitchOffset)+1;
-		double flutter=flutterGen.getNext(frame->flutter);  // KLSYN88: apply flutter
+		double jitter=jitterShimmer.getPitchMod(frame->flutter);  // Stochastic pitch jitter
 
 		// KLSYN88: Diplophonia - alternating pitch periods for creaky voice
 		double diplophoniaMod = 1.0;
@@ -472,11 +495,12 @@ class VoiceGenerator {
 			diplophoniaMod = periodAlternate ? (1.0 + frame->diplophonia * 0.10) : (1.0 - frame->diplophonia * 0.10);
 		}
 
-		double voice=pitchGen.getNext(frame->voicePitch*vibrato*flutter*diplophoniaMod);
+		double voice=pitchGen.getNext(frame->voicePitch*vibrato*jitter*diplophoniaMod);
 
-		// Detect new pitch period (cycle wrapped) to toggle alternation
+		// Detect new pitch period (cycle wrapped) to toggle alternation and update jitter
 		if (voice < lastCyclePos - 0.5) {  // Wrapped from ~1 back to ~0
 			periodAlternate = !periodAlternate;
+			jitterShimmer.onNewCycle();  // New random jitter/shimmer values per cycle
 		}
 		lastCyclePos = voice;
 
@@ -530,38 +554,29 @@ class VoiceGenerator {
 			// Compensates for Rd-dependent waveform shape changes
 			double ampNorm = 1.0 / (0.5 + 0.3 * Rd);
 
+			// Store for PolyBLEP at te
+			currentTe = te;
+			currentAmpNorm = ampNorm;
+
 			glottisOpen = voice < te;
 
-			if (voice < tp) {
-				// Opening phase: smooth sinusoidal rise to peak
-				// Uses raised cosine for C1 continuity at boundaries
-				double phase = M_PI * voice / tp;
-				glottalWave = 0.5 * (1.0 - cos(phase)) * ampNorm;
-			} else if (voice < te) {
-				// Closing phase: smooth cosinusoidal fall
-				// Derivative is negative (excitation phase)
-				double phase = M_PI * (voice - tp) / (te - tp);
-				glottalWave = 0.5 * (1.0 + cos(phase)) * ampNorm;
-			} else {
-				// Return phase: exponential decay modeling incomplete closure
-				// This phase adds the "breathy" component to the voice
-				double t_return = (voice - te) / (1.0 - te);
-				double decay = exp(-epsilon * t_return * (1.0 - te));
-
-				// Apply smooth fade at end of cycle for C0 continuity
-				double fade = 1.0;
-				if (t_return > 0.7) {
-					// Raised cosine fade from t_return=0.7 to t_return=1.0
-					fade = 0.5 * (1.0 + cos(M_PI * (t_return - 0.7) / 0.3));
-				}
-
-				glottalWave = 0.5 * decay * fade * ampNorm;
-			}
+			// 2x oversampling: evaluate LF waveform at current and half-sample phases
+			// then apply triangular decimation filter to suppress aliased harmonics
+			double dt_os = pitchGen.getDt();
+			double halfPhase = fmod(voice - dt_os * 0.5 + 1.0, 1.0);  // Half-sample back from current
+			double g_current = computeGlottalWave(voice, tp, te, epsilon, ampNorm);
+			double g_half = computeGlottalWave(halfPhase, tp, te, epsilon, ampNorm);
+			// Triangular (Bartlett) decimation: 0.25 * prev_half + 0.5 * current + 0.25 * this_half
+			glottalWave = 0.25 * prevHalfSample + 0.5 * g_current + 0.25 * g_half;
+			prevHalfSample = g_half;
 		} else {
 			// No voicing (voiceless consonants: /p/, /t/, /k/, /f/, /s/, /ʃ/, etc.)
 			// lfRd=0 means no glottal source - only noise/frication used
 			glottalWave = 0.0;
 			glottisOpen = false;
+			currentTe = 0;
+			currentAmpNorm = 0;
+			prevHalfSample = 0;
 		}
 
 		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
@@ -573,11 +588,19 @@ class VoiceGenerator {
 		// Apply polyBLEP at start of cycle (discontinuity from end of return phase)
 		voice -= polyBLEP(cyclePos, dt) * 0.5;  // Attenuated to match waveform jump size
 
+		// PolyBLEP at excitation point (te) — main LF step discontinuity
+		// At te, closing phase ends at glottalWave=0 while return phase starts at 0.5*ampNorm
+		// After [-1,+1] scaling, the upward step magnitude is ~ampNorm (~1.25 for modal voice)
+		if (currentTe > 0 && dt > 0) {
+			double phaseRelTe = fmod(cyclePos - currentTe + 1.0, 1.0);
+			voice -= polyBLEP(phaseRelTe, dt) * currentAmpNorm;
+		}
+
 		if(!glottisOpen) {
 			turbulence*=0.01;
 		}
 		voice+=turbulence;
-		voice*=frame->voiceAmplitude;
+		voice*=frame->voiceAmplitude*jitterShimmer.getAmpMod(frame->flutter);
 
 		// AVS: Sinusoidal voicing - pure sine wave at F0 for voicebars and voiced fricatives
 		// This bypasses the complex glottal model for simpler periodic energy
@@ -761,7 +784,7 @@ class BurstGenerator {
 		// Envelope using STORED parameters (not current frame)
 		double durationMs = 5.0 + activeBurstDuration * (20.0 - 5.0);
 		double durationSamples = (durationMs / 1000.0) * sampleRate;
-		double envelope = pow(1.0 - burstPhase, 2.0);
+		double envelope = exp(-6.0 * burstPhase);
 		burstPhase += 1.0 / durationSamples;
 		if (burstPhase > 1.0) burstPhase = 1.0;
 
