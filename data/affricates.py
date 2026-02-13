@@ -298,8 +298,8 @@ AFFRICATES = {
 				'_phaseFade': 8,
 				'burstAmplitude': 0,
 				'fricationAmplitude': 0.8,
-				'noiseFilterFreq': 5000,
-				'noiseFilterBw': 3000,
+				'noiseFilterFreq': 4000,   # Lateral turbulence is oral, not dental
+				'noiseFilterBw': 2500,     # More focused
 			},
 		],
 		'voiceAmplitude': 0,
@@ -312,7 +312,7 @@ AFFRICATES = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
-		'cfN0': 250,
+		'cfN0': 3500,  # Anti-resonance target (inactive for voiceless)
 		'cb1': 220,
 		'cb2': 90,
 		'cb3': 200,
@@ -320,27 +320,29 @@ AFFRICATES = {
 		'cb5': 200,
 		'cb6': 1000,
 		'cbNP': 100,
-		'cbN0': 100,
+		'cbN0': 400,   # Anti-resonance bandwidth
 		'caNP': 0,
 		'pf1': 310,
 		'pf2': 1050,
 		'pf3': 2880,
-		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf4': 3500,   # Aligned with notch frequency
+		'pf5': 4500,   # Above-notch lateral resonance
+		'pf6': 5500,   # HF lateral turbulence
 		'pb1': 200,
 		'pb2': 120,
-		'pb3': 250,
+		'pb3': 300,    # Wider for turbulent character
 		'pb4': 250,
-		'pb5': 200,
+		'pb5': 300,    # Wider above-notch spread
 		'pb6': 1000,
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0.5,    # Lateral frication pattern (from /ɬ/)
-		'pa4': 0.4,
-		'pa5': 0.6,
-		'pa6': 0.5,
-		'parallelBypass': 0.3,
+		'pa2': 0.15,   # Slight lateral F2 energy
+		'pa3': 0.55,   # Primary below-notch peak
+		'pa4': 0.3,    # Restored — real anti-resonator handles the notch
+		'pa5': 0.7,    # Above-notch peak (strongest)
+		'pa6': 0.45,   # HF rolloff
+		'parallelBypass': 0.15,  # Preserve sculpted shape
+		'parallelAntiFreq': 3500,  # Parallel anti-resonator at lateral zero
+		'parallelAntiBw': 350,     # Anti-resonator bandwidth
 		'lfRd': 0,
 	},
 	# ── Ejective affricates (glottalic egressive) ───────────────────────
@@ -640,9 +642,9 @@ AFFRICATES = {
 				'_phaseDuration': 55,
 				'_phaseFade': 8,
 				'burstAmplitude': 0,
-				'fricationAmplitude': 0.55,
-				'noiseFilterFreq': 5000,
-				'noiseFilterBw': 3000,
+				'fricationAmplitude': 0.5,   # Slightly reduced (voice adds energy)
+				'noiseFilterFreq': 4000,     # Lateral turbulence
+				'noiseFilterBw': 2500,       # More focused
 			},
 		],
 		'voiceAmplitude': 1,
@@ -654,37 +656,40 @@ AFFRICATES = {
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
-		'cfNP': 200,
-		'cfN0': 250,
-		'cb1': 55,
-		'cb2': 75,
+		'cfNP': 0,     # Bypass nasal pole (keep anti-resonator only)
+		'cfN0': 3500,  # Active anti-resonance in cascade voice path
+		'cb1': 65,     # Wider — turbulence broadens resonances
+		'cb2': 85,     # Wider
 		'cb3': 180,
 		'cb4': 250,
 		'cb5': 200,
 		'cb6': 1000,
 		'cbNP': 100,
-		'cbN0': 100,
-		'caNP': 0,
+		'cbN0': 350,   # Anti-resonance bandwidth
+		'caNP': 1.0,   # Activate the N0 chain
 		'pf1': 310,
 		'pf2': 1050,
 		'pf3': 2880,
-		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf4': 3500,   # Aligned with notch
+		'pf5': 4500,   # Above-notch resonance
+		'pf6': 5500,   # HF turbulence
 		'pb1': 50,
 		'pb2': 100,
-		'pb3': 220,
+		'pb3': 250,    # Wider
 		'pb4': 250,
-		'pb5': 200,
+		'pb5': 280,    # Wider above-notch
 		'pb6': 1000,
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0.5,    # Lateral frication pattern (from /ɮ/)
-		'pa4': 0.4,
-		'pa5': 0.6,
-		'pa6': 0.5,
-		'parallelBypass': 0.3,
-		'spectralTilt': 7,
+		'pa2': 0.15,   # Lateral F2 energy
+		'pa3': 0.55,   # Below-notch peak
+		'pa4': 0.3,    # Restored — real anti-resonator handles the notch
+		'pa5': 0.65,   # Above-notch peak
+		'pa6': 0.4,    # HF rolloff
+		'parallelBypass': 0.1,    # Sculpted shape dominates
+		'parallelAntiFreq': 3500,  # Parallel anti-resonator at lateral zero
+		'parallelAntiBw': 350,     # Anti-resonator bandwidth
+		'parallelVoiceMix': 0.6,  # Route voice through lateral-shaped parallel
+		'spectralTilt': 8,         # Lateral channels attenuate harmonics
 		'lfRd': 1.0,
 	},
 	# ── Labiodental affricate ────────────────────────────────────────────

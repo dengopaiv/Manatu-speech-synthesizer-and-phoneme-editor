@@ -415,25 +415,25 @@ FRICATIVES = {
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		'pf1': 350,
-		'pf2': 1800,
-		'pf3': 2700,
-		'pf4': 3700,
-		'pf5': 4200,
+		'pf1': 566,
+		'pf2': 1455,
+		'pf3': 2050,
+		'pf4': 2584,
+		'pf5': 3500,
 		'pf6': 4900,
 		'pb1': 200,
-		'pb2': 120,
-		'pb3': 200,
+		'pb2': 224,
+		'pb3': 178,
 		'pb4': 200,
-		'pb5': 180,
+		'pb5': 261,
 		'pb6': 400,
-		# Retroflex sibilant: energy around 3-4 kHz (lower than alveolar s)
-		'pa1': 0,
-		'pa2': 0.25,
-		'pa3': 0.50,
-		'pa4': 0.65,
+		# Retroflex sibilant: editor-tuned parallel formants shifted lower for darker quality
+		'pa1': 0.46,
+		'pa2': 1.0,
+		'pa3': 0.7,
+		'pa4': 0.4,
 		'pa5': 0.45,
-		'pa6': 0.30,
+		'pa6': 0,
 		'parallelBypass': 0.66,
 		'fricationAmplitude': 1,
 		'noiseFilterFreq': 3170,  # Auto-tuned: lower than alveolar s, centroid ~3950 Hz
@@ -473,29 +473,29 @@ FRICATIVES = {
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
-		'pf1': 250,
-		'pf2': 1800,
-		'pf3': 2700,
-		'pf4': 3700,
-		'pf5': 4200,
+		'pf1': 404,
+		'pf2': 1455,
+		'pf3': 2050,
+		'pf4': 2584,
+		'pf5': 3500,
 		'pf6': 4900,
 		'pb1': 60,
-		'pb2': 100,
-		'pb3': 150,
+		'pb2': 224,
+		'pb3': 178,
 		'pb4': 180,
-		'pb5': 160,
+		'pb5': 261,
 		'pb6': 400,
-		'pa1': 0,
-		'pa2': 0.25,
-		'pa3': 0.50,
-		'pa4': 0.65,
+		'pa1': 0.46,
+		'pa2': 1.0,
+		'pa3': 0.7,
+		'pa4': 0.4,
 		'pa5': 0.45,
-		'pa6': 0.30,
+		'pa6': 0,
 		'parallelBypass': 0.66,
 		'fricationAmplitude': 0.7,
 		'noiseFilterFreq': 3170,
 		'noiseFilterBw': 1500,
-		'spectralTilt': 4,
+		'spectralTilt': 7,
 		'flutter': 0.15,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -1523,7 +1523,7 @@ FRICATIVES = {
 		'ftpBw2': 100,
 	},
 	# Lateral fricatives
-	'ɬ': {  # Voiceless lateral fricative — /l/ formants + frication
+	'ɬ': {  # Voiceless lateral fricative — midline closure, lateral airflow
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -1539,7 +1539,7 @@ FRICATIVES = {
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
-		'cfN0': 250,
+		'cfN0': 3500,  # Anti-resonance target (inactive for voiceless, documents intent)
 		'cb1': 220,
 		'cb2': 90,
 		'cb3': 200,
@@ -1547,30 +1547,32 @@ FRICATIVES = {
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 100,
+		'cbN0': 400,   # Anti-resonance bandwidth
 		'caNP': 0,
 		'pf1': 310,
 		'pf2': 1050,
 		'pf3': 2880,
-		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf4': 3500,   # Aligned with notch frequency
+		'pf5': 4500,   # Above-notch lateral resonance
+		'pf6': 5500,   # HF lateral turbulence
 		'pb1': 200,
 		'pb2': 120,
-		'pb3': 250,
+		'pb3': 300,    # Wider for turbulent character
 		'pb4': 180,
-		'pb5': 150,
+		'pb5': 300,    # Wider above-notch spread
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0.5,
-		'pa4': 0.4,
-		'pa5': 0.6,
-		'pa6': 0.5,
-		'parallelBypass': 0.3,
+		'pa2': 0.15,   # Slight lateral F2 energy
+		'pa3': 0.55,   # Primary below-notch peak
+		'pa4': 0.3,    # Restored — real anti-resonator handles the notch
+		'pa5': 0.7,    # Above-notch peak (strongest)
+		'pa6': 0.45,   # HF rolloff
+		'parallelBypass': 0.15,  # Preserve sculpted shape
+		'parallelAntiFreq': 3500,  # Parallel anti-resonator at lateral zero
+		'parallelAntiBw': 350,     # Anti-resonator bandwidth
 		'fricationAmplitude': 0.8,
-		'noiseFilterFreq': 5000,
-		'noiseFilterBw': 3000,
+		'noiseFilterFreq': 4000,  # Lateral turbulence is oral, not dental
+		'noiseFilterBw': 2500,    # More focused
 		'flutter': 0.25,
 		'lfRd': 0,
 		'diplophonia': 0,
@@ -1581,7 +1583,7 @@ FRICATIVES = {
 		'ftpFreq2': 0,
 		'ftpBw2': 100,
 	},
-	'ɮ': {  # Voiced lateral fricative — base: ɬ with voicing
+	'ɮ': {  # Voiced lateral fricative — voice+noise through lateral channels
 		'_isNasal': False,
 		'_isStop': False,
 		'_isLiquid': False,
@@ -1595,40 +1597,43 @@ FRICATIVES = {
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
-		'cfNP': 200,
-		'cfN0': 250,
-		'cb1': 55,
-		'cb2': 75,
+		'cfNP': 0,     # Bypass nasal pole (keep anti-resonator only)
+		'cfN0': 3500,  # Active anti-resonance in cascade voice path
+		'cb1': 65,     # Wider — turbulence broadens resonances
+		'cb2': 85,     # Wider
 		'cb3': 180,
 		'cb4': 180,
 		'cb5': 150,
 		'cb6': 400,
 		'cbNP': 100,
-		'cbN0': 100,
-		'caNP': 0,
+		'cbN0': 350,   # Anti-resonance bandwidth
+		'caNP': 1.0,   # Activate the N0 chain
 		'pf1': 310,
 		'pf2': 1050,
 		'pf3': 2880,
-		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf4': 3500,   # Aligned with notch
+		'pf5': 4500,   # Above-notch resonance
+		'pf6': 5500,   # HF turbulence
 		'pb1': 50,
 		'pb2': 100,
-		'pb3': 220,
+		'pb3': 250,    # Wider
 		'pb4': 180,
-		'pb5': 150,
+		'pb5': 280,    # Wider above-notch
 		'pb6': 400,
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0.5,
-		'pa4': 0.4,
-		'pa5': 0.6,
-		'pa6': 0.5,
-		'parallelBypass': 0.3,
-		'fricationAmplitude': 0.55,
-		'spectralTilt': 7,
-		'noiseFilterFreq': 5000,
-		'noiseFilterBw': 3000,
+		'pa2': 0.15,   # Lateral F2 energy
+		'pa3': 0.55,   # Below-notch peak
+		'pa4': 0.3,    # Restored — real anti-resonator handles the notch
+		'pa5': 0.65,   # Above-notch peak
+		'pa6': 0.4,    # HF rolloff
+		'parallelBypass': 0.1,    # Sculpted shape dominates
+		'parallelAntiFreq': 3500,  # Parallel anti-resonator at lateral zero
+		'parallelAntiBw': 350,     # Anti-resonator bandwidth
+		'parallelVoiceMix': 0.6,  # Route voice through lateral-shaped parallel
+		'fricationAmplitude': 0.5, # Slightly reduced (voice adds energy)
+		'spectralTilt': 8,         # Lateral channels attenuate harmonics
+		'noiseFilterFreq': 4000,   # Lateral turbulence
+		'noiseFilterBw': 2500,     # More focused
 		'flutter': 0.25,
 		'lfRd': 1.0,
 		'diplophonia': 0,

@@ -66,6 +66,8 @@ typedef struct {
 	speechPlayer_frameParam_t pa1, pa2, pa3, pa4, pa5, pa6; // amplitude of parallel formants between 0 and 1
 	speechPlayer_frameParam_t parallelBypass; // amount of signal which should bypass parallel resonators from 0 to 1
 	speechPlayer_frameParam_t parallelVoiceMix; // fraction of voice signal routed to parallel formant bank (0-1, 0=noise/burst only)
+	speechPlayer_frameParam_t parallelAntiFreq; // Parallel anti-resonator frequency Hz (0=disabled)
+	speechPlayer_frameParam_t parallelAntiBw;   // Parallel anti-resonator bandwidth Hz
 	speechPlayer_frameParam_t preFormantGain; // amplitude from 0 to 1 of all vocal tract sound (voicing, frication) before entering formant resonators. Useful for stopping/starting speech
 	speechPlayer_frameParam_t outputGain; // amplitude from 0 to 1 of final output (master volume)
 	speechPlayer_frameParam_t endVoicePitch; //  pitch of voice at the end of the frame length

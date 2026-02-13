@@ -55,6 +55,8 @@ KLSYN88_DEFAULTS = {
 	'burstDuration': 0.25,    # 5ms at 20ms max
 	'trillRate': 0,           # No trill by default
 	'trillDepth': 0,          # No trill by default
+	'parallelAntiFreq': 0,    # Disabled by default
+	'parallelAntiBw': 300,    # Default bandwidth if enabled
 	'burstFilterFreq': 0,     # Unfiltered burst by default
 	'burstFilterBw': 2000,    # Default bandwidth if filter enabled
 	'burstNoiseColor': 0,    # White noise (flat spectrum) by default

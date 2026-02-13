@@ -818,9 +818,10 @@ class ParallelFormantGenerator {
 	private:
 	int sampleRate;
 	ZDFResonator r1, r2, r3, r4, r5, r6;  // Using ZDF resonators for smooth modulation
+	ZDFResonator antiRes;  // Anti-resonator for parallel path spectral zeros
 
 	public:
-	ParallelFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr) {};
+	ParallelFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), antiRes(sr, true) {};
 
 	double getNext(const speechPlayer_frame_t* frame, double input) {
 		input/=2.0;
@@ -834,16 +835,20 @@ class ParallelFormantGenerator {
 		output+=r4.resonate(input,frame->pf4,frame->pb4)*frame->pa4;
 		output+=r5.resonate(input,frame->pf5,frame->pb5)*frame->pa5;
 		output+=r6.resonate(input,frame->pf6,frame->pb6)*frame->pa6;
+		// Apply parallel anti-resonator (freq=0 bypasses automatically: g=0, returns input)
+		output = antiRes.resonate(output, frame->parallelAntiFreq, frame->parallelAntiBw);
 		return calculateValueAtFadePosition(output,input,frame->parallelBypass);
 	}
 
 	void decay(double factor) {
 		r1.decay(factor); r2.decay(factor); r3.decay(factor);
 		r4.decay(factor); r5.decay(factor); r6.decay(factor);
+		antiRes.decay(factor);
 	}
 	void reset() {
 		r1.reset(); r2.reset(); r3.reset();
 		r4.reset(); r5.reset(); r6.reset();
+		antiRes.reset();
 	}
 
 };

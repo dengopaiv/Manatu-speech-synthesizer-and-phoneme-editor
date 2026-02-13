@@ -63,6 +63,8 @@ class Frame(Structure):
 		'pa1','pa2','pa3','pa4','pa5','pa6',
 		'parallelBypass',
 		'parallelVoiceMix',    # Fraction of voice signal routed to parallel bank (0-1)
+		'parallelAntiFreq',    # Parallel anti-resonator freq Hz (0=disabled)
+		'parallelAntiBw',      # Parallel anti-resonator bandwidth Hz
 		'preFormantGain',
 		'outputGain',
 		'endVoicePitch',
