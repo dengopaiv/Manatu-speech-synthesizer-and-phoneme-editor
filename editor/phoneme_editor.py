@@ -47,7 +47,8 @@ from phoneme_editor_constants import (
 )
 from phoneme_editor_panels import (
     HeaderPanel, ParametersPanel, PresetsPanel,
-    SequenceTestingPanel, ViewPanel, FileExportPanel
+    SequenceTestingPanel, ViewPanel, FileExportPanel,
+    PhonemizeDialog, ID_LOAD_AND_SAVE
 )
 
 # Load phoneme data from parent's data package
@@ -487,6 +488,29 @@ class PhonemeEditorFrame(wx.Frame):
             self.set_status(f"Loaded ({mode}): {os.path.basename(str(filepath))}")
         except Exception as e:
             wx.MessageBox(f"Error loading preset: {e}", "Error", wx.OK | wx.ICON_ERROR)
+
+    def on_phonemize(self):
+        """Resolve IPA text through diacritic pipeline and show results."""
+        ipa_text = self.ipa_input.GetValue().strip()
+        if not ipa_text:
+            self.set_status("Enter IPA text to phonemize")
+            return
+
+        results = ipa.resolve_ipa_phoneme(ipa_text)
+        if not results:
+            self.set_status(f"Could not resolve: {ipa_text}")
+            return
+
+        dlg = PhonemizeDialog(self, ipa_text, results)
+        result = dlg.ShowModal()
+        if result == wx.ID_OK:
+            selected = dlg.get_selected()
+            self.load_phoneme_full(selected['char'], selected['params'])
+        elif result == ID_LOAD_AND_SAVE:
+            selected = dlg.get_selected()
+            self.load_phoneme_full(selected['char'], selected['params'])
+            self.on_save(None)
+        dlg.Destroy()
 
     def set_status(self, message):
         if wx.IsMainThread():

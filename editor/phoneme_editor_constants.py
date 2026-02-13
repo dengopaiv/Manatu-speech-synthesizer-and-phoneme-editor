@@ -289,5 +289,22 @@ IPA_DESCRIPTIONS = {
     'uoi': 'close back → close-mid back → close front',
 }
 
+# Human-readable diacritic names for the Phonemize dialog
+DIACRITIC_NAMES = {
+    'ʰ': 'aspiration',
+    'ʼ': 'ejective',
+    'ʷ': 'labialization',
+    'ʲ': 'palatalization',
+    'ˠ': 'velarization',
+    'ˤ': 'pharyngealization',
+    '\u0325': 'voiceless',
+    '\u030A': 'voiceless (alt)',
+    '\u0324': 'breathy voice',
+    '\u0330': 'creaky voice',
+    '\u0303': 'nasalization',
+    '\u0329': 'syllabic',
+    '\u032F': 'non-syllabic',
+}
+
 # Duration defaults for test sequences
 SEQUENCE_DURATIONS = {'vowel': 250, 'consonant': 100, 'default': 150}

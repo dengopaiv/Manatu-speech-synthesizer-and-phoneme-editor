@@ -26,7 +26,7 @@ import wx.lib.scrolledpanel as scrolled
 # Import local editor modules
 from phoneme_editor_constants import (
     PARAM_GROUPS, PERCENT_PARAMS, GAIN_PARAMS, TENTH_PARAMS,
-    KLSYN88_DEFAULTS, IPA_DESCRIPTIONS
+    KLSYN88_DEFAULTS, IPA_DESCRIPTIONS, DIACRITIC_NAMES
 )
 import voice_profiles
 
@@ -171,9 +171,17 @@ class HeaderPanel(wx.Panel):
 
         # IPA Symbol
         meta_sizer.Add(wx.StaticText(self, label="IPA:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        self.ipa_input = wx.TextCtrl(self, size=(60, -1))
+        self.ipa_input = wx.TextCtrl(self, size=(60, -1), style=wx.TE_PROCESS_ENTER)
         self.ipa_input.SetName("IPA Symbol")
-        meta_sizer.Add(self.ipa_input, 0, wx.RIGHT, 15)
+        meta_sizer.Add(self.ipa_input, 0, wx.RIGHT, 5)
+
+        # Phonemize button
+        self.phonemize_btn = wx.Button(self, label="Phonemize", size=(80, -1))
+        self.phonemize_btn.SetName("Phonemize IPA input")
+        self.phonemize_btn.SetToolTip("Resolve IPA text through diacritic pipeline (Enter)")
+        meta_sizer.Add(self.phonemize_btn, 0, wx.RIGHT, 15)
+        self.phonemize_btn.Bind(wx.EVT_BUTTON, lambda e: editor.on_phonemize())
+        self.ipa_input.Bind(wx.EVT_TEXT_ENTER, lambda e: editor.on_phonemize())
 
         # Category
         meta_sizer.Add(wx.StaticText(self, label="Category:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
@@ -788,3 +796,147 @@ class FileExportPanel(wx.Panel):
         main_sizer.Add(open_sizer, 0, wx.ALL | wx.EXPAND, 10)
 
         self.SetSizer(main_sizer)
+
+
+# Custom return code for "Load & Save" button
+ID_LOAD_AND_SAVE = wx.ID_HIGHEST + 1
+
+
+class PhonemizeDialog(wx.Dialog):
+    """Dialog showing resolved IPA phoneme with diacritic breakdown."""
+
+    def __init__(self, parent, ipa_text, results):
+        super().__init__(parent, title="Phonemize Result", size=(500, 450),
+                         style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        self.results = results
+        self.selected_index = 0
+        self._create_widgets(ipa_text)
+        self._update_display()
+        self.CentreOnParent()
+
+    def _create_widgets(self, ipa_text):
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Input display
+        input_label = wx.StaticText(self, label=f"Input: {ipa_text}")
+        font = input_label.GetFont()
+        font.SetPointSize(font.GetPointSize() + 2)
+        input_label.SetFont(font)
+        main_sizer.Add(input_label, 0, wx.ALL, 10)
+
+        # Phoneme selector (if multiple results)
+        if len(self.results) > 1:
+            sel_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            sel_sizer.Add(wx.StaticText(self, label="Phoneme:"), 0,
+                          wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+            choices = [f"{r['char']} ({r['base_char']})" for r in self.results]
+            self.phoneme_choice = wx.Choice(self, choices=choices)
+            self.phoneme_choice.SetSelection(0)
+            self.phoneme_choice.Bind(wx.EVT_CHOICE, self._on_selection_change)
+            sel_sizer.Add(self.phoneme_choice, 1, wx.EXPAND)
+            main_sizer.Add(sel_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        # Info panel (base phoneme + modifiers)
+        self.info_text = wx.StaticText(self, label="")
+        main_sizer.Add(self.info_text, 0, wx.ALL, 10)
+
+        # Parameter diff table
+        main_sizer.Add(wx.StaticText(self, label="Parameter changes from diacritics:"),
+                       0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+        self.diff_list = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.diff_list.InsertColumn(0, "Parameter", width=130)
+        self.diff_list.InsertColumn(1, "Base", width=100)
+        self.diff_list.InsertColumn(2, "Modified", width=100)
+        main_sizer.Add(self.diff_list, 1, wx.EXPAND | wx.ALL, 10)
+
+        # Buttons
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        load_btn = wx.Button(self, wx.ID_OK, "Load")
+        load_btn.SetDefault()
+        btn_sizer.Add(load_btn, 0, wx.RIGHT, 10)
+
+        save_btn = wx.Button(self, ID_LOAD_AND_SAVE, "Load && Save")
+        btn_sizer.Add(save_btn, 0, wx.RIGHT, 10)
+
+        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
+        btn_sizer.Add(cancel_btn, 0)
+
+        main_sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
+        self.SetSizer(main_sizer)
+
+        save_btn.Bind(wx.EVT_BUTTON, self._on_load_and_save)
+
+    def _on_selection_change(self, event):
+        self.selected_index = event.GetSelection()
+        self._update_display()
+
+    def _on_load_and_save(self, event):
+        self.EndModal(ID_LOAD_AND_SAVE)
+
+    def _update_display(self):
+        result = self.results[self.selected_index]
+        char = result['char']
+        base_char = result['base_char']
+        params = result['params']
+        base_params = result['base_params']
+
+        # Build info text
+        desc = IPA_DESCRIPTIONS.get(base_char, '')
+        info_lines = [f"Base phoneme: {base_char}" + (f" ({desc})" if desc else "")]
+
+        # Identify modifiers
+        modifier_chars = [c for c in char if c not in base_char]
+        if modifier_chars:
+            mod_strs = []
+            for mc in modifier_chars:
+                name = DIACRITIC_NAMES.get(mc, f'U+{ord(mc):04X}')
+                mod_strs.append(f"  {mc}  {name}")
+            info_lines.append("Modifiers:")
+            info_lines.extend(mod_strs)
+
+        # Check for ejective
+        if params.get('_isEjective'):
+            info_lines.append("Modifiers:")
+            info_lines.append("  ʼ  ejective")
+
+        self.info_text.SetLabel('\n'.join(info_lines))
+
+        # Build diff table
+        self.diff_list.DeleteAllItems()
+        if not base_params:
+            return
+
+        # Compare all keys present in either base or modified
+        all_keys = sorted(set(list(base_params.keys()) + list(params.keys())))
+        for key in all_keys:
+            if key.startswith('_'):
+                continue
+            base_val = base_params.get(key)
+            mod_val = params.get(key)
+            if base_val == mod_val:
+                continue
+            # Format values
+            base_str = self._format_val(base_val)
+            mod_str = self._format_val(mod_val)
+            idx = self.diff_list.InsertItem(self.diff_list.GetItemCount(), key)
+            self.diff_list.SetItem(idx, 1, base_str)
+            self.diff_list.SetItem(idx, 2, mod_str)
+
+        # If aspiration was added, show it
+        if params.get('_hasExplicitAspiration') and not base_params.get('_hasExplicitAspiration'):
+            idx = self.diff_list.InsertItem(self.diff_list.GetItemCount(), "+aspiration")
+            self.diff_list.SetItem(idx, 1, "no")
+            self.diff_list.SetItem(idx, 2, "yes")
+
+        self.GetSizer().Layout()
+
+    @staticmethod
+    def _format_val(val):
+        if val is None:
+            return "-"
+        if isinstance(val, float):
+            return f"{val:.1f}" if val != int(val) else f"{int(val)}"
+        return str(val)
+
+    def get_selected(self):
+        return self.results[self.selected_index]

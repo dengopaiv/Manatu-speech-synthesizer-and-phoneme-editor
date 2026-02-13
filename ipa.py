@@ -617,6 +617,45 @@ def IPAToPhonemes(ipaText):
 		lastPhoneme.pop('_hasExplicitAspiration')
 	return phonemeList
 
+def resolve_ipa_phoneme(ipa_text):
+	"""Resolve an IPA string into phoneme parameters with diacritic tracking.
+
+	Returns list of dicts, each with:
+	  - 'char': the matched IPA string
+	  - 'params': full parameter dict (with diacritics applied, pre-phase-expansion)
+	  - 'base_char': the base phoneme character (without diacritics)
+	  - 'base_params': the unmodified base phoneme params (for diff display)
+	"""
+	modifier_chars = set(CONSONANT_MODIFIERS.keys()) | set(COMBINING_DIACRITICS.keys()) | set(TONE_DIACRITICS.keys())
+
+	results = []
+	for char, phoneme in _IPAToPhonemesHelper(ipa_text):
+		if phoneme is None:
+			continue
+		if phoneme.get('_applyEjective'):
+			# Retroactively mark the previous result as ejective
+			if results:
+				prev = results[-1]
+				params = prev['params']
+				# Apply ejective transformation to the params
+				params['_isEjective'] = True
+				prev['char'] = prev['char'] + 'ʼ'
+			continue
+		# Determine the base character by stripping modifier/diacritic chars
+		matched = phoneme.get('_char', char)
+		base_char = ''.join(c for c in matched if c not in modifier_chars)
+		if not base_char:
+			base_char = matched
+		# Look up unmodified base params
+		base_params = data.get(base_char, {}).copy()
+		results.append({
+			'char': char,
+			'params': phoneme,
+			'base_char': base_char,
+			'base_params': base_params,
+		})
+	return results
+
 def correctHPhonemes(phonemeList):
 	finalPhonemeIndex=len(phonemeList)-1
 	# Correct all h phonemes (including inserted aspirations) so that their formants match the next phoneme, or the previous if there is no next
