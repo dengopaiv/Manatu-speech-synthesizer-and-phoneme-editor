@@ -164,25 +164,25 @@ FRICATIVES = {
 		'pf2': 1390,
 		'pf3': 2530,
 		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 5250,
+		'pf5': 5000,
+		'pf6': 5500,
 		'pb1': 200,
 		'pb2': 80,
 		'pb3': 200,
 		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb5': 700,
+		'pb6': 2000,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0.4,   # Boost F5 for higher centroid
-		'pa6': 0.8,   # High peak — reduced to avoid tonal quality
-		'parallelBypass': 0,
+		'pa5': 1.0,   # Full F5 amplitude for HF presence
+		'pa6': 1.0,   # Full F6 amplitude
+		'parallelBypass': 0.4,  # Direct noise bypass for HF presence
 		'fricationAmplitude': 1,
-		# Alveolar sibilant: high center + wide BW to separate from /ʃ/
-		'noiseFilterFreq': 7500,
-		'noiseFilterBw': 3000,
+		# Alveolar sibilant: brighter peak, more focused
+		'noiseFilterFreq': 8000,
+		'noiseFilterBw': 2487,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -224,28 +224,28 @@ FRICATIVES = {
 		'pf2': 1390,
 		'pf3': 2530,
 		'pf4': 3300,
-		'pf5': 3750,
+		'pf5': 5000,
 		# KLSYN88: High F6 for alveolar sibilant (like [s])
-		'pf6': 5250,
+		'pf6': 5500,
 		'pb1': 70,
 		'pb2': 60,
 		'pb3': 180,
 		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb5': 700,
+		'pb6': 2000,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0.4,   # Mirror /s/ — boost F5
-		'pa6': 0.8,   # Mirror /s/ — reduced to avoid tonal quality
-		'parallelBypass': 0,
+		'pa5': 1.0,   # Mirror /s/ — full F5 amplitude
+		'pa6': 1.0,   # Mirror /s/ — full F6 amplitude
+		'parallelBypass': 0.4,  # Mirror /s/ — direct noise bypass for HF presence
 		'fricationAmplitude': 1,
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
 		# Alveolar sibilant: mirror /s/ spectral shape
-		'noiseFilterFreq': 7500,
-		'noiseFilterBw': 3000,
+		'noiseFilterFreq': 8000,
+		'noiseFilterBw': 2487,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -512,9 +512,9 @@ FRICATIVES = {
 		'_isVoiced': False,
 		'voiceAmplitude': 0,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 3,  # Slight breathiness for voiceless fricative
+		'spectralTilt': 2,  # Less breathy — editor-tuned
 		'cf1': 320,
-		'cf2': 1290,
+		'cf2': 1390,
 		'cf3': 2540,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -522,7 +522,7 @@ FRICATIVES = {
 		'cfNP': 200,
 		'cfN0': 250,
 		'cb1': 220,
-		'cb2': 67.5,
+		'cb2': 60,
 		'cb3': 150,
 		'cb4': 180,
 		'cb5': 150,
@@ -531,28 +531,28 @@ FRICATIVES = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 320,
-		'pf2': 1290,
+		'pf2': 1390,
 		'pf3': 2540,
 		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf5': 5000,
+		'pf6': 4450,
 		'pb1': 200,
-		'pb2': 90,
+		'pb2': 80,
 		'pb3': 200,
 		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb5': 700,
+		'pb6': 1100,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
-		'parallelBypass': 0.95,  # Nearly all bypass — diffuse non-sibilant
-		'fricationAmplitude': 0.65,  # Non-sibilant — weaker
-		# Dental non-sibilant: pink noise for diffuse "sea noise" spectrum
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		'pa5': 1.0,   # Enable F5 resonance
+		'pa6': 1.0,   # Enable F6 resonance
+		'parallelBypass': 0.65,  # Less bypass, more resonance shaping
+		'fricationAmplitude': 1.0,  # Full amplitude — editor-tuned
+		# Dental fricative: filtered HF peak instead of diffuse pink
+		'noiseFilterFreq': 7600,
+		'noiseFilterBw': 3025,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -574,7 +574,7 @@ FRICATIVES = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 270,
-		'cf2': 1290,
+		'cf2': 1390,
 		'cf3': 2540,
 		'cf4': 3300,
 		'cf5': 3750,
@@ -591,30 +591,30 @@ FRICATIVES = {
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 270,
-		'pf2': 1290,
+		'pf2': 1390,
 		'pf3': 2540,
 		'pf4': 3300,
-		'pf5': 3750,
-		'pf6': 4900,
+		'pf5': 5000,
+		'pf6': 4450,
 		'pb1': 60,
 		'pb2': 80,
 		'pb3': 170,
 		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb5': 700,
+		'pb6': 1100,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
 		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
-		'parallelBypass': 0.95,  # Mirror /θ/ — nearly all bypass
-		'fricationAmplitude': 0.4,  # Voiced non-sibilant — weaker
+		'pa5': 1.0,   # Mirror /θ/ — enable F5 resonance
+		'pa6': 1.0,   # Mirror /θ/ — enable F6 resonance
+		'parallelBypass': 0.65,  # Mirror /θ/ — less bypass, more resonance shaping
+		'fricationAmplitude': 0.6,  # Voiced — proportional (0.4/0.65 × 1.0 ≈ 0.6)
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
-		# Dental non-sibilant: pink noise for diffuse spectrum
-		'noiseFilterFreq': 0,
-		'noiseFilterBw': 1000,
+		# Dental fricative: mirror /θ/ — filtered HF peak
+		'noiseFilterFreq': 7600,
+		'noiseFilterBw': 3025,
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
