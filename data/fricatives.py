@@ -30,7 +30,7 @@ FRICATIVES = {
 		'cfN0': 250,
 		'cb1': 220,
 		'cb2': 90,
-		'cb3': 112.5,
+		'cb3': 112,
 		'cb4': 180,
 		'cb5': 150,
 		'cb6': 400,
@@ -56,7 +56,7 @@ FRICATIVES = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0.98,  # Essentially all bypass — diffuse spectrum
-		'fricationAmplitude': 0.6,  # Non-sibilant — weaker
+		'fricationAmplitude': 0.7,  # Non-sibilant — editor-tuned
 		# Labiodental non-sibilant: pink noise for diffuse flat spectrum
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
@@ -88,8 +88,8 @@ FRICATIVES = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 66,
-		'cb2': 67.5,
+		'cb1': 90,
+		'cb2': 68,
 		'cb3': 90,
 		'cb4': 180,
 		'cb5': 150,
@@ -116,7 +116,7 @@ FRICATIVES = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0.98,  # Match /f/ — diffuse spectrum
-		'fricationAmplitude': 0.4,  # Voiced non-sibilant — weaker
+		'fricationAmplitude': 0.47,  # Voiced non-sibilant — proportional to /f/
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
 		# Labiodental non-sibilant: pink noise for diffuse flat spectrum
@@ -125,6 +125,7 @@ FRICATIVES = {
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
+		'sinusoidalVoicingAmplitude': 0.35,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
@@ -240,9 +241,10 @@ FRICATIVES = {
 		'pa5': 1.0,   # Mirror /s/ — full F5 amplitude
 		'pa6': 1.0,   # Mirror /s/ — full F6 amplitude
 		'parallelBypass': 0.4,  # Mirror /s/ — direct noise bypass for HF presence
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.75,  # Voiced weaker than voiceless /s/ — editor-tuned
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		'sinusoidalVoicingAmplitude': 0.35,  # Explicit voicebar — editor-tuned
 		# Alveolar sibilant: mirror /s/ spectral shape
 		'noiseFilterFreq': 8000,
 		'noiseFilterBw': 2487,
@@ -574,16 +576,16 @@ FRICATIVES = {
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
 		'cf1': 270,
-		'cf2': 1390,
+		'cf2': 1045,  # Lower cascade F2 — separates from voiceless /θ/
 		'cf3': 2540,
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 66,
+		'cb1': 112,  # Wider F1 for more open voiced quality — editor-tuned
 		'cb2': 60,
-		'cb3': 127.5,
+		'cb3': 127,
 		'cb4': 180,
 		'cb5': 150,
 		'cb6': 400,
@@ -612,6 +614,7 @@ FRICATIVES = {
 		'fricationAmplitude': 0.6,  # Voiced — proportional (0.4/0.65 × 1.0 ≈ 0.6)
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
+		'sinusoidalVoicingAmplitude': 0.35,  # Explicit voicebar — editor-tuned
 		# Dental fricative: mirror /θ/ — filtered HF peak
 		'noiseFilterFreq': 7600,
 		'noiseFilterBw': 3025,
