@@ -59,7 +59,7 @@ PARAM_GROUPS = {
         ('cb6', 200, 2000, 1000, 'Hz', 'F6 bandwidth'),
     ],
     'Nasal Formants': [
-        ('cfN0', 200, 2500, 450, 'Hz', 'Nasal zero ([m]1000, [n]1400, [ŋ]2000)'),
+        ('cfN0', 0, 5000, 450, 'Hz', 'Anti-resonator zero (nasal/lateral)'),
         ('cbN0', 50, 500, 100, 'Hz', 'Nasal zero bandwidth'),
         ('cfNP', 200, 500, 270, 'Hz', 'Nasal pole frequency'),
         ('cbNP', 50, 500, 100, 'Hz', 'Nasal pole bandwidth'),
@@ -90,6 +90,8 @@ PARAM_GROUPS = {
     'Parallel Mix': [
         ('parallelVoiceMix', 0, 100, 0, '%', 'Voice signal into parallel bank'),
         ('parallelBypass', 0, 100, 0, '%', 'Unfiltered noise bypass'),
+        ('parallelAntiFreq', 0, 6000, 0, 'Hz', 'Parallel anti-resonator (0=off)'),
+        ('parallelAntiBw', 50, 1000, 300, 'Hz', 'Parallel anti-resonator BW'),
     ],
     'Voice Quality (KLSYN88)': [
         ('spectralTilt', 0, 41, 0, 'dB', 'High-freq attenuation (breathy)'),
@@ -121,6 +123,10 @@ PARAM_GROUPS = {
         ('burstFilterBw', 100, 6000, 2000, 'Hz', 'Burst bandpass width'),
         ('burstNoiseColor', 0, 100, 0, '%', 'Noise color (0=white, 100=pink)'),
     ],
+    'Trill': [
+        ('trillRate', 0, 50, 0, 'Hz', 'Trill LFO rate (0=off, ~25 alveolar)'),
+        ('trillDepth', 0, 100, 0, '%', 'Trill modulation depth'),
+    ],
 }
 
 # Parameters that use percentage scaling (0-100 maps to 0.0-1.0)
@@ -130,7 +136,7 @@ PERCENT_PARAMS = {
     'glottalOpenQuotient', 'vibratoPitchOffset', 'parallelVoiceMix', 'parallelBypass',
     'flutter', 'openQuotientShape', 'speedQuotient', 'diplophonia',
     'burstAmplitude', 'burstDuration', 'sinusoidalVoicingAmplitude',
-    'burstNoiseColor',
+    'burstNoiseColor', 'trillDepth',
 }
 
 # Parameters that use percentage scaling (0-200 maps to 0.0-2.0)
@@ -164,6 +170,13 @@ KLSYN88_DEFAULTS = {
     'aspirationFilterBw': 2000,
     'noiseFilterFreq': 0,
     'noiseFilterBw': 1000,
+    'trillRate': 0,
+    'trillDepth': 0,
+    'parallelAntiFreq': 0,
+    'parallelAntiBw': 300,
+    'burstFilterFreq': 0,
+    'burstFilterBw': 2000,
+    'burstNoiseColor': 0,
 }
 
 # IPA descriptions
