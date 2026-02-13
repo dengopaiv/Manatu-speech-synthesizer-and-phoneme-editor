@@ -204,6 +204,7 @@ STOPS = {
 		'burstDuration': 0.3,  # Updated from JSON
 		'burstFilterFreq': 4000,  # High, sharp alveolar burst
 		'burstFilterBw': 3000,
+		'burstNoiseColor': 0.15,   # Brightest place; some white for sharp alveolar transient
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,  # From JSON
@@ -270,6 +271,7 @@ STOPS = {
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 4000,  # High, sharp alveolar burst
 		'burstFilterBw': 3000,
+		'burstNoiseColor': 0.15,   # Brightest place; some white for sharp alveolar transient
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -337,6 +339,7 @@ STOPS = {
 		'burstDuration': 0.35,
 		'burstFilterFreq': 3000,  # Retroflex: between alveolar and velar
 		'burstFilterBw': 2500,
+		'burstNoiseColor': 0.3,    # Sublingual cavity dampens HF
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -401,6 +404,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 3000,  # Retroflex: between alveolar and velar
 		'burstFilterBw': 2500,
+		'burstNoiseColor': 0.3,    # Sublingual cavity dampens HF
 		'spectralTilt': 0,
 		'flutter': 0.15,
 		'lfRd': 1.0,
@@ -461,10 +465,11 @@ STOPS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest (Stevens Ch.7)
-		'burstAmplitude': 0.9,
+		'burstAmplitude': 0.82,
 		'burstDuration': 0.4,  # Voiceless longer release
 		'burstFilterFreq': 2000,  # Mid, compact velar burst
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -531,6 +536,7 @@ STOPS = {
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 2000,  # Mid, compact velar burst
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -597,6 +603,7 @@ STOPS = {
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 2000,  # Mid, compact velar burst
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -663,6 +670,7 @@ STOPS = {
 		'burstDuration': 0.4,
 		'burstFilterFreq': 3500,  # High palatal burst
 		'burstFilterBw': 2000,
+		'burstNoiseColor': 0.25,   # Between alveolar and velar
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -726,6 +734,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 3500,  # High palatal burst
 		'burstFilterBw': 2000,
+		'burstNoiseColor': 0.25,   # Between alveolar and velar
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -991,6 +1000,7 @@ STOPS = {
 		'burstDuration': 0.3,
 		'burstFilterFreq': 4000,
 		'burstFilterBw': 3000,
+		'burstNoiseColor': 0.15,   # Brightest place; some white for sharp alveolar transient
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -1056,6 +1066,7 @@ STOPS = {
 		'burstDuration': 0.3,     # Slightly shorter than /k/
 		'burstFilterFreq': 2000,
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -1261,6 +1272,7 @@ STOPS = {
 		'burstDuration': 0.15,
 		'burstFilterFreq': 4000,
 		'burstFilterBw': 3000,
+		'burstNoiseColor': 0.15,   # Brightest place; some white for sharp alveolar transient
 		# Voice quality: pressed/tense from laryngeal tension
 		'spectralTilt': 0,
 		'flutter': 0.15,
@@ -1328,6 +1340,7 @@ STOPS = {
 		'burstDuration': 0.15,
 		'burstFilterFreq': 2000,
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		# Voice quality: pressed/tense from laryngeal tension
 		'spectralTilt': 0,
 		'flutter': 0.15,
@@ -1395,6 +1408,7 @@ STOPS = {
 		'burstDuration': 0.15,
 		'burstFilterFreq': 3500,
 		'burstFilterBw': 2000,
+		'burstNoiseColor': 0.25,   # Between alveolar and velar
 		# Voice quality: pressed/tense from laryngeal tension
 		'spectralTilt': 0,
 		'flutter': 0.15,
@@ -1644,6 +1658,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 4000,
 		'burstFilterBw': 3000,
+		'burstNoiseColor': 0.15,   # Brightest place; some white for sharp alveolar transient
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -1730,6 +1745,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 2000,
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
@@ -1816,6 +1832,7 @@ STOPS = {
 		'burstDuration': 0.2,
 		'burstFilterFreq': 2000,
 		'burstFilterBw': 1500,
+		'burstNoiseColor': 0.45,   # Compact mid-freq spectrum, much less HF than alveolar
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,

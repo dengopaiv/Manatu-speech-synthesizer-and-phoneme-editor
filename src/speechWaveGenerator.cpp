@@ -805,7 +805,8 @@ class BurstGenerator {
 			: 1.5;
 		double onsetSamples = (onsetMs / 1000.0) * sampleRate;
 		double onsetPhase = min(burstPhase * durationSamples / onsetSamples, 1.0);
-		double noise = filtered + raw * (1.0 - onsetPhase);
+		double onsetScale = 1.0 - activeNoiseColor * 0.7;
+		double noise = filtered + raw * (1.0 - onsetPhase) * onsetScale;
 		return noise * envelope * activeBurstAmp;
 	}
 
