@@ -1,24 +1,24 @@
 # IPA Coverage Matrix
 
-Complete phoneme inventory for Manatu (131 phonemes total).
+Complete phoneme inventory for Manatu (143 phonemes total).
 
-## Consonants (70)
+## Consonants (76)
 
 ### Pulmonic Consonants
 
 Standard IPA chart layout: manner (rows) by place of articulation (columns). Voiceless/voiced pairs shown as vl./vd.
 
-|  | Bilabial | Labiodental | Dental | Alveolar | Postalveolar | Retroflex | Palatal | Velar | Uvular | Pharyngeal | Glottal |
-|--|----------|-------------|--------|----------|--------------|-----------|---------|-------|--------|------------|---------|
-| **Stop** | p  b | | | t  d | | ʈ  ɖ | c  ɟ | k  g | q  ɢ | | ʔ |
-| **Nasal** | m | ɱ | | n | | ɳ | ɲ | ŋ | ɴ | | |
-| **Trill** | ʙ | | | r | | | | | ʀ | | |
-| **Tap/Flap** | | ⱱ | | ɾ | | ɽ | | | | | |
-| **Fricative** | ɸ  β | f  v | θ  ð | s  z | ʃ  ʒ | ʂ  ʐ | ç  ʝ | x  ɣ | χ  ʁ | ħ  ʕ | h  ɦ |
-| **Alveolo-palatal fric.** | | | | | | | ɕ  ʑ | | | | |
-| **Lateral fricative** | | | | ɬ  ɮ | | | | | | | |
-| **Approximant** | | ʋ | | ɹ | | ɻ | j | ɰ | | | |
-| **Lateral approximant** | | | | l | | ɭ | ʎ | ʟ | | | |
+|  | Bilabial | Labiodental | Dental | Alveolar | Postalveolar | Retroflex | Palatal | Velar | Uvular | Pharyngeal | Epiglottal | Glottal |
+|--|----------|-------------|--------|----------|--------------|-----------|---------|-------|--------|------------|------------|---------|
+| **Stop** | p  b | | | t  d | | ʈ  ɖ | c  ɟ | k  g | q  ɢ | | ʡ | ʔ |
+| **Nasal** | m | ɱ | | n | | ɳ | ɲ | ŋ | ɴ | | | |
+| **Trill** | ʙ | | | r | | | | | ʀ | | | |
+| **Tap/Flap** | | ⱱ | | ɾ | | ɽ | | | | | | |
+| **Fricative** | ɸ  β | f  v | θ  ð | s  z | ʃ  ʒ | ʂ  ʐ | ç  ʝ | x  ɣ | χ  ʁ | ħ  ʕ | ʜ  ʢ | h  ɦ |
+| **Alveolo-palatal fric.** | | | | | | | ɕ  ʑ | | | | | |
+| **Lateral fricative** | | | | ɬ  ɮ | | | | | | | | |
+| **Approximant** | | ʋ | | ɹ | | ɻ | j | ɰ | | | | |
+| **Lateral approximant** | | | | l | | ɭ | ʎ | ʟ | | | | |
 
 **Additional:** ʍ (voiceless labial-velar fricative), w (labial-velar approximant)
 
@@ -76,6 +76,40 @@ Acoustic characteristics vs. regular voiced stops:
 - Pressed/tense voice quality (lfRd=0.7, lower than modal 1.0)
 - Slight creaky quality (diplophonia from glottal tension)
 - More periodic voicing (less flutter from laryngeal tension)
+
+### Prenasalized Stops (3)
+
+Prenasalized stops begin with a nasal murmur phase before a voiced stop release. Common in Bantu (Swahili, Zulu) and Oceanic (Fijian) languages. Implemented using the multi-phase system (same as affricates).
+
+| Symbol | Type | Place | Based on | Languages |
+|--------|------|-------|----------|-----------|
+| ᵐb | Prenasalized stop | Bilabial | m + b | Swahili, Fijian |
+| ⁿd | Prenasalized stop | Alveolar | n + d | Swahili, Fijian |
+| ᵑɡ | Prenasalized stop | Velar | ŋ + g | Swahili, Fijian |
+
+Acoustic characteristics:
+- Phase 1: ~60ms nasal murmur with nasal pole/zero active (caNP=1)
+- Phase 2: ~8ms voiced stop release with burst energy
+- Voicing maintained throughout both phases
+- Superscript nasal prefix (ᵐ, ⁿ, ᵑ) parsed via 2-character longest match
+
+Note: ᵑɡ (with IPA ɡ U+0261) and ᵑg (with ASCII g U+0067) are both supported.
+
+### Epiglottal Consonants (3)
+
+Rare sounds produced at the epiglottis, further back than pharyngeals. Found in some Caucasian languages (Agul) and East African languages (Dahalo).
+
+| Symbol | Type | Place | Based on | Languages |
+|--------|------|-------|----------|-----------|
+| ʜ | Voiceless fricative | Epiglottal | ħ | Agul, some Caucasian |
+| ʢ | Voiced fricative | Epiglottal | ʕ | Agul, some Caucasian |
+| ʡ | Stop | Epiglottal | ʔ | Dahalo, some Caucasian |
+
+Acoustic characteristics vs. pharyngeal neighbors:
+- Higher F1 than pharyngeals (epiglottal constriction raises F1 further)
+- Lower F2 (more posterior articulation)
+- Stronger aspiration/breathiness (ʜ: spectralTilt=14 vs ħ=12)
+- More creaky voice quality (ʢ: diplophonia=0.2 vs ʕ=0.15)
 
 ## Vowels (34)
 
@@ -171,20 +205,20 @@ Diphthongs are expanded by the IPA parser into component vowels, with the synthe
 | R-colored vowels | 2 |
 | Nasalized vowels | 4 |
 | Diphthongs/triphthongs | 22 |
-| Stops | 14 (incl. 1 alternate glyph) |
+| Stops | 15 (incl. 1 alternate glyph) |
 | Ejective stops | 4 |
-| Fricatives | 27 |
+| Fricatives | 29 |
 | Affricates | 6 |
 | Ejective affricates | 2 |
 | Implosive stops | 5 |
+| Prenasalized stops | 3 (incl. 1 alternate glyph) |
+| Epiglottal consonants | 3 |
 | Nasals | 7 |
 | Liquids & glides | 16 |
-| **Total** | **137** |
+| **Total** | **143** |
 
-## What's Missing (Phase 4 Targets)
+## What's Missing (Future Targets)
 
 The following IPA sound classes are not yet implemented:
 
 - **Clicks** — ʘ, ǀ, ǃ, ǂ, ǁ (velaric ingressive mechanism)
-- **Prenasalized stops** — ᵐb, ⁿd, ᵑɡ (common in Bantu and Oceanic languages)
-- **Epiglottal consonants** — ʜ, ʢ, ʡ

@@ -59,6 +59,7 @@ F2_LOCUS = {
     'velar': 1500,      # k, g, ŋ - varies with vowel context
     'uvular': 1200,     # q, χ, ʁ
     'pharyngeal': 1000, # ħ, ʕ
+    'epiglottal': 1000, # ʜ, ʢ, ʡ (slightly lower than pharyngeal, same effect)
     'glottal': None,    # h, ʔ - no locus effect
 }
 
@@ -111,6 +112,10 @@ PHONEME_PLACE = {
     # Implosives
     'ɓ': 'bilabial', 'ɗ': 'alveolar', 'ɠ': 'velar',
     'ʄ': 'palatal', 'ʛ': 'uvular',
+    # Prenasalized stops (use same place as base stop)
+    'ᵐb': 'bilabial', 'ⁿd': 'alveolar', 'ᵑɡ': 'velar', 'ᵑg': 'velar',
+    # Epiglottals
+    'ʜ': 'epiglottal', 'ʢ': 'epiglottal', 'ʡ': 'epiglottal',
 }
 
 

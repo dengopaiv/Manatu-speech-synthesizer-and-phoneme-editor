@@ -169,6 +169,13 @@ def test_stops_natural():
         ('ɑqɑ', 'voiceless uvular (VCV)'),
         ('ɢɑ', 'voiced uvular (CV)'),
         ('ɑɢɑ', 'voiced uvular (VCV)'),
+        # Prenasalized stops
+        ('ᵐbɑ', 'prenasalized bilabial (CV)'),
+        ('ɑᵐbɑ', 'prenasalized bilabial (VCV)'),
+        ('ⁿdɑ', 'prenasalized alveolar (CV)'),
+        ('ɑⁿdɑ', 'prenasalized alveolar (VCV)'),
+        ('ᵑɡɑ', 'prenasalized velar (CV)'),
+        ('ɑᵑɡɑ', 'prenasalized velar (VCV)'),
     ], "consonant_stops_natural.wav", "Stops (Natural Duration)", speed=0.5)
 
 
@@ -233,6 +240,11 @@ def test_fricatives_natural():
         ('ɑɕɑ', 'voiceless alveolo-palatal (VCV)'),
         ('ʑɑ', 'voiced alveolo-palatal (CV)'),
         ('ɑʑɑ', 'voiced alveolo-palatal (VCV)'),
+        # Epiglottal fricatives
+        ('ʜɑ', 'voiceless epiglottal (CV)'),
+        ('ɑʜɑ', 'voiceless epiglottal (VCV)'),
+        ('ʢɑ', 'voiced epiglottal (CV)'),
+        ('ɑʢɑ', 'voiced epiglottal (VCV)'),
     ], "consonant_fricatives_natural.wav", "Fricatives (Natural Duration)", speed=0.5)
 
 
@@ -845,6 +857,162 @@ def test_alveolo_palatal_spectral():
     return True
 
 
+def test_prenasalized_cv():
+    """Test prenasalized stops ᵐb, ⁿd, ᵑɡ in CV context.
+
+    Prenasalized stops should produce nasal murmur followed by stop release,
+    generating non-silent output when followed by a vowel.
+    """
+    print("\n=== Test: Prenasalized CV ===")
+
+    prenasalized_pairs = [
+        ('ᵐbɑ', 'prenasalized bilabial (CV)'),
+        ('ⁿdɑ', 'prenasalized alveolar (CV)'),
+        ('ᵑɡɑ', 'prenasalized velar (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in prenasalized_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_prenasalized_cv.wav", all_samples)
+    assert all_passed, "Some prenasalized stops show no energy in CV context"
+    print(f"  Generated {len(prenasalized_pairs)} prenasalized CV items")
+    print("  PASSED")
+    return True
+
+
+def test_prenasalized_voicing():
+    """Assert prenasalized stops are strongly voiced in VCV context.
+
+    Prenasalized stops maintain voicing throughout (nasal murmur is voiced,
+    stop release is voiced), so they should show strong periodicity (high HNR)
+    in the consonant region.
+    """
+    print("\n=== Test: Prenasalized Voicing ===")
+
+    prenasalized_texts = [
+        ('ɑᵐbɑ', 'ᵐb'),
+        ('ɑⁿdɑ', 'ⁿd'),
+        ('ɑᵑɡɑ', 'ᵑɡ'),
+    ]
+    all_passed = True
+
+    for ipa_text, label in prenasalized_texts:
+        samples = _synthesize_ipa_phoneme(ipa_text)
+        if len(samples) < 200:
+            print(f"  /{label}/ too short, skipping")
+            continue
+
+        # Check middle third (the consonant region)
+        n = len(samples)
+        mid = samples[n // 3: 2 * n // 3]
+        analysis = analyze_segment(mid, SAMPLE_RATE)
+
+        hnr_str = f"HNR={analysis.hnr:.1f}dB" if analysis.hnr else "HNR=N/A"
+        ok = analysis.is_voiced and (analysis.hnr is None or analysis.hnr > 5)
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{label}/ voiced: {analysis.is_voiced} ({hnr_str}) {status}")
+
+    assert all_passed, "Some prenasalized stops not detected as strongly voiced"
+    print("  PASSED")
+    return True
+
+
+def test_epiglottal_cv():
+    """Test epiglottal consonants ʜ, ʢ, ʡ in CV context.
+
+    Epiglottals should produce non-silent output when followed by a vowel.
+    """
+    print("\n=== Test: Epiglottal CV ===")
+
+    epiglottal_pairs = [
+        ('ʜɑ', 'voiceless epiglottal fricative (CV)'),
+        ('ʢɑ', 'voiced epiglottal fricative (CV)'),
+        ('ʡɑ', 'epiglottal stop (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in epiglottal_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_epiglottal_cv.wav", all_samples)
+    assert all_passed, "Some epiglottals show no energy in CV context"
+    print(f"  Generated {len(epiglottal_pairs)} epiglottal CV items")
+    print("  PASSED")
+    return True
+
+
+def test_epiglottal_high_f1():
+    """Assert epiglottal consonants ʜ, ʢ, ʡ have cf1 > 500 Hz.
+
+    Epiglottal constriction raises F1 even higher than pharyngeals,
+    which is the primary acoustic cue for this place of articulation.
+    """
+    print("\n=== Test: Epiglottal High F1 ===")
+
+    epiglottal_chars = ['ʜ', 'ʢ', 'ʡ']
+    all_passed = True
+
+    for char in epiglottal_chars:
+        if char not in phoneme_data:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        cf1 = phoneme_data[char].get('cf1', None)
+        if cf1 is None:
+            print(f"  /{char}/ no cf1 defined, skipping")
+            continue
+
+        ok = cf1 > 500
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char}/ cf1={cf1} Hz {status} (> 500 Hz)")
+
+    assert all_passed, "Some epiglottals have F1 <= 500 Hz"
+    print("  PASSED")
+    return True
+
+
 def run_all_tests():
     """Run all consonant tests."""
     print("=" * 50)
@@ -876,6 +1044,12 @@ def run_all_tests():
         # Alveolo-palatal tests
         test_alveolo_palatal_cv,
         test_alveolo_palatal_spectral,
+        # Prenasalized stop tests
+        test_prenasalized_cv,
+        test_prenasalized_voicing,
+        # Epiglottal tests
+        test_epiglottal_cv,
+        test_epiglottal_high_f1,
         # Extended spectral assertion tests
         test_palatal_high_f2,
         test_uvular_low_f2,
