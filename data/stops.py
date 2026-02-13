@@ -33,9 +33,9 @@ STOPS = {
 		'cb1': 330,
 		'cb2': 112.5,
 		'cb3': 165,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -48,9 +48,9 @@ STOPS = {
 		'pb1': 300,
 		'pb2': 150,
 		'pb3': 220,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0.75,   # Labials: diffuse-falling spectrum (Klatt 1980)
 		'pa2': 0.70,   # Stronger F2 (main bilabial energy region)
 		'pa3': 0.45,   # Slight F3 boost for audible transient
@@ -103,9 +103,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 75,
 		'cb3': 97.5,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -118,9 +118,9 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 100,
 		'pb3': 130,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0.60,   # Labials: diffuse-falling spectrum (Klatt 1980)
 		'pa2': 0.60,   # Stronger F2 (main bilabial energy region)
 		'pa3': 0.35,   # Slight F3 boost for audible transient
@@ -173,9 +173,9 @@ STOPS = {
 		'cb1': 300,  # Updated from JSON
 		'cb2': 90,
 		'cb3': 187,  # Updated from JSON
-		'cb4': 250,  # Updated from JSON
-		'cb5': 200,  # Updated from JSON
-		'cb6': 1000,  # Updated from JSON
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -188,9 +188,9 @@ STOPS = {
 		'pb1': 300,
 		'pb2': 120,
 		'pb3': 250,  # Updated from JSON
-		'pb4': 250,  # Updated from JSON
-		'pb5': 200,  # Updated from JSON
-		'pb6': 1000,  # Updated from JSON
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0,
 		'pa2': 0.15,  # Alveolar: energy peaks at F5 (Stevens Ch.7)
 		'pa3': 0.2,
@@ -240,9 +240,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 75,
 		'cb3': 127.5,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -255,9 +255,9 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 100,
 		'pb3': 170,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0,
 		'pa2': 0.12,  # Alveolar: energy peaks at F5 (Stevens Ch.7)
 		'pa3': 0.16,
@@ -438,9 +438,9 @@ STOPS = {
 		'cb1': 275,
 		'cb2': 120,
 		'cb3': 247.5,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -453,9 +453,9 @@ STOPS = {
 		'pb1': 250,
 		'pb2': 130,
 		'pb3': 200,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0,
 		'pa2': 0.9,   # Velar: compact mid-frequency peak at F2-F3
 		'pa3': 0.85,
@@ -505,9 +505,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 112.5,
 		'cb3': 210,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -520,9 +520,9 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 150,
 		'pb3': 200,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0,
 		'pa2': 0.8,   # Velar: compact mid-frequency peak at F2-F3
 		'pa3': 0.7,
@@ -532,7 +532,7 @@ STOPS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest, voiced shorter
-		'burstAmplitude': 0.9,
+		'burstAmplitude': 0.70,    # Voiced weaker than voiceless /k/=0.82
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 2000,  # Mid, compact velar burst
 		'burstFilterBw': 1500,
@@ -572,9 +572,9 @@ STOPS = {
 		'cb1': 66,
 		'cb2': 112.5,
 		'cb3': 210,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb4': 825,   # Q=4.0 (3300/4.0) — match vowel scheme
+		'cb5': 938,   # Q=4.0 (3750/4.0)
+		'cb6': 1225,  # Q=4.0 (4900/4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -587,9 +587,9 @@ STOPS = {
 		'pb1': 60,
 		'pb2': 150,
 		'pb3': 200,   # Unified with 'g'
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb4': 825,   # Q=4.0 — match cb4
+		'pb5': 938,   # Q=4.0 — match cb5
+		'pb6': 1225,  # Q=4.0 — match cb6
 		'pa1': 0,
 		'pa2': 0.8,   # Unified with 'g' — compact mid-frequency peak
 		'pa3': 0.7,   # Unified with 'g'
@@ -599,7 +599,7 @@ STOPS = {
 		'parallelBypass': 0,
 		'fricationAmplitude': 0,
 		# KLSYN88: Stop burst - velar strongest, voiced shorter
-		'burstAmplitude': 0.9,
+		'burstAmplitude': 0.70,    # Voiced weaker than voiceless /k/=0.82
 		'burstDuration': 0.2,  # Voiced shorter release
 		'burstFilterFreq': 2000,  # Mid, compact velar burst
 		'burstFilterBw': 1500,
