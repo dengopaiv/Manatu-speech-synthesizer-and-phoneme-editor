@@ -54,6 +54,7 @@ F2_LOCUS = {
     'alveolar': 1700,   # t, d, n, s, z, l
     'postalveolar': 2000,  # ʃ, ʒ, tʃ, dʒ
     'retroflex': 1800,  # ʈ, ɖ, ɳ (from Agrawal 1992)
+    'alveolo-palatal': 2100,  # ɕ, ʑ (between postalveolar=2000 and palatal=2300)
     'palatal': 2300,    # ɲ, ç, j
     'velar': 1500,      # k, g, ŋ - varies with vowel context
     'uvular': 1200,     # q, χ, ʁ
@@ -90,6 +91,8 @@ PHONEME_PLACE = {
     # Palatals
     'c': 'palatal', 'ɟ': 'palatal', 'ɲ': 'palatal',
     'ç': 'palatal', 'ʝ': 'palatal', 'j': 'palatal',
+    # Alveolo-palatals
+    'ɕ': 'alveolo-palatal', 'ʑ': 'alveolo-palatal',
     'ʎ': 'palatal',
     # Velars
     'k': 'velar', 'g': 'velar', 'ɡ': 'velar', 'ŋ': 'velar',

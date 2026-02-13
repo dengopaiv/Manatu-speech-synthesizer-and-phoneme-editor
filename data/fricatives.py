@@ -886,6 +886,135 @@ FRICATIVES = {
 		'ftpFreq2': 0,
 		'ftpBw2': 100,
 	},
+	# Alveolo-palatal fricatives (between postalveolar ʃ/ʒ and palatal ç/ʝ)
+	# Sibilants with palatal influence: higher noise than ʃ, high F2 from palatal articulation
+	'ɕ': {  # Voiceless alveolo-palatal fricative — Mandarin (x-), Polish (ś), Japanese (sh)
+		'_isNasal': False,
+		'_isStop': False,
+		'_isLiquid': False,
+		'_isVowel': False,
+		'_isVoiced': False,
+		'voiceAmplitude': 0,
+		'aspirationAmplitude': 0,
+		'spectralTilt': 2,  # Voiceless sibilant pattern (like ʃ)
+		# Formants: between ʃ (cf2=1840, cf3=2750) and ç (cf2=2200, cf3=3000)
+		'cf1': 300,
+		'cf2': 2000,   # Palatal influence raises F2 above ʃ
+		'cf3': 2850,   # Between ʃ=2750 and ç=3000
+		'cf4': 3300,
+		'cf5': 3750,
+		'cf6': 4900,
+		'cfNP': 200,
+		'cfN0': 250,
+		'cb1': 220,    # Voiceless pattern (match ʃ)
+		'cb2': 75,
+		'cb3': 225,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
+		'cbNP': 100,
+		'cbN0': 100,
+		'caNP': 0,
+		'pf1': 300,
+		'pf2': 2000,
+		'pf3': 2850,
+		'pf4': 3300,
+		'pf5': 3750,
+		'pf6': 4200,   # Slightly higher than ʃ=3800 for brighter quality
+		'pb1': 200,
+		'pb2': 100,
+		'pb3': 300,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
+		'pa1': 0,
+		'pa2': 0,
+		# Sibilant: concentrated at F3-F4 like ʃ, slightly more HF energy
+		'pa3': 1.0,
+		'pa4': 0.85,   # Slightly brighter than ʃ=0.8
+		'pa5': 0.55,   # Slightly more HF than ʃ=0.5
+		'pa6': 0.35,
+		'parallelBypass': 0.15,  # Between ʃ=0 and ç=0.4
+		'fricationAmplitude': 1.0,  # Sibilant — full amplitude (like ʃ, unlike ç=0.8)
+		# Noise: between ʃ=2800 and ç=4500 — sibilant with palatal shift
+		'noiseFilterFreq': 3600,
+		'noiseFilterBw': 2000,
+		# Voice quality
+		'flutter': 0.25,
+		'lfRd': 0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
+	},
+	'ʑ': {  # Voiced alveolo-palatal fricative — Polish (ź), Japanese (j before i)
+		'_isNasal': False,
+		'_isStop': False,
+		'_isLiquid': False,
+		'_isVowel': False,
+		'_isVoiced': True,
+		'voiceAmplitude': 1,
+		'aspirationAmplitude': 0,
+		# Formants: same palatal shift as ɕ
+		'cf1': 300,
+		'cf2': 2000,
+		'cf3': 2850,
+		'cf4': 3300,
+		'cf5': 3750,
+		'cf6': 4900,
+		'cfNP': 200,
+		'cfN0': 250,
+		'cb1': 77,     # Voiced pattern (match ʒ)
+		'cb2': 45,
+		'cb3': 210,
+		'cb4': 180,
+		'cb5': 150,
+		'cb6': 400,
+		'cbNP': 100,
+		'cbN0': 100,
+		'caNP': 0,
+		'pf1': 300,
+		'pf2': 2000,
+		'pf3': 2850,
+		'pf4': 3300,
+		'pf5': 3750,
+		'pf6': 4200,
+		'pb1': 70,
+		'pb2': 60,
+		'pb3': 280,
+		'pb4': 180,
+		'pb5': 150,
+		'pb6': 400,
+		'pa1': 0,
+		'pa2': 0,
+		# Mirror ɕ — sibilant with palatal influence
+		'pa3': 1.0,
+		'pa4': 0.85,
+		'pa5': 0.55,
+		'pa6': 0.35,
+		'parallelBypass': 0.15,
+		'fricationAmplitude': 1.0,  # Sibilant
+		# KLSYN88: Slight breathiness for voiced fricative
+		'spectralTilt': 7,
+		# Noise: mirror ɕ spectral shape
+		'noiseFilterFreq': 3600,
+		'noiseFilterBw': 2000,
+		# Voice quality
+		'flutter': 0.25,
+		'lfRd': 1.0,
+		'diplophonia': 0,
+		# Tracheal formants
+		'ftpFreq1': 0,
+		'ftpBw1': 100,
+		'ftzFreq1': 0,
+		'ftzBw1': 100,
+		'ftpFreq2': 0,
+		'ftpBw2': 100,
+	},
 	# Velar fricatives
 	'x': {  # Voiceless velar fricative
 		'_isNasal': False,

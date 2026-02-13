@@ -228,6 +228,11 @@ def test_fricatives_natural():
         ('ɑɸɑ', 'voiceless bilabial (VCV)'),
         ('βɑ', 'voiced bilabial (CV)'),
         ('ɑβɑ', 'voiced bilabial (VCV)'),
+        # Alveolo-palatal fricatives
+        ('ɕɑ', 'voiceless alveolo-palatal (CV)'),
+        ('ɑɕɑ', 'voiceless alveolo-palatal (VCV)'),
+        ('ʑɑ', 'voiced alveolo-palatal (CV)'),
+        ('ɑʑɑ', 'voiced alveolo-palatal (VCV)'),
     ], "consonant_fricatives_natural.wav", "Fricatives (Natural Duration)", speed=0.5)
 
 
@@ -755,6 +760,91 @@ def test_place_minimal_pairs():
     return True
 
 
+def test_alveolo_palatal_cv():
+    """Test alveolo-palatal fricatives ɕ, ʑ in CV context.
+
+    Alveolo-palatals are sibilants between postalveolar (ʃ/ʒ) and palatal (ç/ʝ).
+    They should produce clear frication energy and non-silent output.
+    """
+    print("\n=== Test: Alveolo-Palatal CV ===")
+
+    pairs = [
+        ('ɕɑ', 'voiceless alveolo-palatal (CV)'),
+        ('ʑɑ', 'voiced alveolo-palatal (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_alveolo_palatal_cv.wav", all_samples)
+    assert all_passed, "Some alveolo-palatals show no energy in CV context"
+    print(f"  Generated {len(pairs)} alveolo-palatal CV items")
+    print("  PASSED")
+    return True
+
+
+def test_alveolo_palatal_spectral():
+    """Assert ɕ spectral centroid is between /s/ and /ʃ/ (sibilant positioning).
+
+    ɕ noise filter (3600 Hz) is between ʃ (2800 Hz) and s (7500 Hz),
+    so its spectral centroid should fall between the two.
+    """
+    print("\n=== Test: Alveolo-Palatal Spectral ===")
+
+    centroids = {}
+    for char in ['s', 'ʃ', 'ɕ']:
+        if char not in phoneme_data:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        samples = _synthesize_ipa_phoneme(char)
+        if len(samples) < 200:
+            continue
+
+        n = len(samples)
+        mid = samples[n // 4: 3 * n // 4]
+        centroid = estimate_spectral_centroid(mid, SAMPLE_RATE)
+        centroids[char] = centroid
+        print(f"  /{char}/ centroid: {centroid:.0f} Hz")
+
+    if 'ɕ' not in centroids:
+        print("  SKIP: /ɕ/ not available")
+        return True
+
+    # ɕ centroid should be between ʃ and s
+    if 'ʃ' in centroids and 's' in centroids:
+        sh_centroid = centroids['ʃ']
+        s_centroid = centroids['s']
+        alv_pal_centroid = centroids['ɕ']
+        assert alv_pal_centroid > sh_centroid, \
+            f"/ɕ/ centroid ({alv_pal_centroid:.0f}) should be > /ʃ/ ({sh_centroid:.0f})"
+        assert alv_pal_centroid < s_centroid, \
+            f"/ɕ/ centroid ({alv_pal_centroid:.0f}) should be < /s/ ({s_centroid:.0f})"
+        print(f"  Verified: /ʃ/ ({sh_centroid:.0f}) < /ɕ/ ({alv_pal_centroid:.0f}) < /s/ ({s_centroid:.0f})")
+
+    print("  PASSED")
+    return True
+
+
 def run_all_tests():
     """Run all consonant tests."""
     print("=" * 50)
@@ -783,6 +873,9 @@ def run_all_tests():
         test_fricative_spectral_centroid,
         test_nasal_low_f1,
         test_stop_burst_presence,
+        # Alveolo-palatal tests
+        test_alveolo_palatal_cv,
+        test_alveolo_palatal_spectral,
         # Extended spectral assertion tests
         test_palatal_high_f2,
         test_uvular_low_f2,

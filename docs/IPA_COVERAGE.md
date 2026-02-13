@@ -1,8 +1,8 @@
 # IPA Coverage Matrix
 
-Complete phoneme inventory for Manatu (129 phonemes total).
+Complete phoneme inventory for Manatu (131 phonemes total).
 
-## Consonants (68)
+## Consonants (70)
 
 ### Pulmonic Consonants
 
@@ -15,6 +15,7 @@ Standard IPA chart layout: manner (rows) by place of articulation (columns). Voi
 | **Trill** | ʙ | | | r | | | | | ʀ | | |
 | **Tap/Flap** | | ⱱ | | ɾ | | ɽ | | | | | |
 | **Fricative** | ɸ  β | f  v | θ  ð | s  z | ʃ  ʒ | ʂ  ʐ | ç  ʝ | x  ɣ | χ  ʁ | ħ  ʕ | h  ɦ |
+| **Alveolo-palatal fric.** | | | | | | | ɕ  ʑ | | | | |
 | **Lateral fricative** | | | | ɬ  ɮ | | | | | | | |
 | **Approximant** | | ʋ | | ɹ | | ɻ | j | ɰ | | | |
 | **Lateral approximant** | | | | l | | ɭ | ʎ | ʟ | | | |
@@ -172,13 +173,13 @@ Diphthongs are expanded by the IPA parser into component vowels, with the synthe
 | Diphthongs/triphthongs | 22 |
 | Stops | 14 (incl. 1 alternate glyph) |
 | Ejective stops | 4 |
-| Fricatives | 25 |
+| Fricatives | 27 |
 | Affricates | 6 |
 | Ejective affricates | 2 |
 | Implosive stops | 5 |
 | Nasals | 7 |
 | Liquids & glides | 16 |
-| **Total** | **135** |
+| **Total** | **137** |
 
 ## What's Missing (Phase 4 Targets)
 
@@ -186,5 +187,4 @@ The following IPA sound classes are not yet implemented:
 
 - **Clicks** — ʘ, ǀ, ǃ, ǂ, ǁ (velaric ingressive mechanism)
 - **Prenasalized stops** — ᵐb, ⁿd, ᵑɡ (common in Bantu and Oceanic languages)
-- **Alveolo-palatal fricatives** — ɕ, ʑ (Mandarin, Polish, Japanese)
 - **Epiglottal consonants** — ʜ, ʢ, ʡ
