@@ -56,7 +56,11 @@
       "WebFetch(domain:courses.grainger.illinois.edu)",
       "WebFetch(domain:www.phon.ox.ac.uk)",
       "WebFetch(domain:www.mq.edu.au)",
-      "WebFetch(domain:www.acsu.buffalo.edu)"
+      "WebFetch(domain:www.acsu.buffalo.edu)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(gh pr merge:*)"
     ]
   }
 }

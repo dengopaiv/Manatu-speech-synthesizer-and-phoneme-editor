@@ -699,15 +699,14 @@ class CascadeFormantGenerator {
 	double glottalAlpha;  // ~2ms smoothing constant
 
 	public:
-	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr), smoothGlottalBlend(0) {
+	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true), smoothGlottalBlend(0) {
 		glottalAlpha = 1.0 - exp(-1.0 / (0.002 * sr));  // 2ms time constant
 	};
 
 	double getNext(const speechPlayer_frame_t* frame, bool glottisOpen, double input) {
 		input/=2.0;
 		double n0Output=rN0.resonate(input,frame->cfN0,frame->cbN0);
-		double nasalPeak=rNP.resonate(n0Output,frame->cfNP,frame->cbNP);
-		double nasalOutput=n0Output+nasalPeak;
+		double nasalOutput=rNP.resonate(n0Output,frame->cfNP,frame->cbNP);
 		double output=calculateValueAtFadePosition(input,nasalOutput,frame->caNP);
 		output=r6.resonate(output,frame->cf6,frame->cb6);
 		output=r5.resonate(output,frame->cf5,frame->cb5);

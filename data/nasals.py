@@ -30,7 +30,7 @@ NASALS = {
 		'cf6': 4900,
 		'cfNP': 270,  # Nasal pole ~270 Hz (Stevens)
 		'cfN0': 1000,  # Bilabial nasal zero ~1000 Hz (Stevens §9.1.3, front cavity 14-17 cm)
-		'cb1': 44,
+		'cb1': 70,    # Wider F1 to prevent ringing (Q≈4.3 vs old Q≈6.8)
 		'cb2': 200,   # Wider — more muffled bilabial quality
 		'cb3': 150,
 		'cb4': 180,
