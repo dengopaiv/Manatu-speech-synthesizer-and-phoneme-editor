@@ -44,8 +44,6 @@ KLSYN88_DEFAULTS = {
 	'lfRd': 1.0,              # Modal voice (LF model enabled)
 	'spectralTilt': 0,        # No tilt (modal voice)
 	'flutter': 0.25,          # Slight natural jitter
-	'openQuotientShape': 0.5, # Moderate exponential
-	'speedQuotient': 1.0,     # Symmetric opening/closing
 	'diplophonia': 0,         # No period alternation
 	'ftpFreq1': 0,            # Tracheal disabled by default
 	'ftpBw1': 100,
@@ -916,8 +914,7 @@ def _blend_diphthong_voice_quality(phonemeList):
 		processed_diphthongs.add(diphthong_char)
 
 		# Voice quality parameters to blend
-		voice_params = ['glottalOpenQuotient', 'spectralTilt', 'speedQuotient',
-		                'flutter', 'openQuotientShape', 'lfRd']
+		voice_params = ['spectralTilt', 'flutter', 'lfRd']
 
 		for param in voice_params:
 			values = [c.get(param) for c in components if param in c and c.get(param) is not None]

@@ -14,7 +14,7 @@ The `lfRd` parameter controls voice quality (glottal pulse shape):
 |-------|---------------|----------|
 | 0 | No voicing | Voiceless consonants only |
 | 1.0 | Modal voice | Voiced consonants (natural, balanced) |
-| 2.7 | Breathy voice | All vowels (soft, smooth quality) |
+| 1.0–2.3 | Modal to breathy | Vowels (height-proportional: close=1.0, open=2.3) |
 
 Valid range: 0.3 to 2.7 (0 = no voicing)
 

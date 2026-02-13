@@ -1210,7 +1210,6 @@ STOPS = {
 		'flutter': 0.15,           # More periodic than regular stops
 		'lfRd': 0.7,              # Pressed voice (lower than modal 1.0)
 		'diplophonia': 0.10,       # Slight creaky quality from glottal tension
-		'openQuotientShape': 0.3,  # More abrupt closure = pressed quality
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
 		'ftzFreq1': 0,
@@ -1278,7 +1277,6 @@ STOPS = {
 		'flutter': 0.15,
 		'lfRd': 0.7,
 		'diplophonia': 0.10,
-		'openQuotientShape': 0.3,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
 		'ftzFreq1': 0,
@@ -1346,7 +1344,6 @@ STOPS = {
 		'flutter': 0.15,
 		'lfRd': 0.7,
 		'diplophonia': 0.10,
-		'openQuotientShape': 0.3,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
 		'ftzFreq1': 0,
@@ -1414,7 +1411,6 @@ STOPS = {
 		'flutter': 0.15,
 		'lfRd': 0.7,
 		'diplophonia': 0.10,
-		'openQuotientShape': 0.3,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
 		'ftzFreq1': 0,
@@ -1482,7 +1478,6 @@ STOPS = {
 		'flutter': 0.15,
 		'lfRd': 0.7,
 		'diplophonia': 0.10,
-		'openQuotientShape': 0.3,
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
 		'ftzFreq1': 0,
