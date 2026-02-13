@@ -102,6 +102,12 @@ PHONEME_PLACE = {
     'ħ': 'pharyngeal', 'ʕ': 'pharyngeal',
     # Glottals
     'h': 'glottal', 'ʔ': 'glottal', 'ɦ': 'glottal',
+    # Ejectives
+    'pʼ': 'bilabial', 'tʼ': 'alveolar', 'kʼ': 'velar', 'qʼ': 'uvular',
+    't͡sʼ': 'alveolar', 't͡ʃʼ': 'postalveolar',
+    # Implosives
+    'ɓ': 'bilabial', 'ɗ': 'alveolar', 'ɠ': 'velar',
+    'ʄ': 'palatal', 'ʛ': 'uvular',
 }
 
 

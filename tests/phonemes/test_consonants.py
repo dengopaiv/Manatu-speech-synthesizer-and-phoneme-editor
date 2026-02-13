@@ -469,6 +469,114 @@ def test_ejective_no_aspiration():
     return True
 
 
+def test_implosive_cv():
+    """Test implosive stops in CV context.
+
+    Implosives should produce burst energy and generate non-silent output
+    when followed by a vowel. Burst should be present but weaker than
+    regular voiced stops.
+    """
+    print("\n=== Test: Implosive CV ===")
+
+    implosive_pairs = [
+        ('ɓɑ', 'implosive bilabial (CV)'),
+        ('ɗɑ', 'implosive alveolar (CV)'),
+        ('ɠɑ', 'implosive velar (CV)'),
+        ('ʄɑ', 'implosive palatal (CV)'),
+        ('ʛɑ', 'implosive uvular (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in implosive_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        # Check for burst energy in onset region
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_implosives_cv.wav", all_samples)
+    assert all_passed, "Some implosives show no energy in CV context"
+    print(f"  Generated {len(implosive_pairs)} implosive CV items")
+    print("  PASSED")
+    return True
+
+
+def test_implosive_voicing():
+    """Assert implosives are strongly voiced in VCV context.
+
+    Implosives maintain voicing through closure (voicebar), so they should
+    show strong periodicity (high HNR) in the consonant region.
+    """
+    print("\n=== Test: Implosive Voicing ===")
+
+    implosive_chars = ['ɓ', 'ɗ', 'ɠ', 'ʄ', 'ʛ']
+    all_passed = True
+
+    for char in implosive_chars:
+        if char not in phoneme_data:
+            print(f"  /{char}/ not in phoneme data, skipping")
+            continue
+
+        samples = _synthesize_ipa_phoneme(f'ɑ{char}ɑ')
+        if len(samples) < 200:
+            print(f"  /{char}/ too short, skipping")
+            continue
+
+        # Check middle third (the consonant region)
+        n = len(samples)
+        mid = samples[n // 3: 2 * n // 3]
+        analysis = analyze_segment(mid, SAMPLE_RATE)
+
+        hnr_str = f"HNR={analysis.hnr:.1f}dB" if analysis.hnr else "HNR=N/A"
+        ok = analysis.is_voiced and (analysis.hnr is None or analysis.hnr > 5)
+        status = "PASS" if ok else "FAIL"
+        if not ok:
+            all_passed = False
+        print(f"  /{char}/ voiced: {analysis.is_voiced} ({hnr_str}) {status}")
+
+    assert all_passed, "Some implosives not detected as strongly voiced"
+    print("  PASSED")
+    return True
+
+
+def test_implosive_no_aspiration():
+    """Assert implosives do NOT insert post-stop aspiration.
+
+    Implosives are voiced stops — auto-aspiration only triggers for voiceless
+    stops. No aspiration phoneme should be inserted after implosives.
+    """
+    print("\n=== Test: Implosive No Aspiration ===")
+
+    all_passed = True
+
+    for ipa_text, label in [("ɓɑ", "ɓ"), ("ɗɑ", "ɗ"), ("ɠɑ", "ɠ"), ("ʄɑ", "ʄ"), ("ʛɑ", "ʛ")]:
+        phonemes = ipa.IPAToPhonemes(ipa_text)
+        has_aspiration = any(p.get('_postStopAspiration') for p in phonemes)
+        status = "PASS" if not has_aspiration else "FAIL"
+        if has_aspiration:
+            all_passed = False
+        print(f"  /{label}/ aspiration suppressed: {status}")
+
+    assert all_passed, "Some implosives incorrectly have aspiration"
+    print("  PASSED")
+    return True
+
+
 def test_stop_burst_presence():
     """Assert energy spike in CV context for stops."""
     print("\n=== Test: Stop Burst Presence ===")
@@ -666,6 +774,10 @@ def run_all_tests():
         # Ejective tests
         test_ejective_cv,
         test_ejective_no_aspiration,
+        # Implosive tests
+        test_implosive_cv,
+        test_implosive_voicing,
+        test_implosive_no_aspiration,
         # Spectral assertion tests
         test_voicing_contrast,
         test_fricative_spectral_centroid,

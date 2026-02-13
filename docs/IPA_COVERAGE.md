@@ -1,6 +1,6 @@
 # IPA Coverage Matrix
 
-Complete phoneme inventory for Manatu (124 phonemes total).
+Complete phoneme inventory for Manatu (129 phonemes total).
 
 ## Consonants (68)
 
@@ -56,6 +56,25 @@ Acoustic characteristics vs. regular voiceless stops:
 - Slight creaky voice onset (diplophonia from glottal opening)
 
 The ejective diacritic ʼ (U+02BC) also works as a fallback modifier on any voiceless stop or affricate.
+
+### Implosives (5)
+
+Non-pulmonic consonants produced with a glottalic ingressive airstream mechanism. The larynx lowers during closure, maintaining voicing (voicebar) through the closure period and producing a weaker burst on release.
+
+| Symbol | Type | Place | Based on | Languages |
+|--------|------|-------|----------|-----------|
+| ɓ | Stop | Bilabial | b | Hausa, Swahili, Sindhi |
+| ɗ | Stop | Alveolar | d | Hausa, Swahili, Vietnamese |
+| ɠ | Stop | Velar | g | Swahili, Kalenjin |
+| ʄ | Stop | Palatal | ɟ | Sindhi, some Chadic |
+| ʛ | Stop | Uvular | ɢ | Mam (rare) |
+
+Acoustic characteristics vs. regular voiced stops:
+- Voicing through closure (larynx descent maintains glottal vibration)
+- Weaker burst (~80% of base, reduced oral pressure from ingressive airstream)
+- Pressed/tense voice quality (lfRd=0.7, lower than modal 1.0)
+- Slight creaky quality (diplophonia from glottal tension)
+- More periodic voicing (less flutter from laryngeal tension)
 
 ## Vowels (34)
 
@@ -156,15 +175,15 @@ Diphthongs are expanded by the IPA parser into component vowels, with the synthe
 | Fricatives | 25 |
 | Affricates | 6 |
 | Ejective affricates | 2 |
+| Implosive stops | 5 |
 | Nasals | 7 |
 | Liquids & glides | 16 |
-| **Total** | **130** |
+| **Total** | **135** |
 
 ## What's Missing (Phase 4 Targets)
 
 The following IPA sound classes are not yet implemented:
 
-- **Implosives** — ɓ, ɗ, ɠ, ʄ, ʛ (glottalic ingressive mechanism)
 - **Clicks** — ʘ, ǀ, ǃ, ǂ, ǁ (velaric ingressive mechanism)
 - **Prenasalized stops** — ᵐb, ⁿd, ᵑɡ (common in Bantu and Oceanic languages)
 - **Alveolo-palatal fricatives** — ɕ, ʑ (Mandarin, Polish, Japanese)

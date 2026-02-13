@@ -399,6 +399,10 @@ def IPAToPhonemes(ipaText):
 				gap['aspirationAmplitude'] = 0  # No aspiration
 				gap['voiceTurbulenceAmplitude'] = 0
 				gap['sinusoidalVoicingAmplitude'] = 0
+				if phoneme.get('_isImplosive'):
+					# Implosives: maintain voicebar through closure
+					gap['voiceAmplitude'] = 0.5
+					gap['preFormantGain'] = 0.2
 				if phoneme.get('_closureDuration'):
 					gap['_closureDuration'] = phoneme['_closureDuration']
 				phonemeList.append(gap)
