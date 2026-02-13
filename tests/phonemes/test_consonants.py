@@ -1,8 +1,12 @@
 """
-Test consonant phoneme synthesis.
+Test consonant phoneme synthesis — Ladefoged CV/VCV + spectral assertions.
 
-Tests stops (bursts), fricatives (noise), nasals, and liquids.
-Generates WAV files for auditory inspection.
+Layer 1: CV transition tests (IPA pipeline with onset frames + locus equations)
+Layer 2: Natural-duration Ladefoged-style CV and VCV tests (slow speed, full IPA pipeline)
+Layer 3: Spectral assertion tests (voicing contrast, centroid, formant checks)
+
+All consonants (basic + extended) are tested via the IPA pipeline with
+natural per-class durations and coarticulation via onset frames.
 
 Usage:
     python tests/phonemes/test_consonants.py
@@ -25,7 +29,7 @@ import speechPlayer
 import ipa
 from data import data as phoneme_data
 from tests.conftest import (
-    save_wav, collect_samples, build_phoneme_frame,
+    save_wav, collect_samples,
     OUTPUT_DIR, SAMPLE_RATE,
 )
 from tools.spectral_analysis import (
@@ -34,384 +38,13 @@ from tools.spectral_analysis import (
 )
 
 
-def synthesize_vowel_frame(sp, ipa_char='a', duration_ms=200, pitch=120):
-    """Queue a vowel frame for CV/VC context using phoneme data."""
-    frame = build_phoneme_frame(ipa_char, pitch)
-    sp.queueFrame(frame, duration_ms, 50)
-
-
-def synthesize_stop_burst(sp, ipa_char, pitch=120):
-    """Synthesize a stop consonant burst using phoneme data."""
-    frame = build_phoneme_frame(ipa_char, pitch)
-    sp.queueFrame(frame, 30, 10)
-
-
-def synthesize_fricative(sp, ipa_char, duration_ms=150, pitch=120):
-    """Synthesize a fricative consonant using phoneme data."""
-    frame = build_phoneme_frame(ipa_char, pitch)
-    sp.queueFrame(frame, duration_ms, 30)
-
-
-def synthesize_nasal(sp, ipa_char, duration_ms=150, pitch=120):
-    """Synthesize a nasal consonant using phoneme data."""
-    frame = build_phoneme_frame(ipa_char, pitch)
-    sp.queueFrame(frame, duration_ms, 40)
-
-
-def synthesize_consonant(sp, ipa_char, duration_ms=150, pitch=120):
-    """Synthesize a generic consonant (liquid, approximant, trill)."""
-    frame = build_phoneme_frame(ipa_char, pitch)
-    sp.queueFrame(frame, duration_ms, 40)
-
-
-# Stop consonants — IPA chars + descriptions (params read from phoneme_data)
-STOPS = {
-    'p': {'ipa': 'p', 'desc': 'voiceless bilabial'},
-    'b': {'ipa': 'b', 'desc': 'voiced bilabial'},
-    't': {'ipa': 't', 'desc': 'voiceless alveolar'},
-    'd': {'ipa': 'd', 'desc': 'voiced alveolar'},
-    'k': {'ipa': 'k', 'desc': 'voiceless velar'},
-    'g': {'ipa': 'g', 'desc': 'voiced velar'},
-}
-
-# Fricatives — IPA chars + descriptions
-FRICATIVES = {
-    'f': {'ipa': 'f', 'desc': 'voiceless labiodental'},
-    'v': {'ipa': 'v', 'desc': 'voiced labiodental'},
-    's': {'ipa': 's', 'desc': 'voiceless alveolar'},
-    'z': {'ipa': 'z', 'desc': 'voiced alveolar'},
-    'S': {'ipa': 'ʃ', 'desc': 'voiceless postalveolar (sh)'},
-    'Z': {'ipa': 'ʒ', 'desc': 'voiced postalveolar (zh)'},
-    'h': {'ipa': 'h', 'desc': 'voiceless glottal'},
-}
-
-# Nasals — IPA chars + descriptions
-NASALS = {
-    'm': {'ipa': 'm', 'desc': 'bilabial'},
-    'n': {'ipa': 'n', 'desc': 'alveolar'},
-    'N': {'ipa': 'ŋ', 'desc': 'velar (ng)'},
-}
-
-# --- Extended consonant dictionaries (Phase 3) ---
-
-PALATAL_STOPS = {
-    'c': {'ipa': 'c', 'desc': 'voiceless palatal'},
-    'ɟ': {'ipa': 'ɟ', 'desc': 'voiced palatal'},
-}
-
-UVULAR_STOPS = {
-    'q': {'ipa': 'q', 'desc': 'voiceless uvular'},
-    'ɢ': {'ipa': 'ɢ', 'desc': 'voiced uvular'},
-}
-
-PALATAL_FRICATIVES = {
-    'ç': {'ipa': 'ç', 'desc': 'voiceless palatal'},
-    'ʝ': {'ipa': 'ʝ', 'desc': 'voiced palatal'},
-}
-
-UVULAR_FRICATIVES = {
-    'χ': {'ipa': 'χ', 'desc': 'voiceless uvular'},
-    'ʁ': {'ipa': 'ʁ', 'desc': 'voiced uvular'},
-}
-
-PHARYNGEAL_FRICATIVES = {
-    'ħ': {'ipa': 'ħ', 'desc': 'voiceless pharyngeal'},
-    'ʕ': {'ipa': 'ʕ', 'desc': 'voiced pharyngeal'},
-}
-
-BILABIAL_FRICATIVES = {
-    'ɸ': {'ipa': 'ɸ', 'desc': 'voiceless bilabial'},
-    'β': {'ipa': 'β', 'desc': 'voiced bilabial'},
-}
-
-EXTENDED_NASALS = {
-    'ɲ': {'ipa': 'ɲ', 'desc': 'palatal'},
-    'ɴ': {'ipa': 'ɴ', 'desc': 'uvular'},
-    'ɱ': {'ipa': 'ɱ', 'desc': 'labiodental'},
-}
-
-TRILLS = {
-    'r': {'ipa': 'r', 'desc': 'alveolar trill'},
-    'ʀ': {'ipa': 'ʀ', 'desc': 'uvular trill'},
-    'ʙ': {'ipa': 'ʙ', 'desc': 'bilabial trill'},
-}
-
-EXTENDED_LATERALS = {
-    'ʎ': {'ipa': 'ʎ', 'desc': 'palatal lateral'},
-    'ʟ': {'ipa': 'ʟ', 'desc': 'velar lateral'},
-}
-
-EXTENDED_APPROXIMANTS = {
-    'ʋ': {'ipa': 'ʋ', 'desc': 'labiodental approximant'},
-    'ɻ': {'ipa': 'ɻ', 'desc': 'retroflex approximant'},
-    'ɰ': {'ipa': 'ɰ', 'desc': 'velar approximant'},
-}
-
-
-def test_voiceless_stops():
-    """Test voiceless stop consonants /p/, /t/, /k/."""
-    print("\n=== Test: Voiceless Stops ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key in ['p', 't', 'k']:
-        s = STOPS[key]
-        print(f"  /{s['ipa']}/ - {s['desc']}")
-
-        # Silence
-        silence = speechPlayer.Frame()
-        silence.voiceAmplitude = 0.0
-        sp.queueFrame(silence, 50, 10)
-
-        # Burst
-        synthesize_stop_burst(sp, s['ipa'])
-
-        # Following vowel /a/
-        synthesize_vowel_frame(sp)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_stops_voiceless.wav", samples)
-    print("  PASSED")
-    return True
-
-
-def test_voiced_stops():
-    """Test voiced stop consonants /b/, /d/, /g/."""
-    print("\n=== Test: Voiced Stops ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key in ['b', 'd', 'g']:
-        s = STOPS[key]
-        print(f"  /{s['ipa']}/ - {s['desc']}")
-
-        silence = speechPlayer.Frame()
-        silence.voiceAmplitude = 0.0
-        sp.queueFrame(silence, 50, 10)
-
-        synthesize_stop_burst(sp, s['ipa'])
-        synthesize_vowel_frame(sp)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_stops_voiced.wav", samples)
-    print("  PASSED")
-    return True
-
-
-def test_fricatives_voiceless():
-    """Test voiceless fricatives /f/, /s/, /ʃ/, /h/."""
-    print("\n=== Test: Voiceless Fricatives ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key in ['f', 's', 'S', 'h']:
-        f = FRICATIVES[key]
-        print(f"  /{f['ipa']}/ - {f['desc']}")
-
-        synthesize_fricative(sp, f['ipa'])
-        synthesize_vowel_frame(sp, duration_ms=150)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_fricatives_voiceless.wav", samples)
-    print("  PASSED")
-    return True
-
-
-def test_fricatives_voiced():
-    """Test voiced fricatives /v/, /z/, /ʒ/."""
-    print("\n=== Test: Voiced Fricatives ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key in ['v', 'z', 'Z']:
-        f = FRICATIVES[key]
-        print(f"  /{f['ipa']}/ - {f['desc']}")
-
-        synthesize_fricative(sp, f['ipa'])
-        synthesize_vowel_frame(sp, duration_ms=150)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_fricatives_voiced.wav", samples)
-    print("  PASSED")
-    return True
-
-
-def test_nasals():
-    """Test nasal consonants /m/, /n/, /ŋ/."""
-    print("\n=== Test: Nasals ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key in ['m', 'n', 'N']:
-        n = NASALS[key]
-        print(f"  /{n['ipa']}/ - {n['desc']}")
-
-        synthesize_nasal(sp, n['ipa'])
-        synthesize_vowel_frame(sp, duration_ms=150)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_nasals.wav", samples)
-    print("  PASSED")
-    return True
-
-
-def test_minimal_pairs():
-    """Test minimal pairs to verify voicing contrast."""
-    print("\n=== Test: Minimal Pairs ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    pairs = [('p', 'b'), ('t', 'd'), ('s', 'z')]
-
-    for vl, vd in pairs:
-        print(f"  /{vl}/ vs /{vd}/")
-
-        # Voiceless
-        if vl in STOPS:
-            synthesize_stop_burst(sp, STOPS[vl]['ipa'])
-        else:
-            synthesize_fricative(sp, FRICATIVES[vl]['ipa'])
-        synthesize_vowel_frame(sp, duration_ms=150)
-
-        # Brief pause
-        silence = speechPlayer.Frame()
-        sp.queueFrame(silence, 100, 10)
-
-        # Voiced
-        if vd in STOPS:
-            synthesize_stop_burst(sp, STOPS[vd]['ipa'])
-        else:
-            synthesize_fricative(sp, FRICATIVES[vd]['ipa'])
-        synthesize_vowel_frame(sp, duration_ms=150)
-
-    samples = collect_samples(sp)
-
-    save_wav("consonant_minimal_pairs.wav", samples)
-    print("  PASSED")
-    return True
-
-
-# --- Extended consonant WAV-generation tests (Phase 3) ---
-
-def _synthesize_cv_group(phoneme_dict, synth_func, filename, label):
-    """Generic helper: synthesize each phoneme in CV context with /ɑ/, save WAV."""
-    print(f"\n=== Test: {label} ===")
-
-    sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-
-    for key, info in phoneme_dict.items():
-        ipa_char = info['ipa']
-        if ipa_char not in phoneme_data:
-            print(f"  /{ipa_char}/ - {info['desc']} (SKIP: not in phoneme data)")
-            continue
-        print(f"  /{ipa_char}/ - {info['desc']}")
-
-        silence = speechPlayer.Frame()
-        silence.voiceAmplitude = 0.0
-        sp.queueFrame(silence, 50, 10)
-
-        synth_func(sp, ipa_char)
-        synthesize_vowel_frame(sp, ipa_char='ɑ')
-
-    samples = collect_samples(sp)
-
-    save_wav(filename, samples)
-    print("  PASSED")
-    return True
-
-
-def test_palatal_stops():
-    """Test palatal stop consonants /c/, /ɟ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        PALATAL_STOPS, synthesize_stop_burst,
-        "consonant_palatal_stops.wav", "Palatal Stops",
-    )
-
-
-def test_uvular_stops():
-    """Test uvular stop consonants /q/, /ɢ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        UVULAR_STOPS, synthesize_stop_burst,
-        "consonant_uvular_stops.wav", "Uvular Stops",
-    )
-
-
-def test_palatal_fricatives():
-    """Test palatal fricatives /ç/, /ʝ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        PALATAL_FRICATIVES, synthesize_fricative,
-        "consonant_palatal_fricatives.wav", "Palatal Fricatives",
-    )
-
-
-def test_uvular_fricatives():
-    """Test uvular fricatives /χ/, /ʁ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        UVULAR_FRICATIVES, synthesize_fricative,
-        "consonant_uvular_fricatives.wav", "Uvular Fricatives",
-    )
-
-
-def test_pharyngeal_fricatives():
-    """Test pharyngeal fricatives /ħ/, /ʕ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        PHARYNGEAL_FRICATIVES, synthesize_fricative,
-        "consonant_pharyngeal_fricatives.wav", "Pharyngeal Fricatives",
-    )
-
-
-def test_bilabial_fricatives():
-    """Test bilabial fricatives /ɸ/, /β/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        BILABIAL_FRICATIVES, synthesize_fricative,
-        "consonant_bilabial_fricatives.wav", "Bilabial Fricatives",
-    )
-
-
-def test_extended_nasals():
-    """Test extended nasals /ɲ/, /ɴ/, /ɱ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        EXTENDED_NASALS, synthesize_nasal,
-        "consonant_extended_nasals.wav", "Extended Nasals",
-    )
-
-
-def test_trills():
-    """Test trills /r/, /ʀ/, /ʙ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        TRILLS, synthesize_consonant,
-        "consonant_trills.wav", "Trills",
-    )
-
-
-def test_extended_laterals():
-    """Test extended laterals /ʎ/, /ʟ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        EXTENDED_LATERALS, synthesize_consonant,
-        "consonant_extended_laterals.wav", "Extended Laterals",
-    )
-
-
-def test_extended_approximants():
-    """Test extended approximants /ʋ/, /ɻ/, /ɰ/ in CV context with /ɑ/."""
-    return _synthesize_cv_group(
-        EXTENDED_APPROXIMANTS, synthesize_consonant,
-        "consonant_extended_approximants.wav", "Extended Approximants",
-    )
-
-
 # --- CV transition tests (full IPA pipeline with onset frames) ---
 
-def _synthesize_cv_ipa(ipa_text, pitch=120, formantScale=1.0):
+def _synthesize_cv_ipa(ipa_text, pitch=120, formantScale=1.0, speed=1):
     """Synthesize CV text using the full ipa.py pipeline (exercises onset frames)."""
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
     for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
-        ipa_text, speed=1, basePitch=pitch, inflection=0,
+        ipa_text, speed=speed, basePitch=pitch, inflection=0,
         formantScale=formantScale
     ):
         if frame is not None:
@@ -484,6 +117,156 @@ def test_cv_formant_scaling():
              _synthesize_cv_ipa('mɑ', formantScale=1.17))
     print("  PASSED")
     return True
+
+
+# --- Natural-duration CV tests (full IPA pipeline with class-based durations) ---
+
+def _synthesize_cv_list(cv_pairs, filename, label, speed=1, pitch=120):
+    """Synthesize a list of CV pairs via the IPA pipeline, save combined WAV.
+
+    Uses ipa.generateFramesAndTiming which applies natural per-class durations
+    (stops=10ms+closure, nasals=30ms, fricatives=45ms, vowels=50-60ms) and
+    coarticulation via onset frames.
+    """
+    print(f"\n=== Test: {label} ===")
+
+    all_samples = []
+    for ipa_text, desc in cv_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, pitch=pitch, speed=speed)
+        all_samples.extend(samples)
+        # Brief silence between items
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav(filename, all_samples)
+    print(f"  Generated {len(cv_pairs)} items")
+    print("  PASSED")
+    return True
+
+
+def test_stops_natural():
+    """Test stops with Ladefoged-style CV and VCV patterns at slow speed."""
+    return _synthesize_cv_list([
+        ('pɑ', 'voiceless bilabial (CV)'),
+        ('ɑpɑ', 'voiceless bilabial (VCV)'),
+        ('bɑ', 'voiced bilabial (CV)'),
+        ('ɑbɑ', 'voiced bilabial (VCV)'),
+        ('tɑ', 'voiceless alveolar (CV)'),
+        ('ɑtɑ', 'voiceless alveolar (VCV)'),
+        ('dɑ', 'voiced alveolar (CV)'),
+        ('ɑdɑ', 'voiced alveolar (VCV)'),
+        ('kɑ', 'voiceless velar (CV)'),
+        ('ɑkɑ', 'voiceless velar (VCV)'),
+        ('ɡɑ', 'voiced velar (CV)'),
+        ('ɑɡɑ', 'voiced velar (VCV)'),
+        # Palatal stops
+        ('cɑ', 'voiceless palatal (CV)'),
+        ('ɑcɑ', 'voiceless palatal (VCV)'),
+        ('ɟɑ', 'voiced palatal (CV)'),
+        ('ɑɟɑ', 'voiced palatal (VCV)'),
+        # Uvular stops
+        ('qɑ', 'voiceless uvular (CV)'),
+        ('ɑqɑ', 'voiceless uvular (VCV)'),
+        ('ɢɑ', 'voiced uvular (CV)'),
+        ('ɑɢɑ', 'voiced uvular (VCV)'),
+    ], "consonant_stops_natural.wav", "Stops (Natural Duration)", speed=0.5)
+
+
+def test_nasals_natural():
+    """Test nasals with Ladefoged-style CV and VCV patterns at slow speed."""
+    return _synthesize_cv_list([
+        ('mɑ', 'bilabial nasal (CV)'),
+        ('ɑmɑ', 'bilabial nasal (VCV)'),
+        ('nɑ', 'alveolar nasal (CV)'),
+        ('ɑnɑ', 'alveolar nasal (VCV)'),
+        ('ŋɑ', 'velar nasal (CV)'),
+        ('ɑŋɑ', 'velar nasal (VCV)'),
+        # Extended nasals
+        ('ɲɑ', 'palatal nasal (CV)'),
+        ('ɑɲɑ', 'palatal nasal (VCV)'),
+        ('ɴɑ', 'uvular nasal (CV)'),
+        ('ɑɴɑ', 'uvular nasal (VCV)'),
+        ('ɱɑ', 'labiodental nasal (CV)'),
+        ('ɑɱɑ', 'labiodental nasal (VCV)'),
+    ], "consonant_nasals_natural.wav", "Nasals (Natural Duration)", speed=0.5)
+
+
+def test_fricatives_natural():
+    """Test fricatives with Ladefoged-style CV and VCV patterns at slow speed."""
+    return _synthesize_cv_list([
+        ('fɑ', 'voiceless labiodental (CV)'),
+        ('ɑfɑ', 'voiceless labiodental (VCV)'),
+        ('vɑ', 'voiced labiodental (CV)'),
+        ('ɑvɑ', 'voiced labiodental (VCV)'),
+        ('sɑ', 'voiceless alveolar (CV)'),
+        ('ɑsɑ', 'voiceless alveolar (VCV)'),
+        ('zɑ', 'voiced alveolar (CV)'),
+        ('ɑzɑ', 'voiced alveolar (VCV)'),
+        ('ʃɑ', 'voiceless postalveolar (CV)'),
+        ('ɑʃɑ', 'voiceless postalveolar (VCV)'),
+        ('ʒɑ', 'voiced postalveolar (CV)'),
+        ('ɑʒɑ', 'voiced postalveolar (VCV)'),
+        ('hɑ', 'voiceless glottal (CV)'),
+        ('ɑhɑ', 'voiceless glottal (VCV)'),
+        # Palatal fricatives
+        ('çɑ', 'voiceless palatal (CV)'),
+        ('ɑçɑ', 'voiceless palatal (VCV)'),
+        ('ʝɑ', 'voiced palatal (CV)'),
+        ('ɑʝɑ', 'voiced palatal (VCV)'),
+        # Uvular fricatives
+        ('χɑ', 'voiceless uvular (CV)'),
+        ('ɑχɑ', 'voiceless uvular (VCV)'),
+        ('ʁɑ', 'voiced uvular (CV)'),
+        ('ɑʁɑ', 'voiced uvular (VCV)'),
+        # Pharyngeal fricatives
+        ('ħɑ', 'voiceless pharyngeal (CV)'),
+        ('ɑħɑ', 'voiceless pharyngeal (VCV)'),
+        ('ʕɑ', 'voiced pharyngeal (CV)'),
+        ('ɑʕɑ', 'voiced pharyngeal (VCV)'),
+        # Bilabial fricatives
+        ('ɸɑ', 'voiceless bilabial (CV)'),
+        ('ɑɸɑ', 'voiceless bilabial (VCV)'),
+        ('βɑ', 'voiced bilabial (CV)'),
+        ('ɑβɑ', 'voiced bilabial (VCV)'),
+    ], "consonant_fricatives_natural.wav", "Fricatives (Natural Duration)", speed=0.5)
+
+
+def test_approximants_natural():
+    """Test approximants/liquids with Ladefoged-style CV and VCV patterns at slow speed."""
+    return _synthesize_cv_list([
+        ('lɑ', 'alveolar lateral (CV)'),
+        ('ɑlɑ', 'alveolar lateral (VCV)'),
+        ('ɹɑ', 'postalveolar approximant (CV)'),
+        ('ɑɹɑ', 'postalveolar approximant (VCV)'),
+        ('jɑ', 'palatal approximant (CV)'),
+        ('ɑjɑ', 'palatal approximant (VCV)'),
+        ('wɑ', 'labial-velar approximant (CV)'),
+        ('ɑwɑ', 'labial-velar approximant (VCV)'),
+        # Extended approximants (front-to-back by place)
+        ('ʋɑ', 'labiodental approximant (CV)'),
+        ('ɑʋɑ', 'labiodental approximant (VCV)'),
+        ('ɻɑ', 'retroflex approximant (CV)'),
+        ('ɑɻɑ', 'retroflex approximant (VCV)'),
+        ('ɰɑ', 'velar approximant (CV)'),
+        ('ɑɰɑ', 'velar approximant (VCV)'),
+        # Extended laterals (front-to-back by place)
+        ('ʎɑ', 'palatal lateral (CV)'),
+        ('ɑʎɑ', 'palatal lateral (VCV)'),
+        ('ʟɑ', 'velar lateral (CV)'),
+        ('ɑʟɑ', 'velar lateral (VCV)'),
+    ], "consonant_approximants_natural.wav", "Approximants (Natural Duration)", speed=0.5)
+
+
+def test_trills_natural():
+    """Test trills with Ladefoged-style CV and VCV patterns at slow speed."""
+    return _synthesize_cv_list([
+        ('rɑ', 'alveolar trill (CV)'),
+        ('ɑrɑ', 'alveolar trill (VCV)'),
+        ('ʀɑ', 'uvular trill (CV)'),
+        ('ɑʀɑ', 'uvular trill (VCV)'),
+        ('ʙɑ', 'bilabial trill (CV)'),
+        ('ɑʙɑ', 'bilabial trill (VCV)'),
+    ], "consonant_trills_natural.wav", "Trills (Natural Duration)", speed=0.5)
 
 
 # --- Spectral assertion tests (using actual phoneme data + spectral analysis) ---
@@ -651,7 +434,7 @@ def test_stop_burst_presence():
     return True
 
 
-# --- Phase 3: Extended consonant spectral assertion tests ---
+# --- Extended consonant spectral assertion tests ---
 
 def _get_phoneme_cf2(ipa_char):
     """Get the cascade F2 value from phoneme data."""
@@ -801,33 +584,21 @@ def run_all_tests():
     print("=" * 50)
 
     tests = [
-        # Original WAV-generation tests
-        test_voiceless_stops,
-        test_voiced_stops,
-        test_fricatives_voiceless,
-        test_fricatives_voiced,
-        test_nasals,
-        test_minimal_pairs,
-        # Phase 3: Extended consonant WAV-generation tests
-        test_palatal_stops,
-        test_uvular_stops,
-        test_palatal_fricatives,
-        test_uvular_fricatives,
-        test_pharyngeal_fricatives,
-        test_bilabial_fricatives,
-        test_extended_nasals,
-        test_trills,
-        test_extended_laterals,
-        test_extended_approximants,
         # CV transition tests (full IPA pipeline)
         test_cv_transitions,
         test_cv_formant_scaling,
+        # Natural-duration Ladefoged CV/VCV tests
+        test_stops_natural,
+        test_nasals_natural,
+        test_fricatives_natural,
+        test_approximants_natural,
+        test_trills_natural,
         # Spectral assertion tests
         test_voicing_contrast,
         test_fricative_spectral_centroid,
         test_nasal_low_f1,
         test_stop_burst_presence,
-        # Phase 3: Extended spectral assertion tests
+        # Extended spectral assertion tests
         test_palatal_high_f2,
         test_uvular_low_f2,
         test_pharyngeal_high_f1,
