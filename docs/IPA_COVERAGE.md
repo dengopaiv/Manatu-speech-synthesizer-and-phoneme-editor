@@ -1,8 +1,8 @@
 # IPA Coverage Matrix
 
-Complete phoneme inventory for Manatu (143 phonemes total).
+Complete phoneme inventory for Manatu (152 explicit phonemes + 9 diacritic modifiers).
 
-## Consonants (76)
+## Consonants (85)
 
 ### Pulmonic Consonants
 
@@ -18,13 +18,13 @@ Standard IPA chart layout: manner (rows) by place of articulation (columns). Voi
 | **Alveolo-palatal fric.** | | | | | | | ɕ  ʑ | | | | | |
 | **Lateral fricative** | | | | ɬ  ɮ | | | | | | | | |
 | **Approximant** | | ʋ | | ɹ | | ɻ | j | ɰ | | | | |
-| **Lateral approximant** | | | | l | | ɭ | ʎ | ʟ | | | | |
+| **Lateral approximant** | | | | l  ɫ | | ɭ | ʎ | ʟ | | | | |
 
 **Additional:** ʍ (voiceless labial-velar fricative), w (labial-velar approximant)
 
-Note: ɡ (U+0261, IPA standard) is also mapped as an alias for g (U+0067).
+Note: ɡ (U+0261, IPA standard) is also mapped as an alias for g (U+0067). ɫ is the velarized (dark) lateral approximant.
 
-### Affricates (6)
+### Affricates (9)
 
 | Affricate | Components | Place | Voicing |
 |-----------|------------|-------|---------|
@@ -33,6 +33,9 @@ Note: ɡ (U+0261, IPA standard) is also mapped as an alias for g (U+0067).
 | t͡s | stop + fricative | Alveolar | Voiceless |
 | d͡z | stop + fricative | Alveolar | Voiced |
 | t͡ɬ | stop + lateral fricative | Alveolar | Voiceless |
+| d͡ɮ | stop + lateral fricative | Alveolar | Voiced |
+| t͡ɕ | stop + fricative | Alveolo-palatal | Voiceless |
+| d͡ʑ | stop + fricative | Alveolo-palatal | Voiced |
 | p͡f | stop + fricative | Labiodental | Voiceless |
 
 Affricates use multi-phase envelopes: burst phase followed by sustained frication phase, with timing controlled per-phase.
@@ -110,6 +113,47 @@ Acoustic characteristics vs. pharyngeal neighbors:
 - Lower F2 (more posterior articulation)
 - Stronger aspiration/breathiness (ʜ: spectralTilt=14 vs ħ=12)
 - More creaky voice quality (ʢ: diplophonia=0.2 vs ʕ=0.15)
+
+### Click Consonants (5)
+
+Clicks are produced with a velaric ingressive airstream mechanism. The current engine approximates them using the burst generator with short, sharp transients — recognizable if not acoustically perfect.
+
+| Symbol | Name | Burst Freq | Character | Languages |
+|--------|------|-----------|-----------|-----------|
+| ʘ | Bilabial click | 600 Hz | Diffuse pop, like lip smack | Zulu, !Xoo |
+| ǀ | Dental click | 4000 Hz | Sharp "tsk" | Zulu, Xhosa |
+| ǃ | Postalveolar click | 2500 Hz | Loud "cluck" | Zulu, !Xoo |
+| ǂ | Palatal click | 3500 Hz | Softer "clop" | !Xoo, Sandawe |
+| ǁ | Lateral click | 5000 Hz | Lateral "tchk" | Zulu, Xhosa |
+
+Each click is implemented as a 2-phase stop:
+- Phase 1 (click burst): 4ms, high-amplitude burst with characteristic spectral shape
+- Phase 2 (velar release): 6ms, lower burst mimicking the velar back-release
+
+## Diacritic Modifiers (9)
+
+Diacritics modify base phonemes to create hundreds of additional combinations. Pre-computed entries (e.g. ɛ̃ in nasalized vowels) are matched first; the generic handler fires for all other combinations.
+
+### Superscript Modifiers (Secondary Articulation)
+
+| Modifier | Name | Effect | Parameter Changes |
+|----------|------|--------|-------------------|
+| ʰ | Aspiration | Post-stop aspiration | Inserts /h/ phoneme after stop |
+| ʼ | Ejective | Glottalic egressive | Sharper burst, no aspiration, diplophonia |
+| ʷ | Labialization | Lower F2 toward lip rounding | cf2/pf2 blend 25% toward 700 Hz |
+| ʲ | Palatalization | Raise F2 toward palatal | cf2/pf2 blend 30% toward 2300 Hz |
+| ˠ | Velarization | Lower F2 toward velar | cf2/pf2 blend 25% toward 1200 Hz |
+| ˤ | Pharyngealization | Raise F1, lower F2 | cf1/pf1 blend 30% toward 700 Hz, cf2/pf2 blend 25% toward 1000 Hz |
+
+### Combining Diacritics (Voice Quality / Manner)
+
+| Diacritic | Unicode | Name | Effect | Parameter Changes |
+|-----------|---------|------|--------|-------------------|
+| ̥ | U+0325 | Voiceless | Remove voicing | voiceAmplitude=0, lfRd=0, _isVoiced=False |
+| ̤ | U+0324 | Breathy | Breathy voice | lfRd=max(lfRd, 2.5), spectralTilt += 8 |
+| ̰ | U+0330 | Creaky | Creaky voice | lfRd=min(lfRd, 0.5), diplophonia += 0.3 |
+| ̃ | U+0303 | Nasalized | Add nasal resonance | caNP=0.5, cfNP=270 |
+| ̩ | U+0329 | Syllabic | Consonant as nucleus | _isSyllabic=True |
 
 ## Vowels (34)
 
@@ -208,17 +252,14 @@ Diphthongs are expanded by the IPA parser into component vowels, with the synthe
 | Stops | 15 (incl. 1 alternate glyph) |
 | Ejective stops | 4 |
 | Fricatives | 29 |
-| Affricates | 6 |
+| Affricates | 9 |
 | Ejective affricates | 2 |
 | Implosive stops | 5 |
 | Prenasalized stops | 3 (incl. 1 alternate glyph) |
 | Epiglottal consonants | 3 |
+| Click consonants | 5 |
 | Nasals | 7 |
-| Liquids & glides | 16 |
-| **Total** | **143** |
-
-## What's Missing (Future Targets)
-
-The following IPA sound classes are not yet implemented:
-
-- **Clicks** — ʘ, ǀ, ǃ, ǂ, ǁ (velaric ingressive mechanism)
+| Liquids & glides | 17 |
+| Diacritic modifiers | 9 |
+| **Explicit phonemes** | **152** |
+| **Effective combinations** | **500+** (diacritics on any base) |

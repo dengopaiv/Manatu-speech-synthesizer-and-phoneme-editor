@@ -223,9 +223,44 @@ IPA_DESCRIPTIONS = {
     't͡s': 'voiceless alveolar affricate',
     'd͡z': 'voiced alveolar affricate',
     't͡ɬ': 'voiceless lateral affricate',
+    'd͡ɮ': 'voiced lateral affricate',
     'p͡f': 'voiceless labiodental affricate',
+    't͡ɕ': 'voiceless alveolo-palatal affricate',
+    'd͡ʑ': 'voiced alveolo-palatal affricate',
+    # Alveolo-palatal fricatives
+    'ɕ': 'voiceless alveolo-palatal fricative',
+    'ʑ': 'voiced alveolo-palatal fricative',
+    # Epiglottal consonants
+    'ʜ': 'voiceless epiglottal fricative',
+    'ʢ': 'voiced epiglottal fricative',
+    'ʡ': 'epiglottal stop',
+    # Ejective stops
+    'pʼ': 'ejective bilabial stop',
+    'tʼ': 'ejective alveolar stop',
+    'kʼ': 'ejective velar stop',
+    'qʼ': 'ejective uvular stop',
+    # Ejective affricates
+    't͡sʼ': 'ejective alveolar affricate',
+    't͡ʃʼ': 'ejective postalveolar affricate',
+    # Implosive stops
+    'ɓ': 'voiced bilabial implosive',
+    'ɗ': 'voiced alveolar implosive',
+    'ɠ': 'voiced velar implosive',
+    'ʄ': 'voiced palatal implosive',
+    'ʛ': 'voiced uvular implosive',
+    # Prenasalized stops
+    'ᵐb': 'prenasalized bilabial stop',
+    'ⁿd': 'prenasalized alveolar stop',
+    'ᵑɡ': 'prenasalized velar stop',
+    # Click consonants
+    'ʘ': 'bilabial click',
+    'ǀ': 'dental click',
+    'ǃ': 'postalveolar click',
+    'ǂ': 'palatal click',
+    'ǁ': 'lateral click',
     # Liquids & Glides
-    'l': 'alveolar lateral approximant', 'ɭ': 'retroflex lateral approximant',
+    'l': 'alveolar lateral approximant', 'ɫ': 'velarized alveolar lateral',
+    'ɭ': 'retroflex lateral approximant',
     'ʎ': 'palatal lateral approximant', 'ʟ': 'velar lateral approximant',
     'ɹ': 'alveolar approximant', 'ɻ': 'retroflex approximant',
     'ʋ': 'labiodental approximant', 'ɰ': 'velar approximant',

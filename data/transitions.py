@@ -84,6 +84,8 @@ PHONEME_PLACE = {
     't͡ʃ': 'postalveolar', 'd͡ʒ': 'postalveolar',
     't͡s': 'alveolar', 'd͡z': 'alveolar',
     't͡ɬ': 'alveolar',
+    'd͡ɮ': 'alveolar',
+    't͡ɕ': 'alveolo-palatal', 'd͡ʑ': 'alveolo-palatal',
     'p͡f': 'labiodental',
     # Retroflexes
     'ʈ': 'retroflex', 'ɖ': 'retroflex', 'ɳ': 'retroflex',
@@ -98,7 +100,7 @@ PHONEME_PLACE = {
     # Velars
     'k': 'velar', 'g': 'velar', 'ɡ': 'velar', 'ŋ': 'velar',
     'x': 'velar', 'ɣ': 'velar', 'w': 'velar',
-    'ʟ': 'velar', 'ɰ': 'velar',
+    'ʟ': 'velar', 'ɰ': 'velar', 'ɫ': 'velar',
     # Uvulars
     'q': 'uvular', 'ɢ': 'uvular', 'ɴ': 'uvular',
     'χ': 'uvular', 'ʁ': 'uvular', 'ʀ': 'uvular',
@@ -116,6 +118,8 @@ PHONEME_PLACE = {
     'ᵐb': 'bilabial', 'ⁿd': 'alveolar', 'ᵑɡ': 'velar', 'ᵑg': 'velar',
     # Epiglottals
     'ʜ': 'epiglottal', 'ʢ': 'epiglottal', 'ʡ': 'epiglottal',
+    # Clicks (velar back closure determines coarticulation)
+    'ʘ': 'velar', 'ǀ': 'velar', 'ǃ': 'velar', 'ǂ': 'velar', 'ǁ': 'velar',
 }
 
 

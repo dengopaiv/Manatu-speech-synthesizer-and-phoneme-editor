@@ -104,7 +104,7 @@ VOWELS_FRONT = {
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 80,  # Slightly wider F1 to reduce cascade valley depth
+		'cb1': 65,  # Narrowed F1 bandwidth (Q≈4.3) — sharper peak for LPC accuracy at F0=120 Hz
 		'cb2': 400,  # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb3': 512,  # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb4': 950,   # cf4/4.0 (Q=4.0)
@@ -120,7 +120,7 @@ VOWELS_FRONT = {
 		'pf4': 3800,
 		'pf5': 4156,
 		'pf6': 4900,
-		'pb1': 80,  # Match cb1
+		'pb1': 65,  # Match cb1
 		'pb2': 400,  # Match cb2
 		'pb3': 512,  # Match cb3
 		'pb4': 950,   # Match cb4
@@ -137,8 +137,8 @@ VOWELS_FRONT = {
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 95,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
+		'ftzFreq1': 180,  # Tracheal zero below F1 — attenuates F0/sub-F1 energy for LPC accuracy
+		'ftzBw1': 80,  # Moderate BW — cuts sub-F1 without touching F1 peak
 		'ftpFreq2': 0,
 		'ftpBw2': 200,
 	},

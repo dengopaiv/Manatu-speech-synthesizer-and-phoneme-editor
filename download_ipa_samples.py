@@ -120,6 +120,63 @@ IPA_SAMPLES = {
     'ʍ': 'Voiceless_labio-velar_fricative.ogg',
     'ɫ': 'Velarized_alveolar_lateral_approximant.ogg',
 
+    # === STOPS - PALATAL/UVULAR ===
+    'c': 'Voiceless_palatal_plosive.ogg',
+    'ɟ': 'Voiced_palatal_plosive.ogg',
+    'q': 'Voiceless_uvular_plosive.ogg',
+    'ɢ': 'Voiced_uvular_plosive.ogg',
+
+    # === IMPLOSIVES ===
+    'ɓ': 'Voiced_bilabial_implosive.ogg',
+    'ɗ': 'Voiced_alveolar_implosive.ogg',
+    'ɠ': 'Voiced_velar_implosive.ogg',
+    'ʄ': 'Voiced_palatal_implosive.ogg',
+    'ʛ': 'Voiced_uvular_implosive.ogg',
+
+    # === EPIGLOTTAL ===
+    'ʜ': 'Voiceless_epiglottal_fricative.ogg',
+    'ʢ': 'Voiced_epiglottal_fricative.ogg',
+    'ʡ': 'Epiglottal_plosive.ogg',
+
+    # === CLICKS ===
+    'ʘ': 'Bilabial_click.ogg',
+    'ǀ': 'Dental_click.ogg',
+    'ǃ': 'Postalveolar_click.ogg',
+    'ǂ': 'Palatal_click.ogg',
+    'ǁ': 'Alveolar_lateral_click.ogg',
+
+    # === FRICATIVES - ADDITIONAL ===
+    'ɸ': 'Voiceless_bilabial_fricative.ogg',
+    'β': 'Voiced_bilabial_fricative.ogg',
+    'ʂ': 'Voiceless_retroflex_sibilant.ogg',
+    'ʐ': 'Voiced_retroflex_sibilant.ogg',
+    'χ': 'Voiceless_uvular_fricative.ogg',
+    'ʁ': 'Voiced_uvular_fricative.ogg',
+    'ħ': 'Voiceless_pharyngeal_fricative.ogg',
+    'ʕ': 'Voiced_pharyngeal_fricative.ogg',
+    'ɕ': 'Voiceless_alveolo-palatal_fricative.ogg',
+    'ʑ': 'Voiced_alveolo-palatal_fricative.ogg',
+
+    # === LATERAL FRICATIVES ===
+    'ɬ': 'Voiceless_alveolar_lateral_fricative.ogg',
+    'ɮ': 'Voiced_alveolar_lateral_fricative.ogg',
+
+    # === NASALS - ADDITIONAL ===
+    'ɱ': 'Labiodental_nasal.ogg',
+    'ɴ': 'Uvular_nasal.ogg',
+
+    # === LIQUIDS & GLIDES - ADDITIONAL ===
+    'ɭ': 'Retroflex_lateral_approximant.ogg',
+    'ʎ': 'Palatal_lateral_approximant.ogg',
+    'ʟ': 'Velar_lateral_approximant.ogg',
+    'ʋ': 'Labiodental_approximant.ogg',
+    'ɻ': 'Retroflex_approximant.ogg',
+    'ɰ': 'Voiced_velar_approximant.ogg',
+    'ɽ': 'Retroflex_flap.ogg',
+    'ⱱ': 'Labiodental_flap.ogg',
+    'ʀ': 'Uvular_trill.ogg',
+    'ʙ': 'Bilabial_trill.ogg',
+
     # === SPECIAL ===
     ' ': None,  # Silence - no sample needed
     '_': None,  # Pause - no sample needed

@@ -33,6 +33,7 @@ from .affricates import AFFRICATES
 from .nasals import NASALS
 from .liquids_glides import LIQUIDS_GLIDES
 from .special import SPECIAL
+from .clicks import CLICKS
 
 # Merge all dictionaries into one
 data = {}
@@ -48,6 +49,7 @@ data.update(AFFRICATES)
 data.update(NASALS)
 data.update(LIQUIDS_GLIDES)
 data.update(SPECIAL)
+data.update(CLICKS)
 
 # Apply automatic parameter calculations for new synthesis features
 # This adds deltaF1, deltaB1, ftzFreq2, ftzBw2, sinusoidalVoicingAmplitude,
@@ -81,6 +83,7 @@ PHONEME_CATEGORIES = {
     'Nasals': NASALS,
     'Liquids & Glides': LIQUIDS_GLIDES,
     'Special': SPECIAL,
+    'Clicks': CLICKS,
 }
 
 # Ordered list for menu display
@@ -97,6 +100,7 @@ CATEGORY_ORDER = [
     'Nasals',
     'Liquids & Glides',
     'Special',
+    'Clicks',
 ]
 
 # For backwards compatibility
