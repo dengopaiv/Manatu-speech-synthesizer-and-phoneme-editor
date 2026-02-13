@@ -7,3 +7,29 @@ vowelcharts/
 *.pyc
 *.pyo
 build/
+
+# Build artifacts
+dist/
+*.nvda-addon
+*.spec
+
+# Test outputs
+test_output/
+tests/output/
+
+# Backups
+*.bak
+presets/backup/
+
+# Samples (large files)
+samples/
+
+# Windows artifacts
+nul
+
+# IDE
+.vscode/
+__pycache__/
+
+# Claude Code temp files
+tmpclaude-*

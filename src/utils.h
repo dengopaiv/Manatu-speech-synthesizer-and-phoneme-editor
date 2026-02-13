@@ -17,9 +17,18 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 #include <float.h>
 
+// Perlin quintic smootherstep: C2-continuous S-curve
+// Maps linear t [0,1] to smooth curve with zero 1st AND 2nd derivatives at endpoints
+// Eliminates perceptible acceleration discontinuity at transition boundaries
+inline double smoothstep(double t) {
+	return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+}
+
 inline double calculateValueAtFadePosition(double oldVal, double newVal, double curFadeRatio) {
 	if(_isnan(newVal)) return oldVal;
-	return oldVal+((newVal-oldVal)*curFadeRatio);
+	// Apply smoothstep for gentler start/end of transitions
+	double smoothRatio = smoothstep(curFadeRatio);
+	return oldVal + ((newVal - oldVal) * smoothRatio);
 }
 
 #endif
