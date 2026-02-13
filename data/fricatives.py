@@ -116,7 +116,7 @@ FRICATIVES = {
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0.98,  # Match /f/ — diffuse spectrum
-		'fricationAmplitude': 0.47,  # Voiced non-sibilant — proportional to /f/
+		'fricationAmplitude': 0.55,  # Voiced non-sibilant — boosted so turbulence dominates voicing
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
 		# Labiodental non-sibilant: pink noise for diffuse flat spectrum
@@ -125,7 +125,7 @@ FRICATIVES = {
 		# Voice quality
 		'flutter': 0.25,
 		'lfRd': 1.0,
-		'sinusoidalVoicingAmplitude': 0.35,
+		'sinusoidalVoicingAmplitude': 0,  # No voicebar — LF voicing (lfRd=1.0) suffices; sine hum makes /v/ sound nasal
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
