@@ -45,8 +45,7 @@ class AccessibleSlider(wx.Slider):
     - Home: Jump to minimum
     - End: Jump to maximum
     - F2: Open edit dialog for exact value
-    - D: Reset to parameter default
-    - Shift+D: Restore to original loaded value
+    - D: Restore to original loaded value
     """
 
     def __init__(self, parent, param_name, min_val, max_val, default, unit,
@@ -96,12 +95,7 @@ class AccessibleSlider(wx.Slider):
             self._open_edit_dialog()
             return
         elif key == ord('D') or key == ord('d'):
-            if shift:
-                # Restore to original loaded value
-                self._restore_original()
-            else:
-                # Reset to parameter default
-                self._restore_default()
+            self._restore_original()
             return
         else:
             event.Skip()
@@ -180,8 +174,6 @@ class HeaderPanel(wx.Panel):
         self.phonemize_btn.SetName("Phonemize IPA input")
         self.phonemize_btn.SetToolTip("Resolve IPA text through diacritic pipeline (Enter)")
         meta_sizer.Add(self.phonemize_btn, 0, wx.RIGHT, 15)
-        self.phonemize_btn.Bind(wx.EVT_BUTTON, lambda e: editor.on_phonemize())
-        self.ipa_input.Bind(wx.EVT_TEXT_ENTER, lambda e: editor.on_phonemize())
 
         # Category
         meta_sizer.Add(wx.StaticText(self, label="Category:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)

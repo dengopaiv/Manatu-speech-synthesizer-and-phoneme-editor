@@ -505,11 +505,16 @@ class AudioManager:
     # LOOP SEQUENCE PLAYBACK
     # =========================================================================
 
-    def _play_loop_sequence_thread(self, phoneme_list, formant_scale=1.0):
+    def _play_loop_sequence_thread(self, phoneme_list, formant_scale=1.0, get_current_params_fn=None):
         try:
             iteration = 0
             while self.is_playing and self._is_looping:
                 iteration += 1
+                # Refresh [*] entries with current slider values
+                if get_current_params_fn:
+                    for i, (key, params) in enumerate(phoneme_list):
+                        if key == '*':
+                            phoneme_list[i] = ('*', get_current_params_fn())
                 self._set_status(f"Loop #{iteration}: {len(phoneme_list)} phonemes...")
 
                 sp = speechPlayer.SpeechPlayer(self.sample_rate)
@@ -573,7 +578,7 @@ class AudioManager:
 
         self.play_thread = threading.Thread(
             target=self._play_loop_sequence_thread,
-            args=(phoneme_list, formant_scale),
+            args=(phoneme_list, formant_scale, get_current_params_fn),
             daemon=True
         )
         self.play_thread.start()

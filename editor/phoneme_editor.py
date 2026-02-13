@@ -216,6 +216,8 @@ class PhonemeEditorFrame(wx.Frame):
         self.header_panel.stop_btn.Bind(wx.EVT_BUTTON, self.on_stop)
         self.header_panel.ref_btn.Bind(wx.EVT_BUTTON, self.on_play_reference)
         self.header_panel.live_btn.Bind(wx.EVT_BUTTON, self.on_toggle_live_preview)
+        self.header_panel.phonemize_btn.Bind(wx.EVT_BUTTON, self.on_phonemize)
+        self.header_panel.ipa_input.Bind(wx.EVT_TEXT_ENTER, self.on_phonemize)
 
         # Parameters panel
         self.params_panel.reset_btn.Bind(wx.EVT_BUTTON, self._file_ops.on_reset)
@@ -368,7 +370,7 @@ class PhonemeEditorFrame(wx.Frame):
         except Exception as e:
             wx.MessageBox(f"Error loading preset: {e}", "Error", wx.OK | wx.ICON_ERROR)
 
-    def on_phonemize(self):
+    def on_phonemize(self, event=None):
         """Resolve IPA text through diacritic pipeline and show results."""
         ipa_text = self.ipa_input.GetValue().strip()
         if not ipa_text:
