@@ -178,17 +178,28 @@ def _parseToneLetters(text, index):
 
 # Consonant modifier diacritics (superscript letters following a consonant)
 CONSONANT_MODIFIERS = {
-	'ʰ': 'aspiration',     # U+02B0 — modifier letter small h
-	'ʼ': 'ejective',       # U+02BC — modifier letter apostrophe (ejective diacritic)
-	# Future:
-	# 'ʷ': 'labialization',  # U+02B7
-	# 'ʲ': 'palatalization',  # U+02B2
-	# 'ⁿ': 'prenasalization', # U+207F
+	'ʰ': 'aspiration',         # U+02B0 — modifier letter small h
+	'ʼ': 'ejective',           # U+02BC — modifier letter apostrophe (ejective diacritic)
+	'ʷ': 'labialization',      # U+02B7
+	'ʲ': 'palatalization',     # U+02B2
+	'ˠ': 'velarization',       # U+02E0
+	'ˤ': 'pharyngealization',  # U+02E4
+}
+
+# Combining diacritics (attached to base character in Unicode)
+COMBINING_DIACRITICS = {
+	'\u0325': 'voiceless',      # ̥  (combining ring below)
+	'\u030A': 'voiceless',      # ̊  (combining ring above — alternate)
+	'\u0324': 'breathy',        # ̤  (combining diaeresis below)
+	'\u0330': 'creaky',         # ̰  (combining tilde below)
+	'\u0303': 'nasalized',      # ̃  (combining tilde)
+	'\u0329': 'syllabic',       # ̩  (combining vertical line below)
+	'\u032F': 'non_syllabic',   # ̯  (combining inverted breve below)
 }
 
 # Characters that should not be included in multi-char phoneme lookups
 # Exclude ʼ from skip set so _findLongestPhoneme can match ejective entries (e.g. "pʼ")
-_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys()) | (set(CONSONANT_MODIFIERS.keys()) - {'ʼ'})
+_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys()) | (set(CONSONANT_MODIFIERS.keys()) - {'ʼ'}) | set(COMBINING_DIACRITICS.keys())
 
 def _findLongestPhoneme(text, index, maxLen=4):
 	"""Try to match the longest phoneme starting at index.
@@ -214,6 +225,141 @@ def _findLongestPhoneme(text, index, maxLen=4):
 		if phoneme:
 			return candidate, phoneme, length
 	return None, None, 0
+
+def _applySecondaryArticulation(phoneme, modifier):
+	"""Apply a secondary articulation modifier (ʷ ʲ ˠ ˤ) to a phoneme dict."""
+	if modifier == 'labialization':
+		# Lower F2 toward lip rounding (~700 Hz)
+		for key in ('cf2', 'pf2'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.75 + 700 * 0.25
+		# Lower F3 toward 2200 Hz (lip rounding lowers F3)
+		for key in ('cf3', 'pf3'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.85 + 2200 * 0.15
+		# Narrower F2 bandwidth from rounding
+		if 'cb2' in phoneme:
+			phoneme['cb2'] *= 0.90
+	elif modifier == 'palatalization':
+		# Raise F2 toward palatal (~2300 Hz)
+		for key in ('cf2', 'pf2'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.7 + 2300 * 0.3
+		# Raise F3 toward 3200 Hz (tongue body toward palate)
+		for key in ('cf3', 'pf3'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.80 + 3200 * 0.20
+		# Lower F1 (tongue body rises), floor at 250 Hz
+		for key in ('cf1', 'pf1'):
+			if key in phoneme:
+				phoneme[key] = max(250, phoneme[key] * 0.92)
+		# Narrower F2 bandwidth from constriction
+		if 'cb2' in phoneme:
+			phoneme['cb2'] *= 0.85
+	elif modifier == 'velarization':
+		# Lower F2 toward velar (~1200 Hz)
+		for key in ('cf2', 'pf2'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.75 + 1200 * 0.25
+		# Lower F3 toward 2400 Hz
+		for key in ('cf3', 'pf3'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.90 + 2400 * 0.10
+		# Wider F2 bandwidth from velar backing
+		if 'cb2' in phoneme:
+			phoneme['cb2'] *= 1.10
+	elif modifier == 'pharyngealization':
+		# Raise F1 toward ~700 Hz, lower F2 toward ~1000 Hz
+		for key in ('cf1', 'pf1'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.7 + 700 * 0.3
+		for key in ('cf2', 'pf2'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.75 + 1000 * 0.25
+		# Lower F3 toward 2200 Hz
+		for key in ('cf3', 'pf3'):
+			if key in phoneme:
+				phoneme[key] = phoneme[key] * 0.90 + 2200 * 0.10
+		# Wider bandwidths from pharyngeal constriction
+		if 'cb1' in phoneme:
+			phoneme['cb1'] *= 1.20
+		if 'cb2' in phoneme:
+			phoneme['cb2'] *= 1.15
+		# Slight breathiness from pharyngeal constriction
+		if phoneme.get('lfRd', 0) > 0:
+			phoneme['lfRd'] = min(2.7, phoneme.get('lfRd', 1.0) * 1.15)
+
+
+def _applyCombiningDiacritic(phoneme, diacritic):
+	"""Apply a combining diacritic (̥ ̤ ̰ ̃ ̩ ̯) to a phoneme dict."""
+	if diacritic == 'voiceless':
+		phoneme['voiceAmplitude'] = 0
+		phoneme['lfRd'] = 0
+		phoneme['_isVoiced'] = False
+	elif diacritic == 'breathy':
+		# Relative scaling: blend 60% toward max breathy (2.7)
+		currentRd = phoneme.get('lfRd', 1.0)
+		if currentRd > 0:
+			phoneme['lfRd'] = currentRd + 0.60 * (2.7 - currentRd)
+		else:
+			phoneme['lfRd'] = 2.5
+			phoneme['voiceAmplitude'] = phoneme.get('voiceAmplitude', 0) or 1
+		# Spectral tilt: blend toward target of 10 dB
+		currentTilt = phoneme.get('spectralTilt', 0)
+		phoneme['spectralTilt'] = currentTilt + 0.60 * (10 - currentTilt)
+		# Aspiration noise from glottal turbulence
+		phoneme['aspirationAmplitude'] = max(phoneme.get('aspirationAmplitude', 0), 0.15)
+		# F1 bandwidth expansion from increased airflow
+		if 'cb1' in phoneme:
+			phoneme['cb1'] *= 1.25
+	elif diacritic == 'creaky':
+		# Relative scaling: blend 60% toward tight closure (0.3)
+		currentRd = phoneme.get('lfRd', 1.0)
+		if currentRd > 0:
+			phoneme['lfRd'] = currentRd + 0.60 * (0.3 - currentRd)
+		else:
+			phoneme['lfRd'] = 0.5
+			phoneme['voiceAmplitude'] = phoneme.get('voiceAmplitude', 0) or 1
+		# Diplophonia: period alternation
+		phoneme['diplophonia'] = min(0.5, phoneme.get('diplophonia', 0) + 0.25)
+		# More HF energy from tight closure
+		phoneme['spectralTilt'] = phoneme.get('spectralTilt', 0) - 2
+		# F0 irregularity
+		phoneme['flutter'] = min(0.5, phoneme.get('flutter', 0.25) + 0.15)
+		# Tighter closure = sharper F1
+		if 'cb1' in phoneme:
+			phoneme['cb1'] *= 0.85
+	elif diacritic == 'nasalized':
+		# Nasal pole and zero (vowels and consonants)
+		phoneme['caNP'] = 0.5
+		phoneme['cfNP'] = 270
+		phoneme['cbNP'] = 100
+		phoneme['cfN0'] = 250
+		phoneme['cbN0'] = 100
+		# Vowel-specific modifications: F1 lowering, F2 shifts, bandwidth
+		if phoneme.get('_isVowel'):
+			cf1 = phoneme.get('cf1', 500)
+			# F1 lowering proportional to openness (open vowels lose more)
+			lowering = max(0, min(200, (cf1 - 500) * 0.50))
+			for key in ('cf1', 'pf1'):
+				if key in phoneme:
+					phoneme[key] = max(250, phoneme[key] - lowering)
+			# F2 lowering ~7%
+			for key in ('cf2', 'pf2'):
+				if key in phoneme:
+					phoneme[key] -= phoneme[key] * 0.07
+			# F2 bandwidth expansion ~15% from nasal impedance coupling
+			if 'cb2' in phoneme:
+				phoneme['cb2'] *= 1.15
+			# Voice quality toward modal: blend lfRd 25% toward 2.0
+			currentRd = phoneme.get('lfRd', 1.0)
+			if currentRd > 0:
+				phoneme['lfRd'] = currentRd + 0.25 * (2.0 - currentRd)
+	elif diacritic == 'syllabic':
+		phoneme['_isSyllabic'] = True
+	elif diacritic == 'non_syllabic':
+		phoneme['_isNonSyllabic'] = True
+
 
 def _IPAToPhonemesHelper(text):
 	textLen=len(text)
@@ -245,7 +391,13 @@ def _IPAToPhonemesHelper(text):
 				lastPhonemeRef[0]['_tone'] = tone
 			offset += consumed - 1  # -1 because the loop will advance by 1
 			continue
-		# Check for consonant modifier diacritics (e.g. ʰ for aspiration)
+		# Check for combining diacritics (̥ ̤ ̰ ̃ ̩ ̯) — apply to previous phoneme
+		elif char in COMBINING_DIACRITICS:
+			diacritic = COMBINING_DIACRITICS[char]
+			if lastPhonemeRef[0] is not None:
+				_applyCombiningDiacritic(lastPhonemeRef[0], diacritic)
+			continue
+		# Check for consonant modifier diacritics (e.g. ʰ for aspiration, ʷ ʲ ˠ ˤ)
 		elif char in CONSONANT_MODIFIERS:
 			modifier = CONSONANT_MODIFIERS[char]
 			if lastPhonemeRef[0] is not None:
@@ -255,6 +407,8 @@ def _IPAToPhonemesHelper(text):
 					if not lastPhonemeRef[0].get('_isEjective'):
 						# No explicit ejective entry — yield marker for fallback transformation
 						yield 'ʼ', {'_applyEjective': True}
+				elif modifier in ('labialization', 'palatalization', 'velarization', 'pharyngealization'):
+					_applySecondaryArticulation(lastPhonemeRef[0], modifier)
 			continue
 		isLengthened=(text[index+1:index+2]=='ː')
 		isTiedTo=(text[index+1:index+2]=='͡')
@@ -297,6 +451,28 @@ def _IPAToPhonemesHelper(text):
 			yield char,None
 			continue
 
+		# Look ahead for trailing combining diacritics and secondary articulation modifiers.
+		# Apply these BEFORE yielding so stops/affricates get the modifications in their
+		# phase expansion (IPAToPhonemes copies the phoneme dict when expanding phases).
+		nextPos = index + offset + 1
+		pendingModifiers = []
+		while nextPos < textLen:
+			nextChar = text[nextPos]
+			if nextChar in COMBINING_DIACRITICS:
+				pendingModifiers.append(('combining', COMBINING_DIACRITICS[nextChar]))
+				offset += 1
+				nextPos += 1
+			elif nextChar in CONSONANT_MODIFIERS:
+				mod = CONSONANT_MODIFIERS[nextChar]
+				if mod in ('labialization', 'palatalization', 'velarization', 'pharyngealization'):
+					pendingModifiers.append(('secondary', mod))
+					offset += 1
+					nextPos += 1
+				else:
+					break  # aspiration/ejective handled by the main loop
+			else:
+				break
+
 		# Check if this is a diphthong/triphthong that needs expansion
 		components = phoneme.get('_components')
 		if components:
@@ -310,6 +486,12 @@ def _IPAToPhonemesHelper(text):
 				if i == 0 and curStress:
 					component_phoneme['_stress'] = curStress
 					curStress = 0
+				# Apply pending modifiers to each component
+				for modType, modValue in pendingModifiers:
+					if modType == 'combining':
+						_applyCombiningDiacritic(component_phoneme, modValue)
+					elif modType == 'secondary':
+						_applySecondaryArticulation(component_phoneme, modValue)
 				# Mark as part of diphthong for potential special handling
 				component_phoneme['_inDiphthong'] = True
 				component_phoneme['_diphthongChar'] = matchedChars
@@ -328,6 +510,12 @@ def _IPAToPhonemesHelper(text):
 				phoneme['_tiedTo']=True
 			if isLengthened:
 				phoneme['_lengthened']=True
+			# Apply pending modifiers BEFORE yielding
+			for modType, modValue in pendingModifiers:
+				if modType == 'combining':
+					_applyCombiningDiacritic(phoneme, modValue)
+				elif modType == 'secondary':
+					_applySecondaryArticulation(phoneme, modValue)
 			phoneme['_char']=matchedChars  # Use matched string (may be diphthong/triphthong)
 			lastPhonemeRef[0] = phoneme  # Track last phoneme for tone diacritics
 			yield matchedChars,phoneme

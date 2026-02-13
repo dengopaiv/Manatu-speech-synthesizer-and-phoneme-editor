@@ -1013,6 +1013,481 @@ def test_epiglottal_high_f1():
     return True
 
 
+def test_alveolo_palatal_affricate_cv():
+    """Test alveolo-palatal affricates t͡ɕ, d͡ʑ in CV context.
+
+    These should produce clear burst + frication energy and non-silent output.
+    """
+    print("\n=== Test: Alveolo-Palatal Affricate CV ===")
+
+    pairs = [
+        ('t͡ɕɑ', 'voiceless alveolo-palatal affricate (CV)'),
+        ('d͡ʑɑ', 'voiced alveolo-palatal affricate (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_alveolo_palatal_affricate_cv.wav", all_samples)
+    assert all_passed, "Some alveolo-palatal affricates show no energy in CV context"
+    print(f"  Generated {len(pairs)} affricate CV items")
+    print("  PASSED")
+    return True
+
+
+def test_lateral_affricate_cv():
+    """Test lateral affricate d͡ɮ in CV context."""
+    print("\n=== Test: Lateral Affricate CV ===")
+
+    pairs = [
+        ('t͡ɬɑ', 'voiceless lateral affricate (CV)'),
+        ('d͡ɮɑ', 'voiced lateral affricate (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_lateral_affricate_cv.wav", all_samples)
+    assert all_passed, "Some lateral affricates show no energy in CV context"
+    print("  PASSED")
+    return True
+
+
+def test_velarized_lateral_cv():
+    """Test velarized lateral ɫ in CV context."""
+    print("\n=== Test: Velarized Lateral CV ===")
+
+    samples = _synthesize_cv_ipa('ɫɑ', speed=0.5)
+
+    arr = np.array(samples, dtype=np.float64)
+    n = len(arr)
+
+    rms = np.sqrt(np.mean(arr ** 2)) if n > 0 else 0
+    has_signal = rms > 0
+    status = "PASS" if has_signal else "FAIL"
+    print(f"  /ɫɑ/ RMS={rms:.0f} {status}")
+
+    # Verify ɫ has lower F2 than l
+    l_cf2 = _get_phoneme_cf2('l')
+    dark_l_cf2 = _get_phoneme_cf2('ɫ')
+    if l_cf2 is not None and dark_l_cf2 is not None:
+        assert dark_l_cf2 < l_cf2, f"ɫ cf2 ({dark_l_cf2}) should be < l cf2 ({l_cf2})"
+        print(f"  ɫ cf2={dark_l_cf2} < l cf2={l_cf2} PASS")
+
+    save_wav("consonant_velarized_lateral_cv.wav", samples)
+    assert has_signal, "Velarized lateral shows no energy"
+    print("  PASSED")
+    return True
+
+
+def test_click_cv():
+    """Test all 5 click consonants in CV context.
+
+    Clicks should produce short sharp transients (burst energy) and
+    non-silent output when followed by a vowel.
+    """
+    print("\n=== Test: Click CV ===")
+
+    click_pairs = [
+        ('ʘɑ', 'bilabial click (CV)'),
+        ('ǀɑ', 'dental click (CV)'),
+        ('ǃɑ', 'postalveolar click (CV)'),
+        ('ǂɑ', 'palatal click (CV)'),
+        ('ǁɑ', 'lateral click (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in click_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_clicks_cv.wav", all_samples)
+    assert all_passed, "Some clicks show no energy in CV context"
+    print(f"  Generated {len(click_pairs)} click CV items")
+    print("  PASSED")
+    return True
+
+
+def test_diacritic_voiceless():
+    """Test voiceless diacritic: b̥ɑ should produce output (voiceless b = like p)."""
+    print("\n=== Test: Diacritic Voiceless ===")
+
+    # b with combining ring below = voiceless b
+    samples = _synthesize_cv_ipa('b\u0325ɑ', speed=0.5)
+
+    arr = np.array(samples, dtype=np.float64)
+    has_signal = len(arr) > 0 and np.sqrt(np.mean(arr ** 2)) > 0
+    print(f"  /b̥ɑ/ has signal: {has_signal}")
+
+    # Check that voicing was removed via IPA pipeline
+    phonemes = ipa.IPAToPhonemes('b\u0325ɑ')
+    # Find the b phoneme (skip gaps)
+    b_phoneme = None
+    for p in phonemes:
+        if p.get('_char') and 'b' in p.get('_char', ''):
+            b_phoneme = p
+            break
+    if b_phoneme is None:
+        # Might be in a phase — check for _isPhase entries
+        for p in phonemes:
+            if p.get('_isPhase') and p.get('_isVoiced') is not None:
+                b_phoneme = p
+                break
+
+    if b_phoneme:
+        is_voiceless = not b_phoneme.get('_isVoiced', True)
+        print(f"  b̥ _isVoiced={b_phoneme.get('_isVoiced')} (expect False): {'PASS' if is_voiceless else 'FAIL'}")
+        assert is_voiceless, "b̥ should be voiceless"
+
+    assert has_signal, "b̥ɑ should produce non-silent output"
+    print("  PASSED")
+    return True
+
+
+def test_diacritic_labialized():
+    """Test labialized diacritic: kʷɑ should have lower cf2 than kɑ."""
+    print("\n=== Test: Diacritic Labialized ===")
+
+    # Get phonemes for kɑ and kʷɑ
+    phonemes_plain = ipa.IPAToPhonemes('kɑ')
+    phonemes_lab = ipa.IPAToPhonemes('kʷɑ')
+
+    # Find the k phoneme (it will be in phases for stops)
+    def find_first_phase_cf2(phonemes):
+        for p in phonemes:
+            if p.get('_isPhase') and 'cf2' in p:
+                return p['cf2']
+            if not p.get('_silence') and not p.get('_preStopGap') and 'cf2' in p:
+                return p['cf2']
+        return None
+
+    cf2_plain = find_first_phase_cf2(phonemes_plain)
+    cf2_lab = find_first_phase_cf2(phonemes_lab)
+
+    if cf2_plain is not None and cf2_lab is not None:
+        print(f"  kɑ cf2={cf2_plain:.0f}, kʷɑ cf2={cf2_lab:.0f}")
+        assert cf2_lab < cf2_plain, f"kʷ cf2 ({cf2_lab:.0f}) should be < k cf2 ({cf2_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not extract cf2 from phoneme pipeline")
+    return True
+
+
+def test_diacritic_palatalized():
+    """Test palatalized diacritic: tʲɑ should have higher cf2 than tɑ."""
+    print("\n=== Test: Diacritic Palatalized ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('tɑ')
+    phonemes_pal = ipa.IPAToPhonemes('tʲɑ')
+
+    def find_first_phase_cf2(phonemes):
+        for p in phonemes:
+            if p.get('_isPhase') and 'cf2' in p:
+                return p['cf2']
+            if not p.get('_silence') and not p.get('_preStopGap') and 'cf2' in p:
+                return p['cf2']
+        return None
+
+    cf2_plain = find_first_phase_cf2(phonemes_plain)
+    cf2_pal = find_first_phase_cf2(phonemes_pal)
+
+    if cf2_plain is not None and cf2_pal is not None:
+        print(f"  tɑ cf2={cf2_plain:.0f}, tʲɑ cf2={cf2_pal:.0f}")
+        assert cf2_pal > cf2_plain, f"tʲ cf2 ({cf2_pal:.0f}) should be > t cf2 ({cf2_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not extract cf2 from phoneme pipeline")
+    return True
+
+
+def test_diacritic_nasalized_generic():
+    """Test generic nasalized diacritic: ẽ (e + ̃) should have caNP > 0.
+
+    Pre-computed nasalized vowels (ɛ̃, ɔ̃, etc.) should be matched first.
+    The generic handler fires only for vowels not in the pre-computed set.
+    """
+    print("\n=== Test: Diacritic Nasalized Generic ===")
+
+    # e + combining tilde (not in pre-computed set)
+    phonemes = ipa.IPAToPhonemes('e\u0303')
+
+    e_phoneme = None
+    for p in phonemes:
+        if not p.get('_silence') and not p.get('_preStopGap') and p.get('_isVowel'):
+            e_phoneme = p
+            break
+
+    if e_phoneme:
+        canp = e_phoneme.get('caNP', 0)
+        print(f"  ẽ caNP={canp} (expect > 0)")
+        assert canp > 0, "ẽ should have nasal pole active (caNP > 0)"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not find vowel phoneme for ẽ")
+    return True
+
+
+def test_diacritic_creaky():
+    """Test creaky voice diacritic: a̰ should have diplophonia > base a."""
+    print("\n=== Test: Diacritic Creaky ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('a')
+    phonemes_creaky = ipa.IPAToPhonemes('a\u0330')
+
+    def find_vowel(phonemes):
+        for p in phonemes:
+            if p.get('_isVowel') and not p.get('_silence'):
+                return p
+        return None
+
+    a_plain = find_vowel(phonemes_plain)
+    a_creaky = find_vowel(phonemes_creaky)
+
+    if a_plain and a_creaky:
+        diplo_plain = a_plain.get('diplophonia', 0)
+        diplo_creaky = a_creaky.get('diplophonia', 0)
+        print(f"  a diplophonia={diplo_plain}, a̰ diplophonia={diplo_creaky}")
+        assert diplo_creaky > diplo_plain, \
+            f"a̰ diplophonia ({diplo_creaky}) should be > a ({diplo_plain})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not find vowel phonemes")
+    return True
+
+
+def test_diacritic_nasalized_f1_lowering():
+    """Test nasalized F1 lowering: open vowels should lose more F1 than close vowels."""
+    print("\n=== Test: Diacritic Nasalized F1 Lowering ===")
+
+    # Close vowel u (cf1≈310) — minimal F1 lowering expected
+    phonemes_u = ipa.IPAToPhonemes('u')
+    phonemes_u_nasal = ipa.IPAToPhonemes('u\u0303')
+
+    # Open vowel ɑ (cf1≈850) — large F1 lowering expected
+    phonemes_a = ipa.IPAToPhonemes('\u0251')  # ɑ
+    phonemes_a_nasal = ipa.IPAToPhonemes('\u0251\u0303')  # ɑ̃
+
+    def find_vowel(phonemes):
+        for p in phonemes:
+            if p.get('_isVowel') and not p.get('_silence'):
+                return p
+        return None
+
+    u_plain = find_vowel(phonemes_u)
+    u_nasal = find_vowel(phonemes_u_nasal)
+    a_plain = find_vowel(phonemes_a)
+    a_nasal = find_vowel(phonemes_a_nasal)
+
+    if u_plain and u_nasal and a_plain and a_nasal:
+        u_drop = u_plain.get('cf1', 0) - u_nasal.get('cf1', 0)
+        a_drop = a_plain.get('cf1', 0) - a_nasal.get('cf1', 0)
+        print(f"  u cf1 drop: {u_drop:.0f} Hz, ɑ cf1 drop: {a_drop:.0f} Hz")
+        assert a_drop > u_drop, \
+            f"Open vowel ɑ̃ should lose more F1 ({a_drop:.0f}) than close vowel ũ ({u_drop:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not find vowel phonemes")
+    return True
+
+
+def test_diacritic_nasalized_bandwidth():
+    """Test nasalized F2 bandwidth expansion: ẽ should have wider cb2 than e."""
+    print("\n=== Test: Diacritic Nasalized Bandwidth ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('e')
+    phonemes_nasal = ipa.IPAToPhonemes('e\u0303')
+
+    def find_vowel(phonemes):
+        for p in phonemes:
+            if p.get('_isVowel') and not p.get('_silence'):
+                return p
+        return None
+
+    e_plain = find_vowel(phonemes_plain)
+    e_nasal = find_vowel(phonemes_nasal)
+
+    if e_plain and e_nasal:
+        cb2_plain = e_plain.get('cb2', 0)
+        cb2_nasal = e_nasal.get('cb2', 0)
+        print(f"  e cb2={cb2_plain:.0f}, ẽ cb2={cb2_nasal:.0f}")
+        assert cb2_nasal > cb2_plain, \
+            f"ẽ cb2 ({cb2_nasal:.0f}) should be > e cb2 ({cb2_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not find vowel phonemes")
+    return True
+
+
+def test_diacritic_breathy_scaling():
+    """Test breathy voice uses relative scaling, not flat lfRd=2.5."""
+    print("\n=== Test: Diacritic Breathy Scaling ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('a')
+    phonemes_breathy = ipa.IPAToPhonemes('a\u0324')  # a̤
+
+    def find_vowel(phonemes):
+        for p in phonemes:
+            if p.get('_isVowel') and not p.get('_silence'):
+                return p
+        return None
+
+    a_plain = find_vowel(phonemes_plain)
+    a_breathy = find_vowel(phonemes_breathy)
+
+    if a_plain and a_breathy:
+        rd_plain = a_plain.get('lfRd', 1.0)
+        rd_breathy = a_breathy.get('lfRd', 1.0)
+        print(f"  a lfRd={rd_plain:.2f}, a̤ lfRd={rd_breathy:.2f}")
+        assert rd_breathy > rd_plain, \
+            f"a̤ lfRd ({rd_breathy:.2f}) should be > a lfRd ({rd_plain:.2f})"
+        # Verify it's NOT the old flat 2.5 value
+        assert rd_breathy != 2.5, \
+            f"a̤ lfRd should use relative scaling, not flat 2.5 (got {rd_breathy:.2f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not find vowel phonemes")
+    return True
+
+
+def test_diacritic_palatalized_f3():
+    """Test palatalized diacritic raises F3: tʲ should have higher cf3 than t."""
+    print("\n=== Test: Diacritic Palatalized F3 ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('t\u0251')  # tɑ
+    phonemes_pal = ipa.IPAToPhonemes('t\u02B2\u0251')  # tʲɑ
+
+    def find_first_phase_cf3(phonemes):
+        for p in phonemes:
+            if p.get('_isPhase') and 'cf3' in p:
+                return p['cf3']
+            if not p.get('_silence') and not p.get('_preStopGap') and 'cf3' in p:
+                return p['cf3']
+        return None
+
+    cf3_plain = find_first_phase_cf3(phonemes_plain)
+    cf3_pal = find_first_phase_cf3(phonemes_pal)
+
+    if cf3_plain is not None and cf3_pal is not None:
+        print(f"  tɑ cf3={cf3_plain:.0f}, tʲɑ cf3={cf3_pal:.0f}")
+        assert cf3_pal > cf3_plain, \
+            f"tʲ cf3 ({cf3_pal:.0f}) should be > t cf3 ({cf3_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not extract cf3 from phoneme pipeline")
+    return True
+
+
+def test_diacritic_labialized_f3():
+    """Test labialized diacritic lowers F3: kʷ should have lower cf3 than k."""
+    print("\n=== Test: Diacritic Labialized F3 ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('k\u0251')  # kɑ
+    phonemes_lab = ipa.IPAToPhonemes('k\u02B7\u0251')  # kʷɑ
+
+    def find_first_phase_cf3(phonemes):
+        for p in phonemes:
+            if p.get('_isPhase') and 'cf3' in p:
+                return p['cf3']
+            if not p.get('_silence') and not p.get('_preStopGap') and 'cf3' in p:
+                return p['cf3']
+        return None
+
+    cf3_plain = find_first_phase_cf3(phonemes_plain)
+    cf3_lab = find_first_phase_cf3(phonemes_lab)
+
+    if cf3_plain is not None and cf3_lab is not None:
+        print(f"  kɑ cf3={cf3_plain:.0f}, kʷɑ cf3={cf3_lab:.0f}")
+        assert cf3_lab < cf3_plain, \
+            f"kʷ cf3 ({cf3_lab:.0f}) should be < k cf3 ({cf3_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not extract cf3 from phoneme pipeline")
+    return True
+
+
+def test_diacritic_pharyngealized_bandwidth():
+    """Test pharyngealized diacritic widens cb1: dˤ should have wider cb1 than d."""
+    print("\n=== Test: Diacritic Pharyngealized Bandwidth ===")
+
+    phonemes_plain = ipa.IPAToPhonemes('d\u0251')  # dɑ
+    phonemes_phar = ipa.IPAToPhonemes('d\u02E4\u0251')  # dˤɑ
+
+    def find_first_phase_cb1(phonemes):
+        for p in phonemes:
+            if p.get('_isPhase') and 'cb1' in p:
+                return p['cb1']
+            if not p.get('_silence') and not p.get('_preStopGap') and 'cb1' in p:
+                return p['cb1']
+        return None
+
+    cb1_plain = find_first_phase_cb1(phonemes_plain)
+    cb1_phar = find_first_phase_cb1(phonemes_phar)
+
+    if cb1_plain is not None and cb1_phar is not None:
+        print(f"  dɑ cb1={cb1_plain:.0f}, dˤɑ cb1={cb1_phar:.0f}")
+        assert cb1_phar > cb1_plain, \
+            f"dˤ cb1 ({cb1_phar:.0f}) should be > d cb1 ({cb1_plain:.0f})"
+        print("  PASSED")
+    else:
+        print("  SKIP: Could not extract cb1 from phoneme pipeline")
+    return True
+
+
 def run_all_tests():
     """Run all consonant tests."""
     print("=" * 50)
@@ -1055,6 +1530,26 @@ def run_all_tests():
         test_uvular_low_f2,
         test_pharyngeal_high_f1,
         test_place_minimal_pairs,
+        # Alveolo-palatal affricate tests
+        test_alveolo_palatal_affricate_cv,
+        # Lateral affricate tests
+        test_lateral_affricate_cv,
+        # Velarized lateral test
+        test_velarized_lateral_cv,
+        # Click tests
+        test_click_cv,
+        # Diacritic modifier tests
+        test_diacritic_voiceless,
+        test_diacritic_labialized,
+        test_diacritic_palatalized,
+        test_diacritic_nasalized_generic,
+        test_diacritic_creaky,
+        test_diacritic_nasalized_f1_lowering,
+        test_diacritic_nasalized_bandwidth,
+        test_diacritic_breathy_scaling,
+        test_diacritic_palatalized_f3,
+        test_diacritic_labialized_f3,
+        test_diacritic_pharyngealized_bandwidth,
     ]
 
     passed = 0
