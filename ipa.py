@@ -179,6 +179,7 @@ def _parseToneLetters(text, index):
 # Consonant modifier diacritics (superscript letters following a consonant)
 CONSONANT_MODIFIERS = {
 	'ʰ': 'aspiration',     # U+02B0 — modifier letter small h
+	'ʼ': 'ejective',       # U+02BC — modifier letter apostrophe (ejective diacritic)
 	# Future:
 	# 'ʷ': 'labialization',  # U+02B7
 	# 'ʲ': 'palatalization',  # U+02B2
@@ -186,7 +187,8 @@ CONSONANT_MODIFIERS = {
 }
 
 # Characters that should not be included in multi-char phoneme lookups
-_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys()) | set(CONSONANT_MODIFIERS.keys())
+# Exclude ʼ from skip set so _findLongestPhoneme can match ejective entries (e.g. "pʼ")
+_SKIP_IN_MULTICHAR = set('ˈˌː͡ ') | set(TONE_DIACRITICS.keys()) | set(TONE_LETTERS.keys()) | (set(CONSONANT_MODIFIERS.keys()) - {'ʼ'})
 
 def _findLongestPhoneme(text, index, maxLen=4):
 	"""Try to match the longest phoneme starting at index.
@@ -249,6 +251,10 @@ def _IPAToPhonemesHelper(text):
 			if lastPhonemeRef[0] is not None:
 				if modifier == 'aspiration':
 					lastPhonemeRef[0]['_hasExplicitAspiration'] = True
+				elif modifier == 'ejective':
+					if not lastPhonemeRef[0].get('_isEjective'):
+						# No explicit ejective entry — yield marker for fallback transformation
+						yield 'ʼ', {'_applyEjective': True}
 			continue
 		isLengthened=(text[index+1:index+2]=='ː')
 		isTiedTo=(text[index+1:index+2]=='͡')
@@ -265,10 +271,17 @@ def _IPAToPhonemesHelper(text):
 
 		# Fall back to tie-bar handling
 		if not phoneme and isTiedTo:
-			phoneme=data.get(text[index:index+3])
-			if phoneme:
-				matchedChars = text[index:index+3]
-			offset+=2 if phoneme else 1
+			# Try ejective affricate first (base + tie-bar + second + ʼ)
+			if index + 3 < textLen and text[index + 3] == 'ʼ':
+				phoneme=data.get(text[index:index+4])
+				if phoneme:
+					matchedChars = text[index:index+4]
+					offset+=3
+			if not phoneme:
+				phoneme=data.get(text[index:index+3])
+				if phoneme:
+					matchedChars = text[index:index+3]
+				offset+=2 if phoneme else 1
 
 		# Fall back to lengthened vowel
 		if not phoneme and isLengthened:
@@ -329,6 +342,19 @@ def IPAToPhonemes(ipaText):
 	for char,phoneme in _IPAToPhonemesHelper(ipaText):
 		if char==' ':
 			newWord=True
+		elif phoneme and phoneme.get('_applyEjective'):
+			# Retroactively apply ejective transformation to last stop/affricate phases
+			for i in range(len(phonemeList) - 1, -1, -1):
+				entry = phonemeList[i]
+				if entry.get('_preStopGap'):
+					entry['_closureDuration'] = 18
+					break
+				if entry.get('_isPhase'):
+					entry['aspirationAmplitude'] = 0
+					entry['fricationAmplitude'] = 0
+					entry['diplophonia'] = 0.15
+					entry['burstAmplitude'] = min(entry.get('burstAmplitude', 0) + 0.05, 1.0)
+					entry['_isEjective'] = True
 		elif phoneme:
 			stress=phoneme.pop('_stress',0)
 			if lastPhoneme and not lastPhoneme.get('_isVowel') and phoneme and phoneme.get('_isVowel'):
@@ -337,8 +363,8 @@ def IPAToPhonemes(ipaText):
 			elif stress==1 and lastPhoneme and lastPhoneme.get('_isVowel'):
 				phoneme['_syllableStart']=True
 				syllableStartPhoneme=phoneme
-			# Auto-aspiration: voiceless stop before voiced sound (suppressed if explicit ʰ)
-			if lastPhoneme and lastPhoneme.get('_isStop') and not lastPhoneme.get('_isVoiced') and phoneme and phoneme.get('_isVoiced') and not phoneme.get('_isStop') and not phoneme.get('_isAfricate') and not lastPhoneme.get('_hasExplicitAspiration'):
+			# Auto-aspiration: voiceless stop before voiced sound (suppressed if explicit ʰ or ejective)
+			if lastPhoneme and lastPhoneme.get('_isStop') and not lastPhoneme.get('_isVoiced') and not lastPhoneme.get('_isEjective') and phoneme and phoneme.get('_isVoiced') and not phoneme.get('_isStop') and not phoneme.get('_isAfricate') and not lastPhoneme.get('_hasExplicitAspiration'):
 				psa=data['h'].copy()
 				psa['_postStopAspiration']=True
 				psa['_char']=None

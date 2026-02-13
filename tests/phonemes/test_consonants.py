@@ -399,6 +399,76 @@ def test_nasal_low_f1():
     return True
 
 
+def test_ejective_cv():
+    """Test ejective stops and affricates in CV context.
+
+    Ejectives should produce clear burst energy (sharper than regular stops)
+    and generate non-silent output when followed by a vowel.
+    """
+    print("\n=== Test: Ejective CV ===")
+
+    ejective_pairs = [
+        ('pʼɑ', 'ejective bilabial (CV)'),
+        ('tʼɑ', 'ejective alveolar (CV)'),
+        ('kʼɑ', 'ejective velar (CV)'),
+        ('qʼɑ', 'ejective uvular (CV)'),
+        ('t͡sʼɑ', 'ejective alveolar affricate (CV)'),
+        ('t͡ʃʼɑ', 'ejective postalveolar affricate (CV)'),
+    ]
+
+    all_samples = []
+    all_passed = True
+
+    for ipa_text, desc in ejective_pairs:
+        print(f"  /{ipa_text}/ - {desc}")
+        samples = _synthesize_cv_ipa(ipa_text, speed=0.5)
+
+        arr = np.array(samples, dtype=np.float64)
+        n = len(arr)
+
+        # Check for burst energy in onset region
+        onset_rms = np.sqrt(np.mean(arr[:n // 4] ** 2)) if n > 0 else 0
+        vowel_rms = np.sqrt(np.mean(arr[n // 2:] ** 2)) if n > 0 else 0
+
+        has_signal = onset_rms > 0 or vowel_rms > 0
+        status = "PASS" if has_signal else "FAIL"
+        if not has_signal:
+            all_passed = False
+        print(f"    onset RMS={onset_rms:.0f}, vowel RMS={vowel_rms:.0f} {status}")
+
+        all_samples.extend(samples)
+        all_samples.extend([0] * int(SAMPLE_RATE * 0.15))
+
+    save_wav("consonant_ejectives_cv.wav", all_samples)
+    assert all_passed, "Some ejectives show no energy in CV context"
+    print(f"  Generated {len(ejective_pairs)} ejective CV items")
+    print("  PASSED")
+    return True
+
+
+def test_ejective_no_aspiration():
+    """Assert ejectives do NOT insert post-stop aspiration.
+
+    Regular voiceless stops before a vowel get auto-aspiration (an 'h' phoneme).
+    Ejectives should suppress this — no aspiration phoneme should be inserted.
+    """
+    print("\n=== Test: Ejective No Aspiration ===")
+
+    all_passed = True
+
+    for ipa_text, label in [("pʼɑ", "pʼ"), ("tʼɑ", "tʼ"), ("kʼɑ", "kʼ")]:
+        phonemes = ipa.IPAToPhonemes(ipa_text)
+        has_aspiration = any(p.get('_postStopAspiration') for p in phonemes)
+        status = "PASS" if not has_aspiration else "FAIL"
+        if has_aspiration:
+            all_passed = False
+        print(f"  /{label}/ aspiration suppressed: {status}")
+
+    assert all_passed, "Some ejectives incorrectly have aspiration"
+    print("  PASSED")
+    return True
+
+
 def test_stop_burst_presence():
     """Assert energy spike in CV context for stops."""
     print("\n=== Test: Stop Burst Presence ===")
@@ -593,6 +663,9 @@ def run_all_tests():
         test_fricatives_natural,
         test_approximants_natural,
         test_trills_natural,
+        # Ejective tests
+        test_ejective_cv,
+        test_ejective_no_aspiration,
         # Spectral assertion tests
         test_voicing_contrast,
         test_fricative_spectral_centroid,

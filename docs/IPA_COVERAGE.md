@@ -36,6 +36,27 @@ Note: ɡ (U+0261, IPA standard) is also mapped as an alias for g (U+0067).
 
 Affricates use multi-phase envelopes: burst phase followed by sustained frication phase, with timing controlled per-phase.
 
+### Ejectives (6)
+
+Non-pulmonic consonants produced with a glottalic egressive airstream mechanism. The glottis closes, the larynx rises to compress trapped air, and oral release produces a sharp unaspirated burst.
+
+| Symbol | Type | Place | Based on |
+|--------|------|-------|----------|
+| pʼ | Stop | Bilabial | p |
+| tʼ | Stop | Alveolar | t |
+| kʼ | Stop | Velar | k |
+| qʼ | Stop | Uvular | q |
+| t͡sʼ | Affricate | Alveolar | t͡s |
+| t͡ʃʼ | Affricate | Postalveolar | t͡ʃ |
+
+Acoustic characteristics vs. regular voiceless stops:
+- No aspiration (glottal closure prevents airflow after burst)
+- Sharper, more intense burst (compressed air behind closure)
+- Longer closure (~18ms vs 12ms, glottal + oral closure builds pressure)
+- Slight creaky voice onset (diplophonia from glottal opening)
+
+The ejective diacritic ʼ (U+02BC) also works as a fallback modifier on any voiceless stop or affricate.
+
 ## Vowels (34)
 
 ### Monophthongs
@@ -131,17 +152,18 @@ Diphthongs are expanded by the IPA parser into component vowels, with the synthe
 | Nasalized vowels | 4 |
 | Diphthongs/triphthongs | 22 |
 | Stops | 14 (incl. 1 alternate glyph) |
+| Ejective stops | 4 |
 | Fricatives | 25 |
 | Affricates | 6 |
+| Ejective affricates | 2 |
 | Nasals | 7 |
 | Liquids & glides | 16 |
-| **Total** | **124** |
+| **Total** | **130** |
 
 ## What's Missing (Phase 4 Targets)
 
 The following IPA sound classes are not yet implemented:
 
-- **Ejectives** — p', t', k', ts', etc. (glottalic egressive mechanism)
 - **Implosives** — ɓ, ɗ, ɠ, ʄ, ʛ (glottalic ingressive mechanism)
 - **Clicks** — ʘ, ǀ, ǃ, ǂ, ǁ (velaric ingressive mechanism)
 - **Prenasalized stops** — ᵐb, ⁿd, ᵑɡ (common in Bantu and Oceanic languages)
