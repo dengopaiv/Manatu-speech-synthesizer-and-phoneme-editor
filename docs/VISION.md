@@ -32,32 +32,33 @@ Build a research-grounded, academically-accurate Klatt speech synthesizer that *
 
 ## Development Phases
 
-### Phase 0: Foundation (Current)
+### Phase 0: Foundation — Done
 - Core synthesis engine (KLSYN88-based)
 - Basic phoneme data structure
 - Phoneme editor tool
 - Parameter infrastructure (spectral tilt, flutter, LF model, etc.)
 
-### Phase 1: Vowels
+### Phase 1: Vowels — Done
 - All IPA vowels with accurate formants (F1-F6)
 - Voice quality consistency across vowels
 - Vowel stability (no warbling/drift)
 - Diphthong transitions
 
-### Phase 2: Common Consonants
+### Phase 2: Common Consonants — Done
 - Stops (p, b, t, d, k, g) with proper bursts
 - Fricatives (f, v, s, z, ʃ, ʒ, θ, ð, h) with place-specific spectra
 - Nasals (m, n, ŋ)
 - Liquids and glides (l, r, w, j)
 - Affricates (tʃ, dʒ)
 
-### Phase 3: Extended Consonants - done
-- Retroflexes (ʈ, ɖ, ʂ, ʐ, ɳ, ɭ) - done
-- Palatals (c, ɟ, ç, ʝ, ɲ, ʎ), uvulars (q, ɢ, χ, ʁ, ɴ, ʀ), pharyngeals (ħ, ʕ) - done
-- Voiced/voiceless pairs for all places - done
-- Trills (r, ʀ, ʙ), bilabial fricatives (ɸ, β), extended approximants (ʋ, ɻ, ɰ) - done
+### Phase 3: Extended Consonants — Done
+- Retroflexes (ʈ, ɖ, ʂ, ʐ, ɳ, ɭ)
+- Palatals (c, ɟ, ç, ʝ, ɲ, ʎ), uvulars (q, ɢ, χ, ʁ, ɴ, ʀ), pharyngeals (ħ, ʕ)
+- Voiced/voiceless pairs for all places
+- Trills (r, ʀ, ʙ), bilabial fricatives (ɸ, β), extended approximants (ʋ, ɻ, ɰ)
+- Lateral fricatives (ɬ, ɮ), velar fricatives (x, ɣ), additional affricates (t͡s, d͡z, t͡ɬ, p͡f)
 
-### Phase 4: Non-Pulmonic & Exotic
+### Phase 4: Non-Pulmonic & Exotic (Next)
 - Ejectives
 - Implosives
 - Clicks

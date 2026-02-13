@@ -6,13 +6,13 @@ A KLSYN88-based Klatt formant speech synthesizer with complete IPA coverage, wri
 
 ## Overview
 
-Manatu is a free and open-source speech synthesizer targeting the quality of classic Klatt synthesizers like DecTalk and Eloquence. It covers 121 IPA phonemes — vowels, consonants, diphthongs, nasalized vowels, and retroflexes — using modern DSP techniques: Zero Delay Feedback resonators for stable formant filtering, a Liljencrants-Fant glottal model for natural voice quality, and context-aware coarticulation with F2 locus equations for smooth phoneme transitions.
+Manatu is a free and open-source speech synthesizer targeting the quality of classic Klatt synthesizers like DecTalk and Eloquence. It covers 124 IPA phonemes — vowels, consonants, diphthongs, affricates, lateral fricatives, nasalized vowels, and retroflexes — using modern DSP techniques: Zero Delay Feedback resonators for stable formant filtering, a Liljencrants-Fant glottal model for natural voice quality, and context-aware coarticulation with F2 locus equations for smooth phoneme transitions.
 
 Manatu is delivered both as a standalone synthesis engine (`speechPlayer.dll`) and as an NVDA screen reader addon for blind and visually impaired users.
 
 ## Features
 
-- **121 IPA phonemes** — front/back/central vowels, r-colored vowels, nasalized vowels, stops, nasals, fricatives, affricates, liquids, glides, trills, taps, and 22 diphthongs
+- **124 IPA phonemes** — front/back/central vowels, r-colored vowels, nasalized vowels, stops, nasals, fricatives, affricates, lateral fricatives, liquids, glides, trills, taps, and 22 diphthongs
 - **KLSYN88 cascade/parallel formant synthesis** — dual-path architecture with 6 cascade and 6 parallel formant resonators
 - **Zero Delay Feedback (ZDF) resonators** — Zavalishin (2012) topology; 4th-order (24 dB/oct) for F1-F3, 2nd-order for F4-F6
 - **Liljencrants-Fant (LF) glottal model** — continuous voice quality control from tense (Rd=0.3) through modal (Rd=1.0) to breathy (Rd=2.7)
@@ -20,6 +20,39 @@ Manatu is delivered both as a standalone synthesis engine (`speechPlayer.dll`) a
 - **Hermite smoothstep interpolation** — smooth parameter trajectories between phoneme frames
 - **Trill modulator and burst pre-filtering** — dedicated mechanisms for trills (/r/, /ʀ/, /ʙ/) and stop bursts
 - **NVDA screen reader addon** — packages as a ready-to-install `.nvda-addon`
+
+## Quick Start
+
+**Prerequisites:** Python 3.7+, SCons 3, Visual Studio 2019 Community
+
+```bash
+# 1. Build the synthesis engine
+scons
+
+# 2. Run a test to generate audio
+python tests/phonemes/test_vowels.py
+
+# 3. Listen to the output
+# WAV files are in tests/output/
+
+# 4. Try the phoneme editor (requires wxPython)
+python editor/phoneme_editor.py
+```
+
+See [Getting Started](docs/GETTING_STARTED.md) for a full walkthrough.
+
+## Project Status
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 0 | Foundation — core engine, phoneme editor, parameter infrastructure | Done |
+| Phase 1 | Vowels — all IPA vowels, diphthongs, voice quality | Done |
+| Phase 2 | Common consonants — stops, fricatives, nasals, liquids, glides | Done |
+| Phase 3 | Extended consonants — retroflexes, palatals, uvulars, pharyngeals, trills, lateral fricatives | Done |
+| Phase 4 | Non-pulmonic — ejectives, implosives, clicks, prenasalized stops | Next |
+| Phase 5 | Polish — prosody refinement, NVDA addon packaging | Planned |
+
+Current inventory: 34 vowels, 22 diphthongs, 68 consonants. See [IPA Coverage](docs/IPA_COVERAGE.md) for the full matrix.
 
 ## Tools
 
@@ -93,7 +126,11 @@ python tests/phonemes/test_vowels.py     # Vowel formant accuracy
 python tests/phonemes/test_consonants.py # Consonant tests
 ```
 
-Tests generate WAV files to `tests/output/` for auditory inspection. The DLL must be built first.
+Tests produce two kinds of output:
+- **WAV files** in `tests/output/` for auditory inspection (gitignored)
+- **Spectral assertions** that automatically verify formant accuracy, voicing, and place contrasts using LPC analysis
+
+The DLL must be built first (`scons`).
 
 ## Architecture
 
@@ -105,7 +142,14 @@ Audio <-- Soft Limit <-- Mix <-- Parallel Path <---- Noise/Burst        v
                   Cascade Path <-- Tracheal <-- Spectral Tilt <-- Glottal Pulse
 ```
 
-The C++ engine handles real-time sample generation while Python manages phoneme data, linguistic processing, and coarticulation rules. See `docs/SYNTHESIS.md` for the full technical reference.
+The C++ engine handles real-time sample generation while Python manages phoneme data, linguistic processing, and coarticulation rules.
+
+## Documentation
+
+- [Getting Started](docs/GETTING_STARTED.md) — building, first synthesis, phoneme editing workflow
+- [Synthesis Architecture](docs/SYNTHESIS.md) — full technical reference for the engine
+- [IPA Coverage](docs/IPA_COVERAGE.md) — complete phoneme inventory matrix
+- [Vision](docs/VISION.md) — project goals and development phases
 
 ## Origins and Acknowledgments
 
