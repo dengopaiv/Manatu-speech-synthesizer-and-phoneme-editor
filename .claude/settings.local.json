@@ -60,7 +60,9 @@
       "Bash(PYTHONIOENCODING=utf-8 python:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr edit:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(awk:*)",
+      "Bash(more:*)"
     ]
   }
 }
