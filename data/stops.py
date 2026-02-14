@@ -57,17 +57,17 @@ STOPS = {
 		'pa4': 0.15,
 		'pa5': 0.1,
 		'pa6': 0.05,
-		'parallelBypass': 0.15,  # Reduced from 0.5 — burst needs formant resonance for audibility
-		# Lip turbulence: brief fricative-like noise models bilabial release
-		'fricationAmplitude': 0.10,  # Minimal — let burst dominate the release
-		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
-		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
-		# KLSYN88: Stop burst - labial weakest (Stevens Ch.7)
-		'burstAmplitude': 0.90,    # Near /k/ level — bilabial diffuseness still makes it sound weaker
+		'parallelBypass': 0.5,   # Diffuse bilabial release bypasses formant shaping
+		# Frication-dominated release: low-frequency filtered noise for soft bilabial pop
+		'fricationAmplitude': 0.55,  # Main release energy via frication (not burst)
+		'noiseFilterFreq': 300,    # Low-frequency diffuse pop (bilabial = no compact spectrum)
+		'noiseFilterBw': 2000,     # Narrower — concentrate energy low, not spread to HF
+		# KLSYN88: Stop burst - reduced for bilabial (onset transient only)
+		'burstAmplitude': 0.30,    # Small click for onset definition; frication carries the release
 		'burstDuration': 0.4,  # Voiceless longer release
-		'burstFilterFreq': 2500,  # Higher for more audible transient energy
-		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
-		'burstNoiseColor': 0.2,   # Mostly white: strong transient pop, slight pink for diffuse character
+		'burstFilterFreq': 1200,  # Lower — match bilabial diffuse spectrum
+		'burstFilterBw': 2000,    # Tighter — give the burst some spectral shape
+		'burstNoiseColor': 0.4,   # More pink — less high-frequency harshness
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -127,17 +127,17 @@ STOPS = {
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.12,  # Reduced from 0.4 — burst needs formant resonance for audibility
-		# Lip turbulence: brief fricative-like noise models bilabial release
-		'fricationAmplitude': 0.08,  # Minimal — let burst dominate the release
-		'noiseFilterFreq': 1500,   # Same as ɸ — bilabial fricative spectrum
-		'noiseFilterBw': 4000,     # Same as ɸ — wide diffuse band
-		# KLSYN88: Stop burst - labial weakest, voiced shorter
-		'burstAmplitude': 0.75,    # Near /d/ level — bilabial diffuseness still makes it sound weaker
+		'parallelBypass': 0.5,   # Diffuse bilabial release bypasses formant shaping
+		# Frication-dominated release: low-frequency filtered noise for soft bilabial pop
+		'fricationAmplitude': 0.45,  # Main release energy via frication; slightly less than /p/ (voiced = shorter VOT)
+		'noiseFilterFreq': 300,    # Low-frequency diffuse pop (bilabial = no compact spectrum)
+		'noiseFilterBw': 2000,     # Narrower — concentrate energy low, not spread to HF
+		# KLSYN88: Stop burst - reduced for bilabial (onset transient only)
+		'burstAmplitude': 0.25,    # Small click for onset definition; frication carries the release
 		'burstDuration': 0.2,  # Voiced shorter release
-		'burstFilterFreq': 2500,  # Higher for more audible transient energy
-		'burstFilterBw': 3000,    # Wider diffuse spread, faster ZDF warm-up
-		'burstNoiseColor': 0.2,   # Mostly white: strong transient pop, slight pink for diffuse character
+		'burstFilterFreq': 1200,  # Lower — match bilabial diffuse spectrum
+		'burstFilterBw': 2000,    # Tighter — give the burst some spectral shape
+		'burstNoiseColor': 0.4,   # More pink — less high-frequency harshness
 		# Voice quality
 		'spectralTilt': 0,
 		'flutter': 0.25,
@@ -926,15 +926,16 @@ STOPS = {
 		'pa4': 0.15,
 		'pa5': 0.1,
 		'pa6': 0.05,
-		'parallelBypass': 0.15,
-		'fricationAmplitude': 0,  # No lip turbulence
-		'noiseFilterFreq': 1500,
-		'noiseFilterBw': 4000,
-		'burstAmplitude': 0.95,   # Sharper release (+0.05 from /p/)
+		'parallelBypass': 0.5,   # Diffuse bilabial release bypasses formant shaping
+		# Frication-dominated release: bilabial diffuse spectrum even for ejectives
+		'fricationAmplitude': 0.45,  # Bilabial release needs frication
+		'noiseFilterFreq': 300,    # Low-frequency diffuse pop (bilabial = no compact spectrum)
+		'noiseFilterBw': 2000,     # Narrower — concentrate energy low
+		'burstAmplitude': 0.40,    # Stronger than /p/=0.30 for ejective sharpness
 		'burstDuration': 0.3,     # Slightly shorter than /p/
-		'burstFilterFreq': 2500,
-		'burstFilterBw': 3000,
-		'burstNoiseColor': 0.2,
+		'burstFilterFreq': 1200,  # Lower — match bilabial diffuse spectrum
+		'burstFilterBw': 2000,    # Tighter — give the burst some spectral shape
+		'burstNoiseColor': 0.4,   # More pink — bilabial diffuse character
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 0,
@@ -1195,16 +1196,17 @@ STOPS = {
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.12,
-		'fricationAmplitude': 0.08,
-		'noiseFilterFreq': 1500,
-		'noiseFilterBw': 4000,
-		# Weaker burst: 80% of /b/ (reduced oral pressure from ingressive airstream)
-		'burstAmplitude': 0.60,
+		'parallelBypass': 0.5,   # Diffuse bilabial release bypasses formant shaping
+		# Frication-dominated release: ~80% of /b/ (weaker oral pressure from ingressive airstream)
+		'fricationAmplitude': 0.35,  # ~80% of /b/'s 0.45
+		'noiseFilterFreq': 300,    # Low-frequency diffuse pop (bilabial = no compact spectrum)
+		'noiseFilterBw': 2000,     # Narrower — concentrate energy low
+		# Weaker burst: ~80% of /b/ (reduced oral pressure from ingressive airstream)
+		'burstAmplitude': 0.20,    # ~80% of /b/'s 0.25
 		'burstDuration': 0.15,
-		'burstFilterFreq': 2500,
-		'burstFilterBw': 3000,
-		'burstNoiseColor': 0.2,
+		'burstFilterFreq': 1200,  # Lower — match bilabial diffuse spectrum
+		'burstFilterBw': 2000,    # Tighter — give the burst some spectral shape
+		'burstNoiseColor': 0.4,   # More pink — bilabial diffuse character
 		# Voice quality: pressed/tense from laryngeal tension
 		'spectralTilt': 0,
 		'flutter': 0.15,           # More periodic than regular stops
@@ -1516,9 +1518,9 @@ STOPS = {
 				'_phaseFade': 3,
 				'voiceAmplitude': 1,
 				'caNP': 0,
-				'burstAmplitude': 0.75,
+				'burstAmplitude': 0.25,    # Match /b/ bilabial release
 				'burstDuration': 0.2,
-				'fricationAmplitude': 0,
+				'fricationAmplitude': 0.45,  # Enable frication in release phase too
 			},
 		],
 		'voiceAmplitude': 1,
@@ -1558,15 +1560,16 @@ STOPS = {
 		'pa4': 0.12,
 		'pa5': 0.08,
 		'pa6': 0.04,
-		'parallelBypass': 0.12,
-		'fricationAmplitude': 0.08,
-		'noiseFilterFreq': 1500,
-		'noiseFilterBw': 4000,
-		'burstAmplitude': 0.75,
+		'parallelBypass': 0.5,   # Diffuse bilabial release bypasses formant shaping
+		# Frication-dominated release: low-frequency filtered noise for soft bilabial pop
+		'fricationAmplitude': 0.45,  # Main release energy via frication; match /b/
+		'noiseFilterFreq': 300,    # Low-frequency diffuse pop (bilabial = no compact spectrum)
+		'noiseFilterBw': 2000,     # Narrower — concentrate energy low, not spread to HF
+		'burstAmplitude': 0.25,    # Small click for onset definition; match /b/
 		'burstDuration': 0.2,
-		'burstFilterFreq': 2500,
-		'burstFilterBw': 3000,
-		'burstNoiseColor': 0.2,
+		'burstFilterFreq': 1200,  # Lower — match bilabial diffuse spectrum
+		'burstFilterBw': 2000,    # Tighter — give the burst some spectral shape
+		'burstNoiseColor': 0.4,   # More pink — less high-frequency harshness
 		'spectralTilt': 0,
 		'flutter': 0.25,
 		'lfRd': 1.0,
