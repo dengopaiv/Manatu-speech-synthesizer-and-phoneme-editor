@@ -115,8 +115,8 @@ FRICATIVES = {
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
-		'parallelBypass': 0.98,  # Match /f/ — diffuse spectrum
-		'fricationAmplitude': 0.55,  # Voiced non-sibilant — boosted so turbulence dominates voicing
+		'parallelBypass': 0.45,  # Moderate bypass — preserve cascade resonance to avoid nasal quality
+		'fricationAmplitude': 0.60,  # Voiced non-sibilant — boosted slightly for reduced bypass
 		# KLSYN88: Slight breathiness for voiced fricative
 		'spectralTilt': 7,
 		# Labiodental non-sibilant: pink noise for diffuse flat spectrum
