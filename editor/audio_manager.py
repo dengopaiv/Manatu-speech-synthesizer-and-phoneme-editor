@@ -132,6 +132,7 @@ class AudioManager:
             sp = speechPlayer.SpeechPlayer(self.sample_rate)
 
             # Get formant data for each component vowel
+            voice_pitch = self._frame.get_frame_params().get('voicePitch', 120)
             frames = []
             for vowel_char in components:
                 vowel_data = PHONEME_DATA.get(vowel_char, {})
@@ -140,8 +141,8 @@ class AudioManager:
                 frame = speechPlayer.Frame()
                 frame.preFormantGain = 1.0
                 frame.outputGain = 2.0
-                frame.voicePitch = 120
-                frame.endVoicePitch = 120
+                frame.voicePitch = voice_pitch
+                frame.endVoicePitch = voice_pitch
                 frame.voiceAmplitude = 1.0
                 ipa_module.applyPhonemeToFrame(frame, vowel_data)
                 self.apply_formant_scaling(frame, formant_scale)
@@ -421,11 +422,11 @@ class AudioManager:
 
         return phonemes
 
-    def _create_frame_from_phoneme(self, params):
+    def _create_frame_from_phoneme(self, params, voice_pitch=100):
         frame = speechPlayer.Frame()
-        frame.voicePitch = 100
+        frame.voicePitch = voice_pitch
         frame.midVoicePitch = 0
-        frame.endVoicePitch = 100
+        frame.endVoicePitch = voice_pitch
         frame.preFormantGain = 1.0
         frame.outputGain = 1.0
         for name, value in KLSYN88_DEFAULTS.items():
@@ -440,9 +441,10 @@ class AudioManager:
         try:
             self._set_status(f"Playing sequence of {len(phoneme_list)} phonemes...")
             sp = speechPlayer.SpeechPlayer(self.sample_rate)
+            voice_pitch = self._frame.get_frame_params().get('voicePitch', 120)
 
             for i, (phoneme_key, params) in enumerate(phoneme_list):
-                frame = self._create_frame_from_phoneme(params)
+                frame = self._create_frame_from_phoneme(params, voice_pitch)
                 self.apply_formant_scaling(frame, formant_scale)
                 duration = SEQUENCE_DURATIONS['vowel'] if params.get('_isVowel') else SEQUENCE_DURATIONS['consonant']
                 fade = min(30, duration // 3)
@@ -516,10 +518,11 @@ class AudioManager:
                         if key == '*':
                             phoneme_list[i] = ('*', get_current_params_fn())
                 self._set_status(f"Loop #{iteration}: {len(phoneme_list)} phonemes...")
+                voice_pitch = self._frame.get_frame_params().get('voicePitch', 120)
 
                 sp = speechPlayer.SpeechPlayer(self.sample_rate)
                 for phoneme_key, params in phoneme_list:
-                    frame = self._create_frame_from_phoneme(params)
+                    frame = self._create_frame_from_phoneme(params, voice_pitch)
                     self.apply_formant_scaling(frame, formant_scale)
                     duration = SEQUENCE_DURATIONS['vowel'] if params.get('_isVowel') else SEQUENCE_DURATIONS['consonant']
                     fade = min(30, duration // 3)
