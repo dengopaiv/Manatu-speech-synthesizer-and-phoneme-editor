@@ -889,7 +889,7 @@ def _blend_diphthong_voice_quality(phonemeList):
 	"""Blend voice quality parameters between diphthong components for smoother glides.
 
 	Since the C++ synthesizer interpolates ALL parameters during fade (including
-	voice quality params like spectralTilt, glottalOpenQuotient, etc.), large
+	voice quality params like spectralTilt, lfRd, etc.), large
 	differences between diphthong components can cause audible voice quality changes.
 
 	This function averages key voice quality parameters across diphthong components

@@ -28,7 +28,6 @@ PARAM_GROUPS = {
         ('endVoicePitch', 50, 500, 120, 'Hz', 'End pitch (for contours)'),
         ('vibratoPitchOffset', 0, 100, 12, '%', 'Vibrato depth (0-100%)'),
         ('vibratoSpeed', 0, 100, 55, 'x0.1Hz', 'Vibrato rate'),
-        ('glottalOpenQuotient', 10, 99, 50, '%', 'Glottis open time'),
     ],
     'Amplitudes': [
         ('voiceAmplitude', 0, 100, 100, '%', 'Voiced sound level'),
@@ -96,8 +95,6 @@ PARAM_GROUPS = {
     'Voice Quality (KLSYN88)': [
         ('spectralTilt', 0, 41, 0, 'dB', 'High-freq attenuation (breathy)'),
         ('flutter', 0, 100, 25, '%', 'Natural pitch jitter'),
-        ('openQuotientShape', 0, 100, 50, '%', 'Glottal closing curve'),
-        ('speedQuotient', 50, 200, 100, '%', 'Opening/closing asymmetry'),
         ('diplophonia', 0, 100, 0, '%', 'Period alternation (creaky)'),
         ('lfRd', 0, 27, 0, 'x0.1', 'LF model Rd (0=legacy, 3-27=tense-breathy)'),
     ],
@@ -133,8 +130,8 @@ PARAM_GROUPS = {
 PERCENT_PARAMS = {
     'voiceAmplitude', 'voiceTurbulenceAmplitude', 'aspirationAmplitude',
     'fricationAmplitude', 'caNP', 'pa1', 'pa2', 'pa3', 'pa4', 'pa5', 'pa6',
-    'glottalOpenQuotient', 'vibratoPitchOffset', 'parallelVoiceMix', 'parallelBypass',
-    'flutter', 'openQuotientShape', 'speedQuotient', 'diplophonia',
+    'vibratoPitchOffset', 'parallelVoiceMix', 'parallelBypass',
+    'flutter', 'diplophonia',
     'burstAmplitude', 'burstDuration', 'sinusoidalVoicingAmplitude',
     'burstNoiseColor', 'trillDepth',
 }
@@ -149,8 +146,6 @@ TENTH_PARAMS = {'vibratoSpeed', 'lfRd'}
 KLSYN88_DEFAULTS = {
     'spectralTilt': 0,
     'flutter': 0.25,
-    'openQuotientShape': 0.5,
-    'speedQuotient': 1.0,
     'diplophonia': 0,
     'lfRd': 0,
     'deltaF1': 0,

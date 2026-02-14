@@ -318,16 +318,6 @@ def extract_preset_params(wav_path, max_formant_hz=5500):
     if tilt is not None:
         params['spectralTilt'] = tilt
 
-    # Estimate glottal open quotient from HNR
-    # Higher HNR = cleaner voice = lower open quotient (more closed)
-    if stability and 'HNR_mean' in stability:
-        hnr = stability['HNR_mean']
-        # HNR 5-20 dB maps to OQ 0.6-0.4
-        oq = max(0.35, min(0.65, 0.6 - (hnr - 5) * 0.015))
-        params['glottalOpenQuotient'] = round(oq, 2)
-    else:
-        params['glottalOpenQuotient'] = 0.5  # neutral default
-
     # Standard vowel settings
     params['voiceAmplitude'] = 1.0
     params['_isVowel'] = True
@@ -395,8 +385,6 @@ def print_preset_params(params, vowel_label=None):
     print("\nVOICE QUALITY:")
     if 'spectralTilt' in params:
         print(f"  Spectral tilt: {params['spectralTilt']} dB")
-    if 'glottalOpenQuotient' in params:
-        print(f"  Glottal open quotient: {params['glottalOpenQuotient']}")
 
     # JSON format for copy/paste
     print("\nJSON (copy to presets/ folder):")
@@ -446,7 +434,6 @@ def show_transition_params(vowel1, vowel2, play_audio=False):
 
     voice_params = [
         ('spectralTilt', 'Spec tilt'),
-        ('glottalOpenQuotient', 'Glot OQ'),
         ('voiceTurbulenceAmplitude', 'Breathiness'),
     ]
 

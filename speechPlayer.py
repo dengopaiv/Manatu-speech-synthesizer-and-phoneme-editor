@@ -23,7 +23,6 @@ class Frame(Structure):
 		'vibratoPitchOffset',
 		'vibratoSpeed',
 		'voiceTurbulenceAmplitude',
-		'glottalOpenQuotient',
 		'voiceAmplitude',
 		'sinusoidalVoicingAmplitude',  # AVS: pure sine at F0 for voicebars (0-1)
 		'aspirationAmplitude',
@@ -32,8 +31,6 @@ class Frame(Structure):
 		# KLSYN88 voice quality parameters
 		'spectralTilt',      # TL: high-frequency attenuation 0-41 dB
 		'flutter',           # FL: natural F0 jitter 0-1
-		'openQuotientShape', # OQ shape: glottal closing curve 0-1
-		'speedQuotient',     # SQ: opening/closing asymmetry 0.5-2.0
 		'diplophonia',       # DI: period alternation 0-1
 		'lfRd',              # Rd: LF model voice quality 0.3-2.7 (0=use legacy)
 		# Tracheal resonances
@@ -128,33 +125,3 @@ class SpeechPlayer(object):
 
 	def __del__(self):
 		self._dll.speechPlayer_terminate(self._speechHandle)
-
-class VowelChart(object):
-
-	def __init__(self,fileName):
-		self._vowels={}
-		with open(fileName,'r') as f:
-			for line in f.readlines():
-				params=line.split()
-				vowel=params.pop(0)
-				flag=params.pop(0)
-				if flag=='1': continue
-				starts=[int(params[x]) for x in range(3)]
-				ends=[int(params[x]) for x in range(3,6)]
-				self._vowels[vowel]=starts,ends
-
-	def applyVowel(self,frame,vowel,end=False):
-		data=self._vowels[vowel][0 if not end else 1]
-		frame.cf1=data[0]
-		frame.cb1=60
-		frame.ca1=1
-		frame.cf2=data[1]
-		frame.cb2=90
-		frame.ca2=1
-		frame.cf3=data[2]
-		frame.cb3=120
-		frame.ca3=1
-		frame.ca4=frame.ca5=frame.ca6=frame.caN0=frame.caNP=0
-		frame.fricationAmplitude=0
-		frame.voiceAmplitude=1
-		frame.aspirationAmplitude=0
