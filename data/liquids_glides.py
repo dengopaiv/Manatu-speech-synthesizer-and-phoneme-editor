@@ -653,37 +653,37 @@ LIQUIDS_GLIDES = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
-		'flutter': 0.15,     # Natural F0 jitter (Stevens)
+		'spectralTilt': 0,   # Match /u/ — bright close-vowel quality
+		'flutter': 0.10,     # Match /u/
 		'cf1': 290,
-		'cf2': 610,
+		'cf2': 770,          # Raised toward /u/ (870), slightly lower for lip constriction
 		'cf3': 2150,
 		'cf4': 3300,
 		'cf5': 3750,
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 55,
-		'cb2': 60,
-		'cb3': 45,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 90,           # Match /u/
+		'cb2': 123,          # Q=6.25 for cf2=770 (matching /u/ Q scheme)
+		'cb3': 344,          # Q=6.25 for cf3=2150 (matching /u/ Q scheme)
+		'cb4': 825,          # Match /u/ (Q=4.0)
+		'cb5': 938,          # Match /u/ (Q=4.0)
+		'cb6': 1225,         # Match /u/ (Q=4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 290,
-		'pf2': 610,
+		'pf2': 770,          # Match cascade cf2
 		'pf3': 2150,
 		'pf4': 3300,
 		'pf5': 3750,
 		'pf6': 4900,
-		'pb1': 50,
-		'pb2': 80,
-		'pb3': 60,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 90,           # Match cascade BWs (like /u/)
+		'pb2': 123,
+		'pb3': 344,
+		'pb4': 825,
+		'pb5': 938,
+		'pb6': 1225,
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
@@ -712,55 +712,56 @@ LIQUIDS_GLIDES = {
 		'_isVoiced': True,
 		'voiceAmplitude': 1,
 		'aspirationAmplitude': 0,
-		'spectralTilt': 4,   # Modal voice naturalness
-		'flutter': 0.15,     # Natural F0 jitter (Stevens)
+		'spectralTilt': 0,   # Match /i/ — bright close-vowel quality
+		'flutter': 0.12,     # Match /i/
 		'cf1': 260,
-		'cf2': 2070,
-		'cf3': 3020,
-		'cf4': 3300,
-		'cf5': 3750,
+		'cf2': 2300,         # Raised toward /i/ (2500), slightly lower for constriction
+		'cf3': 3100,         # Raised toward /i/ (3200)
+		'cf4': 3800,         # Match /i/ — capture F2-F3-F4 cluster
+		'cf5': 4156,         # Match /i/
 		'cf6': 4900,
 		'cfNP': 200,
 		'cfN0': 250,
-		'cb1': 44,
-		'cb2': 187.5,
-		'cb3': 375,
-		'cb4': 180,
-		'cb5': 150,
-		'cb6': 400,
+		'cb1': 65,           # Match /i/
+		'cb2': 368,          # Q=6.25 for cf2=2300 (matching /i/ Q scheme)
+		'cb3': 496,          # Q=6.25 for cf3=3100 (matching /i/ Q scheme)
+		'cb4': 950,          # Match /i/ (Q=4.0)
+		'cb5': 1039,         # Match /i/ (Q=4.0)
+		'cb6': 1225,         # Match /i/ (Q=4.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
 		'pf1': 260,
-		'pf2': 2070,
-		'pf3': 3020,
-		'pf4': 3300,
-		'pf5': 3750,
+		'pf2': 2300,         # Match cascade
+		'pf3': 3100,         # Match cascade
+		'pf4': 3800,         # Match cascade
+		'pf5': 4156,         # Match cascade
 		'pf6': 4900,
-		'pb1': 40,
-		'pb2': 250,
-		'pb3': 500,
-		'pb4': 180,
-		'pb5': 150,
-		'pb6': 400,
+		'pb1': 65,           # Match cascade BWs (like /i/)
+		'pb2': 368,
+		'pb3': 496,
+		'pb4': 950,
+		'pb5': 1039,
+		'pb6': 1225,
 		'pa1': 0,
-		'pa2': 0,
-		'pa3': 0,
+		'pa2': 0.5,          # Match /i/ — F2 reinforcement
+		'pa3': 0.4,          # Match /i/ — F3 reinforcement
 		'pa4': 0,
 		'pa5': 0,
 		'pa6': 0,
 		'parallelBypass': 0,
+		'parallelVoiceMix': 0.5,  # Match /i/ — parallel voice blend
 		'fricationAmplitude': 0,
 		# Voice quality
 		'lfRd': 1.0,
 		'diplophonia': 0,
 		# Tracheal formants
 		'ftpFreq1': 0,
-		'ftpBw1': 100,
-		'ftzFreq1': 0,
-		'ftzBw1': 100,
+		'ftpBw1': 95,        # Match /i/
+		'ftzFreq1': 180,     # Match /i/ — tracheal zero for sub-F1 cleanup
+		'ftzBw1': 80,        # Match /i/
 		'ftpFreq2': 0,
-		'ftpBw2': 100,
+		'ftpBw2': 200,       # Match /i/
 	},
 	# Velar approximant (unrounded)
 	'ɰ': {  # Velar approximant — base: w manner, unrounded (higher F2)
