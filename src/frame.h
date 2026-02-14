@@ -15,17 +15,20 @@ http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 #ifndef SPEECHPLAYER_FRAME_H
 #define SPEECHPLAYER_FRAME_H
 
+#include <cstddef>
 #include "lock.h"
 
 typedef double speechPlayer_frameParam_t;
+
+// Compute the index of a field within the frame struct (for iteration as array of doubles)
+#define FRAME_INDEX(field) (offsetof(speechPlayer_frame_t, field) / sizeof(speechPlayer_frameParam_t))
 
 typedef struct {
 	// voicing and cascaide
 	speechPlayer_frameParam_t voicePitch; //  fundermental frequency of voice (phonation) in hz
 	speechPlayer_frameParam_t vibratoPitchOffset; // pitch is offset up or down in fraction of a semitone
 	speechPlayer_frameParam_t vibratoSpeed; // Speed of vibrato in hz
-	speechPlayer_frameParam_t voiceTurbulenceAmplitude; // amplitude of voice breathiness from 0 to 1 
-	speechPlayer_frameParam_t glottalOpenQuotient; // fraction between 0 and 1 of a voice cycle that the glottis is open (allows voice turbulance, alters f1...)
+	speechPlayer_frameParam_t voiceTurbulenceAmplitude; // amplitude of voice breathiness from 0 to 1
 	speechPlayer_frameParam_t voiceAmplitude; // amplitude of voice (phonation) source between 0 and 1.
 	speechPlayer_frameParam_t sinusoidalVoicingAmplitude; // AVS: pure sine wave at F0 for voicebars/voiced fricatives (0-1)
 	speechPlayer_frameParam_t aspirationAmplitude; // amplitude of aspiration (voiceless h, whisper) source between 0 and 1.
@@ -34,8 +37,6 @@ typedef struct {
 	// KLSYN88 voice quality parameters
 	speechPlayer_frameParam_t spectralTilt; // TL: high-frequency attenuation 0-41 dB at 3kHz (0=no tilt, modal voice)
 	speechPlayer_frameParam_t flutter; // FL: natural F0 jitter 0-1 (0.25 typical for natural speech)
-	speechPlayer_frameParam_t openQuotientShape; // OQ shape: glottal closing curve 0-1 (0=linear, 1=exponential decay)
-	speechPlayer_frameParam_t speedQuotient; // SQ: opening/closing time asymmetry 0.5-2.0 (1.0=symmetric)
 	speechPlayer_frameParam_t diplophonia; // DI: period alternation for creaky voice 0-1 (0=none)
 	speechPlayer_frameParam_t lfRd; // Rd: LF model voice quality 0.3-2.7 (0=use legacy, <1=tense, 1=modal, >1=lax/breathy)
 	// Tracheal/subglottal resonances (for breathy voice)

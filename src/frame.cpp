@@ -50,10 +50,14 @@ class FrameManagerImpl: public FrameManager {
 			} else {
 				double curFadeRatio=(double)sampleCounter/(newFrameRequest->numFadeSamples);
 				for(int i=0;i<speechPlayer_frame_numParams;++i) {
-					// Burst params (26-27), noise filter (46-47), preFormantGain (68),
-					// and burst noise params (74-75) step instantly to avoid audible
-					// filter sweeps and ensure correct onset timing
-					if (i == 26 || i == 27 || i == 46 || i == 47 || i == 68 || i == 74 || i == 75) {
+					// These parameters step instantly (no smoothstep interpolation)
+					// to avoid audible filter sweeps and ensure correct onset timing
+					if (i == FRAME_INDEX(burstAmplitude) || i == FRAME_INDEX(burstDuration)
+					    || i == FRAME_INDEX(fricationAmplitude) || i == FRAME_INDEX(noiseFilterFreq)
+					    || i == FRAME_INDEX(noiseFilterBw) || i == FRAME_INDEX(parallelAntiFreq)
+					    || i == FRAME_INDEX(trillRate) || i == FRAME_INDEX(trillDepth)
+					    || i == FRAME_INDEX(burstFilterFreq) || i == FRAME_INDEX(burstFilterBw)
+					    || i == FRAME_INDEX(burstNoiseColor)) {
 						// Use target value immediately
 						((speechPlayer_frameParam_t*)&curFrame)[i] = ((speechPlayer_frameParam_t*)&(newFrameRequest->frame))[i];
 					} else {
@@ -107,8 +111,8 @@ class FrameManagerImpl: public FrameManager {
 	void queueFrame(speechPlayer_frame_t* frame, unsigned int minNumSamples, unsigned int numFadeSamples, int userIndex, bool purgeQueue) {
 		frameLock.acquire();
 		frameRequest_t* frameRequest=new frameRequest_t;
-		frameRequest->minNumSamples=minNumSamples; //max(minNumSamples,1);
-		frameRequest->numFadeSamples=numFadeSamples; //max(numFadeSamples,1);
+		frameRequest->minNumSamples=max(minNumSamples,(unsigned int)1);
+		frameRequest->numFadeSamples=max(numFadeSamples,(unsigned int)1);
 		if(frame) {
 			frameRequest->NULLFrame=false;
 			memcpy(&(frameRequest->frame),frame,sizeof(speechPlayer_frame_t));
@@ -161,6 +165,7 @@ class FrameManagerImpl: public FrameManager {
 	}
 
 	~FrameManagerImpl() {
+		for(;!frameRequestQueue.empty();frameRequestQueue.pop()) delete frameRequestQueue.front();
 		if(oldFrameRequest) delete oldFrameRequest;
 		if(newFrameRequest) delete newFrameRequest;
 	}

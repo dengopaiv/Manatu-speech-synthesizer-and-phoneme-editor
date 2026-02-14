@@ -23,7 +23,6 @@ Based on klsyn-88, found at http://linguistics.berkeley.edu/phonlab/resources/
 #include <cstdlib>
 #include <cstdint>
 #include <cfloat>
-#include "debug.h"
 #include "utils.h"
 #include "speechWaveGenerator.h"
 
@@ -74,13 +73,12 @@ class NoiseGenerator {
 	private:
 	uint64_t state0;
 	uint64_t state1;
-	double lastValue;
 	// Pink noise filter state (Voss-McCartney algorithm approximation)
 	double pinkState[5];
 	int pinkCounter;
 
 	public:
-	NoiseGenerator(): lastValue(0.0), pinkCounter(0) {
+	NoiseGenerator(): pinkCounter(0) {
 		// Seed with current time and address for uniqueness
 		state0 = 0x853c49e6748fea9bULL;
 		state1 = 0xda3e39cb94b95bdbULL;
@@ -104,14 +102,6 @@ class NoiseGenerator {
 		return ((double)(xorshift128plus() >> 11) / (double)(1ULL << 53)) * 2.0 - 1.0;
 	}
 
-	double getNext() {
-		// Generate white noise with full frequency spectrum
-		double noise = getWhite();
-		// Gentle smoothing (less than before) to reduce harshness
-		lastValue = noise * 0.7 + lastValue * 0.3;
-		return lastValue;
-	}
-
 	// Pink noise (1/f spectrum) for natural aspiration
 	// Uses Paul Kellet's refined method - cascaded 1-pole filters
 	// Better spectral match for breathy voice than white noise
@@ -133,14 +123,6 @@ class NoiseGenerator {
 		return pink * 0.11;
 	}
 
-	// Highpass-filtered noise for sibilants (more high-frequency energy)
-	double getNextHighpass() {
-		double noise = getWhite();
-		// Highpass by subtracting lowpass
-		double hp = noise - lastValue;
-		lastValue = lastValue * 0.8 + noise * 0.2;
-		return hp;
-	}
 };
 
 // Zero Delay Feedback (ZDF) Resonator using State Variable Filter topology
@@ -477,11 +459,10 @@ class VoiceGenerator {
 	bool periodAlternate;  // KLSYN88: alternating period flag
 	double currentTe;       // Excitation point for PolyBLEP (0 when unvoiced)
 	double currentAmpNorm;  // LF amplitude normalization (0 when unvoiced)
-	double prevHalfSample;  // Previous half-sample for triangular decimation (2x oversampling)
 
 	public:
 	bool glottisOpen;
-	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), sinusoidalGen(sr), aspirationGen(sr), jitterShimmer(), lastCyclePos(0), periodAlternate(false), glottisOpen(false), currentTe(0), currentAmpNorm(0), prevHalfSample(0) {};
+	VoiceGenerator(int sr): pitchGen(sr), vibratoGen(sr), sinusoidalGen(sr), aspirationGen(sr), jitterShimmer(), lastCyclePos(0), periodAlternate(false), glottisOpen(false), currentTe(0), currentAmpNorm(0) {};
 
 	double getNext(const speechPlayer_frame_t* frame) {
 		double vibrato=(sin(vibratoGen.getNext(frame->vibratoSpeed)*PITWO)*0.06*frame->vibratoPitchOffset)+1;
@@ -560,15 +541,15 @@ class VoiceGenerator {
 
 			glottisOpen = voice < te;
 
-			// 2x oversampling: evaluate LF waveform at current and half-sample phases
-			// then apply triangular decimation filter to suppress aliased harmonics
+			// 2x oversampling with symmetric Bartlett (triangular) decimation filter
+			// Evaluates past-half, current, and future-half phases — zero phase delay
 			double dt_os = pitchGen.getDt();
-			double halfPhase = fmod(voice - dt_os * 0.5 + 1.0, 1.0);  // Half-sample back from current
+			double pastHalf = fmod(voice - dt_os * 0.5 + 1.0, 1.0);
+			double futureHalf = fmod(voice + dt_os * 0.5, 1.0);
 			double g_current = computeGlottalWave(voice, tp, te, epsilon, ampNorm);
-			double g_half = computeGlottalWave(halfPhase, tp, te, epsilon, ampNorm);
-			// Triangular (Bartlett) decimation: 0.25 * prev_half + 0.5 * current + 0.25 * this_half
-			glottalWave = 0.25 * prevHalfSample + 0.5 * g_current + 0.25 * g_half;
-			prevHalfSample = g_half;
+			double g_past = computeGlottalWave(pastHalf, tp, te, epsilon, ampNorm);
+			double g_future = computeGlottalWave(futureHalf, tp, te, epsilon, ampNorm);
+			glottalWave = 0.25 * g_past + 0.5 * g_current + 0.25 * g_future;
 		} else {
 			// No voicing (voiceless consonants: /p/, /t/, /k/, /f/, /s/, /ʃ/, etc.)
 			// lfRd=0 means no glottal source - only noise/frication used
@@ -576,17 +557,16 @@ class VoiceGenerator {
 			glottisOpen = false;
 			currentTe = 0;
 			currentAmpNorm = 0;
-			prevHalfSample = 0;
 		}
 
-		voice = (glottalWave * 2.0) - 1.0;  // Scale to -1 to +1
+		voice = glottalWave * 2.0 - currentAmpNorm;  // Center around zero: [0, ampNorm] → [-ampNorm, +ampNorm]
 
 		// Apply polyBLEP anti-aliasing to reduce aliasing at cycle discontinuity
 		// The glottal waveform has a discontinuity when it resets at cycle boundary
 		double dt = pitchGen.getDt();
 		double cyclePos = lastCyclePos;  // Current position in cycle
 		// Apply polyBLEP at start of cycle (discontinuity from end of return phase)
-		voice -= polyBLEP(cyclePos, dt) * 0.5;  // Attenuated to match waveform jump size
+		voice -= polyBLEP(cyclePos, dt) * currentAmpNorm * 0.5;
 
 		// PolyBLEP at excitation point (te) — main LF step discontinuity
 		// At te, closing phase ends at glottalWave=0 while return phase starts at 0.5*ampNorm
