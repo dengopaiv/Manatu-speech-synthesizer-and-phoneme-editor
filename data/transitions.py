@@ -356,7 +356,7 @@ def apply_coarticulation(phonemeList, baseSpeed=1.0):
             candidate = phonemeList[j]
             if candidate.get('_preStopGap'):
                 continue  # Skip the silent gap
-            if candidate.get('_isStop') or candidate.get('_isAfricate'):
+            if candidate.get('_isStop') or candidate.get('_isAfricate') or candidate.get('_isFricative'):
                 next_consonant = candidate
             break
 
