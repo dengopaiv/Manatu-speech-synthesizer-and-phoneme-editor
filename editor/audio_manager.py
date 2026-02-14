@@ -16,6 +16,7 @@ import ipa as ipa_module
 from editor_events import StatusUpdateEvent, PlayDoneEvent
 from phoneme_editor_constants import KLSYN88_DEFAULTS, SEQUENCE_DURATIONS
 from data import data as PHONEME_DATA
+from data.transitions import calculate_formant_onset, calculate_formant_offset, get_transition_duration
 
 # For audio playback
 try:
@@ -397,11 +398,20 @@ class AudioManager:
         matches = re.findall(r'\[([^\]]+)\]', sequence_str)
         for phoneme_key in matches:
             if phoneme_key == '*':
-                phonemes.append(('*', get_current_params_fn()))
+                current = get_current_params_fn()
+                # Use the IPA input field as _char for coarticulation lookup
+                ipa_val = getattr(self._frame, 'ipa_input', None)
+                if ipa_val:
+                    current.setdefault('_char', ipa_val.GetValue())
+                phonemes.append(('*', current))
             elif preset_params := preset_manager.find_preset_by_ipa(phoneme_key):
-                phonemes.append((phoneme_key, dict(preset_params)))
+                params = dict(preset_params)
+                params.setdefault('_char', phoneme_key)
+                phonemes.append((phoneme_key, params))
             elif phoneme_key in PHONEME_DATA:
-                phonemes.append((phoneme_key, dict(PHONEME_DATA[phoneme_key])))
+                params = dict(PHONEME_DATA[phoneme_key])
+                params.setdefault('_char', phoneme_key)
+                phonemes.append((phoneme_key, params))
             else:
                 self._set_status(f"Unknown phoneme: {phoneme_key}")
                 return None
@@ -447,8 +457,44 @@ class AudioManager:
                 frame = self._create_frame_from_phoneme(params, voice_pitch)
                 self.apply_formant_scaling(frame, formant_scale)
                 duration = SEQUENCE_DURATIONS['vowel'] if params.get('_isVowel') else SEQUENCE_DURATIONS['consonant']
-                fade = min(30, duration // 3)
+                fade = get_transition_duration(
+                    phoneme_list[i-1][1] if i > 0 else None,
+                    params, 1.0
+                ) if i > 0 else min(30, duration // 3)
+
+                # CV onset waypoint: if this is a vowel preceded by a consonant
+                if params.get('_isVowel') and i > 0:
+                    prev_params = phoneme_list[i-1][1]
+                    onset = calculate_formant_onset(prev_params, params)
+                    onset_cf2 = onset.get('_onset_cf2')
+                    if onset_cf2 is not None:
+                        onset_frame = self._create_frame_from_phoneme(params, voice_pitch)
+                        self.apply_formant_scaling(onset_frame, formant_scale)
+                        onset_frame.cf2 = onset_cf2 * formant_scale
+                        onset_cf3 = onset.get('_onset_cf3')
+                        if onset_cf3 is not None:
+                            onset_frame.cf3 = onset_cf3 * formant_scale
+                        sp.queueFrame(onset_frame, 1, int(fade * 0.7))
+                        fade = int(fade * 0.3)
+
                 sp.queueFrame(frame, duration, fade)
+
+                # VC offset waypoint: if this is a vowel followed by a consonant
+                if params.get('_isVowel') and i + 1 < len(phoneme_list):
+                    next_params = phoneme_list[i+1][1]
+                    if not next_params.get('_isVowel') and (
+                        next_params.get('_isSemivowel') or next_params.get('_isLiquid')
+                    ):
+                        offset = calculate_formant_offset(next_params, params)
+                        offset_cf2 = offset.get('_offset_cf2')
+                        if offset_cf2 is not None:
+                            offset_frame = self._create_frame_from_phoneme(params, voice_pitch)
+                            self.apply_formant_scaling(offset_frame, formant_scale)
+                            offset_frame.cf2 = offset_cf2 * formant_scale
+                            offset_cf3 = offset.get('_offset_cf3')
+                            if offset_cf3 is not None:
+                                offset_frame.cf3 = offset_cf3 * formant_scale
+                            sp.queueFrame(offset_frame, 1, 30)
 
             sp.queueFrame(None, 50, 20)
 
@@ -521,12 +567,49 @@ class AudioManager:
                 voice_pitch = self._frame.get_frame_params().get('voicePitch', 120)
 
                 sp = speechPlayer.SpeechPlayer(self.sample_rate)
-                for phoneme_key, params in phoneme_list:
+                for i, (phoneme_key, params) in enumerate(phoneme_list):
                     frame = self._create_frame_from_phoneme(params, voice_pitch)
                     self.apply_formant_scaling(frame, formant_scale)
                     duration = SEQUENCE_DURATIONS['vowel'] if params.get('_isVowel') else SEQUENCE_DURATIONS['consonant']
-                    fade = min(30, duration // 3)
+                    fade = get_transition_duration(
+                        phoneme_list[i-1][1] if i > 0 else None,
+                        params, 1.0
+                    ) if i > 0 else min(30, duration // 3)
+
+                    # CV onset waypoint: if this is a vowel preceded by a consonant
+                    if params.get('_isVowel') and i > 0:
+                        prev_params = phoneme_list[i-1][1]
+                        onset = calculate_formant_onset(prev_params, params)
+                        onset_cf2 = onset.get('_onset_cf2')
+                        if onset_cf2 is not None:
+                            onset_frame = self._create_frame_from_phoneme(params, voice_pitch)
+                            self.apply_formant_scaling(onset_frame, formant_scale)
+                            onset_frame.cf2 = onset_cf2 * formant_scale
+                            onset_cf3 = onset.get('_onset_cf3')
+                            if onset_cf3 is not None:
+                                onset_frame.cf3 = onset_cf3 * formant_scale
+                            sp.queueFrame(onset_frame, 1, int(fade * 0.7))
+                            fade = int(fade * 0.3)
+
                     sp.queueFrame(frame, duration, fade)
+
+                    # VC offset waypoint: if this is a vowel followed by a consonant
+                    if params.get('_isVowel') and i + 1 < len(phoneme_list):
+                        next_params = phoneme_list[i+1][1]
+                        if not next_params.get('_isVowel') and (
+                            next_params.get('_isSemivowel') or next_params.get('_isLiquid')
+                        ):
+                            offset = calculate_formant_offset(next_params, params)
+                            offset_cf2 = offset.get('_offset_cf2')
+                            if offset_cf2 is not None:
+                                offset_frame = self._create_frame_from_phoneme(params, voice_pitch)
+                                self.apply_formant_scaling(offset_frame, formant_scale)
+                                offset_frame.cf2 = offset_cf2 * formant_scale
+                                offset_cf3 = offset.get('_offset_cf3')
+                                if offset_cf3 is not None:
+                                    offset_frame.cf3 = offset_cf3 * formant_scale
+                                sp.queueFrame(offset_frame, 1, 30)
+
                 sp.queueFrame(None, 50, 20)
 
                 all_samples = []
