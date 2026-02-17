@@ -96,7 +96,7 @@ PARAM_GROUPS = {
         ('spectralTilt', 0, 41, 0, 'dB', 'High-freq attenuation (breathy)'),
         ('flutter', 0, 100, 25, '%', 'Natural pitch jitter'),
         ('diplophonia', 0, 100, 0, '%', 'Period alternation (creaky)'),
-        ('lfRd', 0, 27, 0, 'x0.1', 'LF model Rd (0=legacy, 3-27=tense-breathy)'),
+        ('lfRd', 0, 27, 0, 'x0.1', 'LF model Rd (0=off, 10=modal, 13-17=vowels, 27=max breathy)'),
     ],
     'Glottal Modulation': [
         ('deltaF1', 0, 100, 0, 'Hz', 'F1 increase during glottal open'),

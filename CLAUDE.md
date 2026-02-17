@@ -61,14 +61,15 @@ Uses Zero Delay Feedback (ZDF) topology (Zavalishin 2012) instead of classic IIR
 - 2nd-order for F4-F6
 - Smooth parameter modulation without zipper noise
 - Anti-resonator mode for nasal zeros
-- Implementation: `src/speechWaveGenerator.cpp:459-601`
+- Implementation: `src/speechWaveGenerator.cpp:146-253` (2nd-order), `603-632` (4th-order)
 
 ### Voice Quality (LF Model)
 
 The `lfRd` parameter controls glottal pulse shape (Liljencrants-Fant model):
 - `lfRd=0`: No voicing (voiceless consonants)
 - `lfRd=1.0`: Modal voice (voiced consonants)
-- `lfRd=2.7`: Breathy voice (vowels)
+- `lfRd=1.3-1.7`: Vowels (close=1.0, open=1.3-1.5, open-mid=1.5-1.7)
+- `lfRd=2.7`: Maximum breathy voice (diacritics only)
 - Valid range: 0.3-2.7 (0 means unvoiced)
 
 ### Frame Interpolation
