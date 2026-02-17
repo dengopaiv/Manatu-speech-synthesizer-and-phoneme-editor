@@ -57,10 +57,11 @@ def collect_samples(sp):
     """
     samples = []
     while True:
-        chunk = sp.synthesize(1024)
+        chunk = sp.synthesize(4096)
         if not chunk:
             break
-        samples.extend(chunk[i] for i in range(len(chunk)))
+        n = chunk.length
+        samples.extend(struct.unpack(f'<{n}h', bytes(chunk)[:n * 2]))
     return samples
 
 
@@ -98,7 +99,7 @@ def synthesize_phoneme(ipa_char, duration_ms=400, pitch=120):
         List of int16 sample values.
     """
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(
         ipa_char, speed=1, basePitch=pitch, inflection=0
     ):
         sp.queueFrame(frame, max(min_dur, duration_ms), fade_dur)

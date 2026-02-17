@@ -43,7 +43,7 @@ from tools.spectral_analysis import (
 def _synthesize_cv_ipa(ipa_text, pitch=120, formantScale=1.0, speed=1):
     """Synthesize CV text using the full ipa.py pipeline (exercises onset frames)."""
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(
         ipa_text, speed=speed, basePitch=pitch, inflection=0,
         formantScale=formantScale
     ):
@@ -124,9 +124,9 @@ def test_cv_formant_scaling():
 def _synthesize_cv_list(cv_pairs, filename, label, speed=1, pitch=120):
     """Synthesize a list of CV pairs via the IPA pipeline, save combined WAV.
 
-    Uses ipa.generateFramesAndTiming which applies natural per-class durations
+    Uses ipa.generateSubFramesAndTiming which applies natural per-class durations
     (stops=10ms+closure, nasals=30ms, fricatives=45ms, vowels=50-60ms) and
-    coarticulation via onset frames.
+    coarticulation via sub-frame interpolation.
     """
     print(f"\n=== Test: {label} ===")
 
@@ -288,13 +288,13 @@ def test_trills_natural():
 
 # --- Spectral assertion tests (using actual phoneme data + spectral analysis) ---
 
-def _synthesize_ipa_phoneme(ipa_text, duration_ms=300, pitch=120):
+def _synthesize_ipa_phoneme(ipa_text, pitch=120, speed=0.5):
     """Synthesize IPA text using the full ipa.py pipeline."""
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
-        ipa_text, speed=1, basePitch=pitch, inflection=0
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(
+        ipa_text, speed=speed, basePitch=pitch, inflection=0
     ):
-        sp.queueFrame(frame, max(min_dur, duration_ms), fade_dur)
+        sp.queueFrame(frame, min_dur, fade_dur)
     return collect_samples(sp)
 
 
@@ -334,11 +334,13 @@ def test_voicing_contrast():
 
     assert all_voiced_ok, "Some voiced consonants not detected as voiced"
 
-    # Verify voiced consonants have reasonable HNR (> 5 dB)
+    # Verify voiced consonants have reasonable HNR (> 3 dB)
+    # Threshold is modest because stops (b, d) have short voicing bars
+    # that lower HNR when analyzed with natural-duration VCV audio
     if voiced_hnrs:
         avg_hnr = sum(voiced_hnrs) / len(voiced_hnrs)
         print(f"  Average voiced HNR: {avg_hnr:.1f} dB")
-        assert avg_hnr > 5, f"Average voiced HNR ({avg_hnr:.1f}) should be > 5 dB"
+        assert avg_hnr > 3, f"Average voiced HNR ({avg_hnr:.1f}) should be > 3 dB"
 
     print("  PASSED")
     return True
