@@ -11,6 +11,248 @@ Each entry documents:
 
 ---
 
+## [2026-02-19] - Cascade HF Shelf Compensation + sourceBrightness Cleanup
+
+### Summary
+Restored HF shelf filter on cascade output to compensate for the cascade formant chain's structural HF loss (~57 dB at 8 kHz through 6 series allPole resonators). Removed dead `sourceBrightness` parameter from all vowel phoneme data. This loss exists regardless of glottal model — removing the shelf during the LF restoration was incorrect.
+
+### What Changed
+
+**Cascade HF shelf** (`src/speechWaveGenerator.cpp`):
+- Added `HFShelfFilter` class: 1st-order HPF shelf topology `y = x + boost * HPF(x)`, transparent at DC
+- Corner frequency: 3000 Hz, Boost: +6 dB (reduced from BLIT-era +9 dB — LF model has more natural HF content than the aggressively-lowpassed BLIT, so less compensation needed)
+- Applied only to cascade output, after ducking and before mixing with parallel path
+- Parallel path (fricative/sibilant HF) is unaffected
+
+**sourceBrightness cleanup** (`data/vowels_*.py`):
+- Removed `sourceBrightness` entries from all 39 vowel phoneme dicts (front, back, central, nasalized)
+- These controlled the BLIT's glottal lowpass (fg = F0 × value) which no longer exists
+- Field kept in `frame.h` and `speechPlayer.py` for ABI stability
+
+**Editor** (`editor/phoneme_editor_constants.py`):
+- Updated `sourceBrightness` slider description to indicate it's reserved/inactive
+
+### Files Modified
+- `src/speechWaveGenerator.cpp`, `data/vowels_front.py`, `data/vowels_back.py`, `data/vowels_central.py`, `data/vowels_nasalized.py`, `editor/phoneme_editor_constants.py`, `docs/CHANGELOG.md`, `docs/SYNTHESIS.md`, `docs/MODIFICATIONS.md`
+
+---
+
+## [2026-02-19] - Restore LF Glottal Model + 4x Oversampling + 96 kHz Output
+
+### Summary
+Reverted BLIT glottal source back to the LF (Liljencrants-Fant) time-domain model with improved anti-aliasing. Upgraded from 2x Bartlett oversampling to 4x halfband FIR decimation. Moved output sample rate from 44.1 kHz to 96 kHz for minimal ZDF frequency warping. Restored 12 dB/oct spectral tilt with 5 kHz reference. Removed HFShelfFilter (BLIT compensation hack no longer needed).
+
+### What Changed
+
+**Glottal source** (`src/speechWaveGenerator.cpp`):
+- Replaced BLIT (band-limited impulse train) with restored LF model using `computeGlottalWave()` — three-phase waveform (raised cosine opening, cosinusoidal closing, exponential return) with Rd-dependent parameter mapping
+- Restored `polyBLEP()` anti-aliasing at cycle boundary and te excitation point
+- Restored DC centering: `voice = glottalWave * 2.0 - ampNorm`
+- Removed `computeBLIT()`, `integratorState`, `glottalLpState` BLIT-specific state
+
+**4x oversampling** (`src/speechWaveGenerator.cpp`):
+- Added `HalfbandDecimator` class: 7-tap halfband FIR with structural zeros, >60 dB stopband, only 4 multiplies per output sample
+- VoiceGenerator evaluates LF waveform at 4 symmetric phases per output sample with PolyBLEP at each (dt_os = dt/4 → more precise corrections)
+- Two cascaded HalfbandDecimator stages: 4x→2x→1x decimation
+- Replaced 3-point symmetric Bartlett (2x) decimation
+
+**Spectral tilt** (`src/speechWaveGenerator.cpp`):
+- Restored two-stage cascaded lowpass (12 dB/oct) replacing single-stage (6 dB/oct)
+- Reference frequency restored to 5 kHz (from 6 kHz BLIT version)
+
+**HFShelfFilter removed** (`src/speechWaveGenerator.cpp`):
+- Removed `HFShelfFilter` class and its usage in `SpeechWaveGeneratorImpl` — the +9 dB global HF boost above 3 kHz was a BLIT compensation hack
+
+**Sample rate 44100 → 96000**:
+- Updated in all Python files, tools, tests, docs, and C++ comments
+- 96 kHz benefits: ZDF warping 4% at 8 kHz (vs 20% at 44.1 kHz), Nyquist at 48 kHz (no speech content near it), LF model runs at 384 kHz with 4x oversampling
+
+### Files Modified
+- `src/speechWaveGenerator.cpp`, `nvdaAddon/synthDrivers/nvSpeechPlayer/__init__.py`, `conlang_gui.py`, `conlang_gui_wx.py`, `tests/conftest.py`, `editor/audio_manager.py`, `tools/phoneme_validator.py`, `tools/consonant_diagnostic.py`, `tools/fricative_autotuner.py`, `tools/vowel_autotuner.py`, `docs/GETTING_STARTED.md`, `docs/SYNTHESIS.md`, `docs/MODIFICATIONS.md`, `docs/CHANGELOG.md`
+
+---
+
+## [2026-02-17] - Brightness, Documentation & Stability Audit
+
+### Summary
+Addressed compounding HF attenuation that made synthesizer output muffled. Three layers of attenuation were identified and reduced: excessive voiced fricative `spectralTilt`, high open vowel `lfRd`, and aggressive tilt filter reference frequency.
+
+### What Changed
+
+**Spectral tilt filter** (`src/speechWaveGenerator.cpp`):
+- Reference frequency raised from 5 kHz to 6 kHz. All `spectralTilt` values now produce ~20% higher cutoff frequencies (e.g., tilt=4 now gives fc=4878 Hz instead of 4065 Hz).
+
+**Voiced fricative brightness** (`data/fricatives.py`):
+- `spectralTilt` reduced from 7 to 4 for 10 voiced fricatives: v, z, ʒ, ð, β, ʝ, ʐ, ʑ, ɣ, ʁ. Cutoff moves from ~1915 Hz to ~4878 Hz. Pharyngeal/epiglottal fricatives (ʕ, ʢ, ħ, ʜ, ɦ, ɮ) intentionally unchanged.
+
+**Open vowel voice quality** (`data/vowels_front.py`, `data/vowels_back.py`, `data/vowels_central.py`, `data/vowels_nasalized.py`):
+- Open-mid vowels (ɛ, œ, ɔ, ʌ, ɜ, ɞ): `lfRd` 2.0-2.3 → 1.5-1.7
+- Near-open/open vowels (a, æ, ɑ, ɒ, ɐ, ɶ): `lfRd` 1.7-2.0 → 1.3-1.5
+- All open/open-mid vowels: `spectralTilt` 3 → 2
+- Nasalized vowels (ã, ɛ̃, ɔ̃, œ̃) updated to match base vowel changes
+
+**New tools and tests**:
+- `tools/spectral_analysis.py`: Added `estimate_hf_energy_ratio()` for quantitative brightness measurement
+- `tests/synthesis/test_spectral.py`: Brightness regression tests (HF ratio, centroid ordering, formant prominence)
+- `tools/phoneme_audit.py`: Parameter consistency scanner with CRITICAL/WARNING/INFO severity grouping
+
+**Documentation**:
+- `docs/MODIFICATIONS.md`: New file cataloging all deviations from KLSYN88 (Klatt & Klatt 1990)
+- `docs/SYNTHESIS.md`: Fixed all stale line number references, updated for current engine state (jitter/shimmer, PeakLimiter, colored noise, PolyBLEP, DC block, parallel anti-resonator, tilt filter)
+- `docs/CHANGELOG.md`: Added entries for all commits since 2026-02-11
+
+### Files Modified
+- `src/speechWaveGenerator.cpp`, `data/fricatives.py`, `data/vowels_front.py`, `data/vowels_back.py`, `data/vowels_central.py`, `data/vowels_nasalized.py`, `tools/spectral_analysis.py`, `tools/phoneme_audit.py`, `tests/synthesis/test_spectral.py`, `docs/SYNTHESIS.md`, `docs/MODIFICATIONS.md`, `docs/CHANGELOG.md`
+
+---
+
+## [2026-02-16] - Speed Up Consonant Tests
+
+### Summary
+Optimized consonant test suite for faster execution by using bulk sample extraction and natural phoneme durations.
+
+### What Changed
+- `tests/phonemes/test_consonants.py`: Switched from frame-by-frame sample collection to bulk `collect_samples()` helper. Reduced test phoneme durations from 400ms to natural durations (~100-200ms).
+
+---
+
+## [2026-02-15] - Editor Presets & Settings
+
+### Summary
+Added JSON preset overlay system for the phoneme editor and updated development settings.
+
+### What Changed
+- `editor/presets/`: Added tuned preset files for editor use
+- `.claude/settings.local.json`: Updated local development settings
+
+---
+
+## [2026-02-15] - Voiced Fricative Refinement: /v/ Cascade Resonance
+
+### Summary
+Reduced /v/ parallel bypass to preserve cascade resonance, preventing nasal-like quality.
+
+### What Changed
+- `data/fricatives.py`: /v/ `parallelBypass` tuned to balance cascade voice quality with frication noise routing.
+
+---
+
+## [2026-02-14] - C++ Engine Cleanup & ABI Fix
+
+### Summary
+Fixed Python/C++ struct ABI mismatch, removed deprecated parameters, and fixed voiced fricative detection in the VC coarticulation path.
+
+### What Changed
+- `src/frame.h`, `src/frame.cpp`: Aligned frame struct layout between C++ and Python ctypes binding
+- `speechPlayer.py`: Updated ctypes struct to match C++ layout
+- `data/*.py`: Removed deprecated `openQuotientShape`/`speedQuotient` parameters
+- `ipa.py`: Fixed VC offset coarticulation to properly detect voiced fricatives
+
+---
+
+## [2026-02-14] - C++ Engine Review: Audio Quality & Portability
+
+### Summary
+Comprehensive review and cleanup of the C++ synthesis engine covering audio quality, numerical stability, and code portability.
+
+### What Changed
+- `src/speechWaveGenerator.cpp`: Various audio quality and portability improvements identified in engine review
+
+---
+
+## [2026-02-13] - CV/VC Coarticulation Waypoints
+
+### Summary
+Extended coarticulation system with bidirectional CV/VC waypoints and editor visualization.
+
+### What Changed
+- `ipa.py`: Added VC (vowel-to-consonant) coarticulation offset for fricatives, semivowels, and liquids
+- `data/transitions.py`: Added CV/VC waypoint calculations
+- Editor: Added coarticulation trajectory visualization
+
+---
+
+## [2026-02-13] - Bilabial Stop Improvements
+
+### Summary
+Applied frication-based bilabial release to all bilabial stops and refined burst parameters.
+
+### What Changed
+- `data/stops.py`: Updated /p/, /b/, /pʼ/, /ɓ/, /ᵐb/ with frication-based release instead of simple burst
+- `data/fricatives.py`: Refined ç/ɕ fricative parameters; deleted stale editor presets
+- `data/liquids_glides.py`: Refined w/j glide parameters
+
+---
+
+## [2026-02-12] - Parallel Anti-Resonator & Lateral Fricatives
+
+### Summary
+Added parallel anti-resonator support and completely reworked lateral fricatives /ɬ/ and /ɮ/.
+
+### What Changed
+- `src/speechWaveGenerator.cpp`: Added parallel anti-resonator (notch filter) in parallel formant path
+- `src/frame.h`, `speechPlayer.py`: Added `parallelAntiFreq`, `parallelAntiBw` fields
+- `data/fricatives.py`: Reworked /ɬ/ and /ɮ/ with anti-resonator at 3500 Hz lateral zero
+- `data/affricates.py`: Added lateral affricates t͡ɬ, d͡ɮ
+
+---
+
+## [2026-02-12] - Velar/Uvular Aspiration Routing & Uvular Trill
+
+### Summary
+Switched velar/uvular fricatives from frication to aspiration routing, added subtle uvular trill modulation.
+
+### What Changed
+- `data/fricatives.py`: /x/, /ɣ/, /χ/, /ʁ/ now use `aspirationAmplitude` instead of `fricationAmplitude` for more natural posterior fricative quality. Added `trillRate`/`trillDepth` for uvular trill.
+
+---
+
+## [2026-02-12] - F4-F6 Bandwidth Normalization
+
+### Summary
+Normalized F4-F6 bandwidths to Q=4.0 across core stops and fricatives for consistency.
+
+### What Changed
+- `data/stops.py`, `data/fricatives.py`: Standardized cb4/cb5/cb6 and pb4/pb5/pb6 using Q=4.0 formula (bandwidth = frequency / 4.0).
+
+---
+
+## [2026-02-12] - Fricative Tuning: /v/, /f/, /z/, /ð/, /s/, /θ/
+
+### Summary
+Multi-session editor-tuned refinement of core fricative parameters for voiced pattern alignment.
+
+### What Changed
+- `data/fricatives.py`: Tuned /v/ (removed voicebar, boosted frication), /z/ (voicebar + sibilant spectrum), /ð/ (voicebar + dental spectrum), /f/ and /θ/ (spectral shape), /s/ (HF parallel formants)
+
+---
+
+## [2026-02-12] - Plosive Burst Spectral Coloring
+
+### Summary
+Added `burstNoiseColor` parameter for place-appropriate spectral shaping of stop bursts.
+
+### What Changed
+- `src/speechWaveGenerator.cpp`: BurstGenerator now supports pink noise via `burstNoiseColor` parameter (0=white, 1=pink)
+- `src/frame.h`, `speechPlayer.py`: Added `burstNoiseColor` field
+- `data/stops.py`: Bilabial (/p/, /b/) and uvular (/q/, /ɢ/) stops use pink noise bursts
+
+---
+
+## [2026-02-12] - Extended Phonemes: Clicks, Ejectives, Implosives, Prenasalized, Epiglottals
+
+### Summary
+Major expansion of the phoneme inventory with non-pulmonic and extended consonants.
+
+### What Changed
+- `data/clicks.py`: 5 click consonants (ǀ, ǁ, ǂ, ǃ, ʘ) with forward/velar burst phases
+- `data/stops.py`: 6 ejective consonants (pʼ, tʼ, kʼ, qʼ) with IPA diacritic support; 5 implosive consonants (ɓ, ɗ, ʄ, ɠ, ʛ) with voicebar through closure; 3 prenasalized stops (ᵐb, ⁿd, ᵑɡ)
+- `data/fricatives.py`: 2 epiglottal fricatives (ʜ, ʢ), 2 alveolo-palatal fricatives (ɕ, ʑ)
+- `data/affricates.py`: 5 new affricates (clicks as affricates, velarized laterals)
+- `data/special.py`: Generic phoneme modifiers with acoustic-aware scaling
+
+---
+
 ## [2026-02-11] - Engine Improvements for Plosive Burst Audibility
 
 ### Summary
@@ -265,12 +507,8 @@ Applied original Klatt Table III values for fricative parallel formant amplitude
 
 ## Planned Changes
 
-### Phase 3: Extended Sound Classes
-- Retroflex consonants using Agrawal & Stevens 1992 KLSYN88 parameters
-- ~~Ejective timing rules~~ — architecture ready via phase system (data needs adding)
-- Implosive parameter derivation (reversed amplitude curves)
-- Prenasalized stop expansion
-
-### Phase 4: Advanced Features
-- Click burst generator for non-pulmonic consonants
-- Physical modeling approach for click articulation
+### Future Work
+- F1 cutback: per-formant interpolation timing during burst-to-vowel transition
+- Vowel-dependent burst spectrum: coarticulated burst filter frequencies (mainly velars)
+- Dynamic velic model for more realistic nasal coupling
+- Physical modeling refinements for click articulation

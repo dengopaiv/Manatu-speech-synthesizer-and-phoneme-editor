@@ -97,6 +97,7 @@ PARAM_GROUPS = {
         ('flutter', 0, 100, 25, '%', 'Natural pitch jitter'),
         ('diplophonia', 0, 100, 0, '%', 'Period alternation (creaky)'),
         ('lfRd', 0, 27, 0, 'x0.1', 'LF model Rd (0=off, 10=modal, 13-17=vowels, 27=max breathy)'),
+        ('sourceBrightness', 0, 100, 0, 'x0.1', 'Source brightness (reserved — not currently used by LF model)'),
     ],
     'Glottal Modulation': [
         ('deltaF1', 0, 100, 0, 'Hz', 'F1 increase during glottal open'),
@@ -140,7 +141,7 @@ PERCENT_PARAMS = {
 GAIN_PARAMS = {'preFormantGain', 'outputGain'}
 
 # Parameters that need /10 scaling
-TENTH_PARAMS = {'vibratoSpeed', 'lfRd'}
+TENTH_PARAMS = {'vibratoSpeed', 'lfRd', 'sourceBrightness'}
 
 # KLSYN88 default values
 KLSYN88_DEFAULTS = {

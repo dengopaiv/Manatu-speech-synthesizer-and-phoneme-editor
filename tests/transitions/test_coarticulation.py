@@ -33,7 +33,7 @@ def _synthesize_cv(consonant, vowel, pitch=120):
     """Synthesize a CV pair using the full ipa.py pipeline."""
     text = consonant + vowel
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(
         text, speed=1, basePitch=pitch, inflection=0
     ):
         sp.queueFrame(frame, min_dur, fade_dur)

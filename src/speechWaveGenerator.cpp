@@ -18,11 +18,9 @@ Based on klsyn-88, found at http://linguistics.berkeley.edu/phonlab/resources/
 
 #define _USE_MATH_DEFINES
 
-#include <cassert>
+#include <algorithm>
 #include <cmath>
-#include <cstdlib>
 #include <cstdint>
-#include <cfloat>
 #include "utils.h"
 #include "speechWaveGenerator.h"
 
@@ -67,18 +65,21 @@ inline double polyBLEP(double t, double dt) {
 
 const double PITWO=M_PI*2;
 
+// Bandwidth compensation for two cascaded 2nd-order stages.
+// Combined -3dB BW narrows by ~0.644x, so each stage needs BW × 1.554.
+static constexpr double CASCADE_BW_COMPENSATION = 1.554;
+
 // Improved noise generator using xorshift128+ algorithm
 // Better quality randomness and full frequency spectrum for fricatives
 class NoiseGenerator {
 	private:
 	uint64_t state0;
 	uint64_t state1;
-	// Pink noise filter state (Voss-McCartney algorithm approximation)
+	// Pink noise filter state (Paul Kellet method)
 	double pinkState[5];
-	int pinkCounter;
 
 	public:
-	NoiseGenerator(): pinkCounter(0) {
+	NoiseGenerator() {
 		// Seed with current time and address for uniqueness
 		state0 = 0x853c49e6748fea9bULL;
 		state1 = 0xda3e39cb94b95bdbULL;
@@ -259,13 +260,12 @@ class ZDFResonator {
 // where a single 2nd-order stage barely filters the noise.
 class ColoredNoiseGenerator {
 	private:
-	int sampleRate;
 	NoiseGenerator white;
 	ZDFResonator bandpass;    // ZDF SVF bandpass stage 1
 	ZDFResonator bandpass2;   // ZDF SVF bandpass stage 2 (4th-order cascade)
 
 	public:
-	ColoredNoiseGenerator(int sr): sampleRate(sr), white(),
+	ColoredNoiseGenerator(int sr): white(),
 		bandpass(sr, false, false),     // bandpass mode
 		bandpass2(sr, false, false) {}  // bandpass mode
 
@@ -280,8 +280,7 @@ class ColoredNoiseGenerator {
 		if (filterBw < 100) filterBw = 100;
 
 		// Widen per-stage BW to compensate for cascade narrowing
-		// (same factor as ZDFResonator4thOrder: 1.554x per stage)
-		double bwAdjusted = filterBw * 1.554;
+		double bwAdjusted = filterBw * CASCADE_BW_COMPENSATION;
 
 		// 4th-order bandpass (two cascaded 2nd-order ZDF stages)
 		// 24 dB/oct rolloff properly shapes spectrum for both narrow sibilants
@@ -315,7 +314,6 @@ class SpectralTiltFilter {
 		if (tiltDB < 1.5) return input;
 
 		double attenLinear = pow(10.0, -tiltDB / 20.0);
-		if (attenLinear >= 0.999) return input;
 		if (attenLinear <= 0.001) attenLinear = 0.001;
 
 		// For two cascaded stages: |H(f)|^2 = 1/(1+(f/fc)^2)^2
@@ -385,9 +383,9 @@ public:
 // Removes DC offset from glottal source before cascade filtering.
 // The LF model at high Rd values produces asymmetric pulses with significant DC,
 // which passes through allPole cascade resonators (unity DC gain) and shifts
-// the tanh soft limiter operating point, causing asymmetric distortion.
+// the limiter operating point, causing asymmetric distortion.
 // y[n] = x[n] - x[n-1] + R * y[n-1], R = 1 - 2π*fc/fs
-// At 44100 Hz, fc=20 Hz: R≈0.997, transparent above ~40 Hz.
+// At 96000 Hz, fc=20 Hz: R≈0.9987, transparent above ~40 Hz.
 class DCBlockFilter {
 private:
 	double R, lastIn, lastOut;
@@ -419,6 +417,7 @@ class FrequencyGenerator {
 	FrequencyGenerator(int sr): sampleRate(sr), lastCyclePos(0), lastDt(0) {}
 
 	double getNext(double frequency) {
+		if (frequency < 1.0) frequency = 1.0;  // Floor clamp: prevent zero/negative phase
 		lastDt = frequency / sampleRate;  // Store phase increment
 		double cyclePos=fmod(lastDt+lastCyclePos,1);
 		lastCyclePos=cyclePos;
@@ -430,7 +429,7 @@ class FrequencyGenerator {
 };
 
 // Pure function for LF glottal waveform evaluation at arbitrary phase
-// Used by 2x oversampling: evaluate at current and half-sample phases
+// Used by 4x oversampling: evaluate at four symmetric phases per output sample
 inline double computeGlottalWave(double phase, double tp, double te,
                                   double epsilon, double ampNorm) {
 	if (phase < tp) {
@@ -448,6 +447,35 @@ inline double computeGlottalWave(double phase, double tp, double te,
 	}
 }
 
+// Halfband FIR decimator for 2:1 downsampling
+// 7-tap halfband kernel: h = {a, 0, b, 0.5, b, 0, a}
+// Structural zeros at h[1] and h[5] reduce to 4 multiplies per output sample
+// Provides >60 dB stopband attenuation for anti-alias filtering
+// Two cascaded stages give 4x→2x→1x decimation
+class HalfbandDecimator {
+private:
+	// 7-tap halfband FIR coefficients (only non-zero taps stored)
+	static constexpr double a = -0.0625;   // h[0], h[6]
+	static constexpr double b = 0.5625;    // h[2], h[4]
+	// h[3] = 0.5 (center tap), h[1] = h[5] = 0 (structural zeros)
+	double z[7];  // delay line
+
+public:
+	HalfbandDecimator() { reset(); }
+	void reset() { for (int i = 0; i < 7; i++) z[i] = 0.0; }
+
+	// Push 2 input samples, return 1 decimated output
+	double process(double in0, double in1) {
+		// Shift delay line left by 2, insert new samples
+		z[0] = z[2]; z[1] = z[3]; z[2] = z[4];
+		z[3] = z[5]; z[4] = z[6];
+		z[5] = in0; z[6] = in1;
+		// Convolve exploiting symmetry and structural zeros:
+		// h[0]*z[0] + h[2]*z[2] + h[3]*z[3] + h[4]*z[4] + h[6]*z[6]
+		return a * (z[0] + z[6]) + b * (z[2] + z[4]) + 0.5 * z[3];
+	}
+};
+
 class VoiceGenerator {
 	private:
 	FrequencyGenerator pitchGen;
@@ -459,6 +487,7 @@ class VoiceGenerator {
 	bool periodAlternate;  // KLSYN88: alternating period flag
 	double currentTe;       // Excitation point for PolyBLEP (0 when unvoiced)
 	double currentAmpNorm;  // LF amplitude normalization (0 when unvoiced)
+	HalfbandDecimator hbStage1, hbStage2;  // 4x→2x→1x decimation
 
 	public:
 	bool glottisOpen;
@@ -496,7 +525,7 @@ class VoiceGenerator {
 
 		double glottalWave;
 
-		// Check if using LF model (Rd > 0) or legacy model
+		// Check if using LF model (Rd > 0) or no voicing
 		if (frame->lfRd > 0) {
 			// Improved Liljencrants-Fant (LF) glottal model
 			// Based on Fant 1995 and Degottex et al. 2011 refinements
@@ -504,7 +533,6 @@ class VoiceGenerator {
 			double Rd = max(0.3, min(2.7, frame->lfRd));
 
 			// Improved Rd-to-parameter mapping (Fant 1995 / Degottex 2011)
-			// These provide better spectral envelope matching than Fant 1985
 			double Rap = (-1.0 + 4.8 * Rd) / 100.0;           // Return phase quotient
 			double Rkp = (22.4 + 11.8 * Rd) / 100.0;          // Open quotient shape
 			double Rgp = 1.0 / (4.0 * ((0.11 * Rd / (0.5 + 1.2 * Rkp)) - Rap)); // Rise time
@@ -528,11 +556,9 @@ class VoiceGenerator {
 			if (te < tp + 0.05) te = tp + 0.05;
 
 			// Calculate epsilon for return phase (ensures smooth decay to zero)
-			// Solve: exp(-epsilon * (1-te)) = threshold (very small)
 			double epsilon = 1.0 / (ta * (1.0 - te) + 0.001);
 
 			// Amplitude normalization factor for consistent output level
-			// Compensates for Rd-dependent waveform shape changes
 			double ampNorm = 1.0 / (0.5 + 0.3 * Rd);
 
 			// Store for PolyBLEP at te
@@ -541,15 +567,42 @@ class VoiceGenerator {
 
 			glottisOpen = voice < te;
 
-			// 2x oversampling with symmetric Bartlett (triangular) decimation filter
-			// Evaluates past-half, current, and future-half phases — zero phase delay
-			double dt_os = pitchGen.getDt();
-			double pastHalf = fmod(voice - dt_os * 0.5 + 1.0, 1.0);
-			double futureHalf = fmod(voice + dt_os * 0.5, 1.0);
-			double g_current = computeGlottalWave(voice, tp, te, epsilon, ampNorm);
-			double g_past = computeGlottalWave(pastHalf, tp, te, epsilon, ampNorm);
-			double g_future = computeGlottalWave(futureHalf, tp, te, epsilon, ampNorm);
-			glottalWave = 0.25 * g_past + 0.5 * g_current + 0.25 * g_future;
+			// 4x oversampling with halfband decimation
+			// Evaluates LF waveform at 4 symmetric phases per output sample,
+			// applies PolyBLEP at each oversampled phase (4x smaller dt → more precise),
+			// then decimates through two cascaded halfband FIR stages (4x→2x→1x)
+			double dt = pitchGen.getDt();
+			double dt_os = dt * 0.25;  // Quarter-sample phase increment
+
+			// Evaluate at 4 symmetric phases centered on current position
+			double phases[4] = {
+				fmod(voice - 1.5 * dt_os + 2.0, 1.0),
+				fmod(voice - 0.5 * dt_os + 1.0, 1.0),
+				fmod(voice + 0.5 * dt_os, 1.0),
+				fmod(voice + 1.5 * dt_os, 1.0)
+			};
+
+			double samples_os[4];
+			for (int k = 0; k < 4; k++) {
+				double gw = computeGlottalWave(phases[k], tp, te, epsilon, ampNorm);
+				double s = gw * 2.0 - ampNorm;  // DC center: [0, ampNorm] → [-ampNorm, +ampNorm]
+
+				// PolyBLEP at cycle boundary (discontinuity from return phase end)
+				s -= polyBLEP(phases[k], dt_os) * ampNorm * 0.5;
+
+				// PolyBLEP at excitation point (te) — main LF step discontinuity
+				if (te > 0 && dt_os > 0) {
+					double phaseRelTe = fmod(phases[k] - te + 1.0, 1.0);
+					s -= polyBLEP(phaseRelTe, dt_os) * ampNorm;
+				}
+
+				samples_os[k] = s;
+			}
+
+			// Two-stage halfband decimation: 4x → 2x → 1x
+			double d0 = hbStage1.process(samples_os[0], samples_os[1]);
+			double d1 = hbStage1.process(samples_os[2], samples_os[3]);
+			glottalWave = hbStage2.process(d0, d1);
 		} else {
 			// No voicing (voiceless consonants: /p/, /t/, /k/, /f/, /s/, /ʃ/, etc.)
 			// lfRd=0 means no glottal source - only noise/frication used
@@ -559,22 +612,7 @@ class VoiceGenerator {
 			currentAmpNorm = 0;
 		}
 
-		voice = glottalWave * 2.0 - currentAmpNorm;  // Center around zero: [0, ampNorm] → [-ampNorm, +ampNorm]
-
-		// Apply polyBLEP anti-aliasing to reduce aliasing at cycle discontinuity
-		// The glottal waveform has a discontinuity when it resets at cycle boundary
-		double dt = pitchGen.getDt();
-		double cyclePos = lastCyclePos;  // Current position in cycle
-		// Apply polyBLEP at start of cycle (discontinuity from end of return phase)
-		voice -= polyBLEP(cyclePos, dt) * currentAmpNorm * 0.5;
-
-		// PolyBLEP at excitation point (te) — main LF step discontinuity
-		// At te, closing phase ends at glottalWave=0 while return phase starts at 0.5*ampNorm
-		// After [-1,+1] scaling, the upward step magnitude is ~ampNorm (~1.25 for modal voice)
-		if (currentTe > 0 && dt > 0) {
-			double phaseRelTe = fmod(cyclePos - currentTe + 1.0, 1.0);
-			voice -= polyBLEP(phaseRelTe, dt) * currentAmpNorm;
-		}
+		voice = glottalWave;
 
 		if(!glottisOpen) {
 			turbulence*=0.01;
@@ -601,19 +639,16 @@ class VoiceGenerator {
 // Better vowel clarity and more focused formant peaks
 class ZDFResonator4thOrder {
 	private:
-	int sampleRate;
 	ZDFResonator stage1, stage2;
 
 	public:
-	ZDFResonator4thOrder(int sr, bool allPole=false): sampleRate(sr), stage1(sr, false, allPole), stage2(sr, false, allPole) {}
+	ZDFResonator4thOrder(int sr, bool allPole=false): stage1(sr, false, allPole), stage2(sr, false, allPole) {}
 
 	double resonate(double in, double frequency, double bandwidth) {
 		if (frequency <= 0) return in;  // Bypass if frequency is 0
 
 		// Widen per-stage bandwidth to compensate for cascade narrowing.
-		// Two cascaded 2nd-order stages narrow the combined -3dB BW by ~0.644×,
-		// so each stage needs BW × 1.554 to achieve the target combined bandwidth.
-		double bwAdjusted = bandwidth * 1.554;
+		double bwAdjusted = bandwidth * CASCADE_BW_COMPENSATION;
 
 		// Cascade two 2nd-order ZDF sections at same frequency
 		double out = stage1.resonate(in, frequency, bwAdjusted);
@@ -624,7 +659,6 @@ class ZDFResonator4thOrder {
 	void reset() { stage1.reset(); stage2.reset(); }
 
 	void setSampleRate(int sr) {
-		sampleRate = sr;
 		stage1.setSampleRate(sr);
 		stage2.setSampleRate(sr);
 	}
@@ -634,11 +668,10 @@ class ZDFResonator4thOrder {
 // Adds coupling to tracheal cavity below the glottis
 class TrachealResonator {
 	private:
-	int sampleRate;
 	ZDFResonator pole1, zero1, pole2, zero2;  // Two pole-zero pairs for tracheal coupling (using ZDF)
 
 	public:
-	TrachealResonator(int sr): sampleRate(sr), pole1(sr, false, true), zero1(sr, true), pole2(sr, false, true), zero2(sr, true) {}
+	TrachealResonator(int sr): pole1(sr, false, true), zero1(sr, true), pole2(sr, false, true), zero2(sr, true) {}
 
 	double resonate(double input, const speechPlayer_frame_t* frame) {
 		double output = input;
@@ -667,9 +700,40 @@ class TrachealResonator {
 	}
 };
 
+// Cascade HF Shelf Filter
+// Compensates for the cascade formant chain's structural HF loss (~57 dB at 8 kHz
+// through 6 series allPole resonators). Applied only to cascade output, not globally.
+// Topology: y = x + boost * HPF(x) — transparent at DC, +boostDB above corner.
+// The cascade chain's 6 allPole stages cumulatively attenuate ~21 dB at 4 kHz and
+// ~57 dB at 8 kHz. Even at 96 kHz (reducing ZDF warping), the cascade is structurally
+// dark. A modest shelf restores presence without affecting the parallel path (which
+// carries fricative/sibilant HF naturally).
+class HFShelfFilter {
+private:
+	double alpha;  // HPF coefficient: exp(-2π * corner / sr)
+	double boost;  // Linear boost factor: 10^(boostDB/20) - 1
+	double lastIn, lastOut;  // HPF state
+
+public:
+	HFShelfFilter(int sampleRate, double cornerHz = 3000.0, double boostDB = 6.0) {
+		alpha = exp(-2.0 * M_PI * cornerHz / sampleRate);
+		boost = pow(10.0, boostDB / 20.0) - 1.0;
+		lastIn = 0.0;
+		lastOut = 0.0;
+	}
+
+	double filter(double input) {
+		// First-order HPF: y[n] = alpha * (y[n-1] + x[n] - x[n-1])
+		double hp = alpha * (lastOut + input - lastIn);
+		lastIn = input;
+		lastOut = hp;
+		// Shelf: add boosted HPF to original (transparent at DC)
+		return input + boost * hp;
+	}
+};
+
 class CascadeFormantGenerator {
 	private:
-	int sampleRate;
 	// F1-F3: 4th-order ZDF resonators with allPole (lowpass) for cascade topology
 	ZDFResonator4thOrder r1, r2, r3;
 	// F4-F6: 2nd-order ZDF resonators with allPole (lowpass) for cascade topology
@@ -679,7 +743,7 @@ class CascadeFormantGenerator {
 	double glottalAlpha;  // ~2ms smoothing constant
 
 	public:
-	CascadeFormantGenerator(int sr): sampleRate(sr), r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true), smoothGlottalBlend(0) {
+	CascadeFormantGenerator(int sr): r1(sr, true), r2(sr, true), r3(sr, true), r4(sr, false, true), r5(sr, false, true), r6(sr, false, true), rN0(sr, true), rNP(sr, false, true), smoothGlottalBlend(0) {
 		glottalAlpha = 1.0 - exp(-1.0 / (0.002 * sr));  // 2ms time constant
 	};
 
@@ -796,12 +860,11 @@ class BurstGenerator {
 
 class ParallelFormantGenerator {
 	private:
-	int sampleRate;
 	ZDFResonator r1, r2, r3, r4, r5, r6;  // Using ZDF resonators for smooth modulation
 	ZDFResonator antiRes;  // Anti-resonator for parallel path spectral zeros
 
 	public:
-	ParallelFormantGenerator(int sr): sampleRate(sr), r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), antiRes(sr, true) {};
+	ParallelFormantGenerator(int sr): r1(sr), r2(sr), r3(sr), r4(sr), r5(sr), r6(sr), antiRes(sr, true) {};
 
 	double getNext(const speechPlayer_frame_t* frame, double input) {
 		input/=2.0;
@@ -897,6 +960,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	BurstGenerator burstGen;  // KLSYN88: stop burst envelopes
 	TrillModulator trillMod;  // Amplitude LFO for trill consonants
 	CascadeFormantGenerator cascade;
+	HFShelfFilter cascadeShelf;  // Compensate cascade chain's structural HF loss
 	ParallelFormantGenerator parallel;
 	CascadeDuckTracker cascadeDuck;  // Reduce cascade during voiceless bursts
 	PeakLimiter peakLimiter;  // Transparent peak limiter (replaces tanh)
@@ -904,7 +968,7 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 	FrameManager* frameManager;
 
 	public:
-	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), trillMod(sr), cascade(sr), parallel(sr), cascadeDuck(sr), peakLimiter(sr), prevPreGain(0), frameManager(NULL) {
+	SpeechWaveGeneratorImpl(int sr): sampleRate(sr), voiceGenerator(sr), dcBlock(sr, 20.0), tiltFilter(sr), trachealRes(sr), fricGenerator(sr), burstGen(sr), trillMod(sr), cascade(sr), cascadeShelf(sr, 3000.0, 6.0), parallel(sr), cascadeDuck(sr), peakLimiter(sr), prevPreGain(0), frameManager(NULL) {
 		// Enable denormal suppression to prevent CPU stalls from subnormal floats
 		enableDenormalSuppression();
 	}
@@ -936,6 +1000,8 @@ class SpeechWaveGeneratorImpl: public SpeechWaveGenerator {
 				// Duck cascade during voiceless bursts to prevent amplitude spikes
 				double duck = cascadeDuck.getDuck(frame->burstAmplitude, frame->fricationAmplitude, frame->voiceAmplitude);
 				cascadeOut *= duck;
+				// HF shelf: compensate cascade chain's structural HF loss
+				cascadeOut = cascadeShelf.filter(cascadeOut);
 				// Colored noise for fricatives (bandpass filtered based on place of articulation)
 				double fric=fricGenerator.getNext(frame->noiseFilterFreq, frame->noiseFilterBw)*0.3*frame->fricationAmplitude;
 				double burst=burstGen.getNext(frame->burstAmplitude,frame->burstDuration,frame->burstFilterFreq,frame->burstFilterBw,frame->burstNoiseColor);  // KLSYN88: stop burst

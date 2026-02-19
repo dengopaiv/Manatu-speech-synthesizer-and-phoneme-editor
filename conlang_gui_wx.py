@@ -48,7 +48,7 @@ class ConlangSynthesizerFrame(wx.Frame):
         )
 
         # Synthesis parameters
-        self.sample_rate = 44100
+        self.sample_rate = 96000
         self.is_speaking = False
         self.speech_thread = None
 
@@ -234,6 +234,7 @@ Chinese-style tones: mā má mǎ mà"""
         grid_sizer.Add(self.inflection_value_label, 0, wx.ALIGN_CENTER_VERTICAL)
 
         controls_sizer.Add(grid_sizer, 0, wx.ALL | wx.EXPAND, 5)
+
         main_sizer.Add(controls_sizer, 0, wx.ALL | wx.EXPAND, 5)
 
         # Voice Type section
@@ -568,8 +569,10 @@ Chinese-style tones: mā má mǎ mà"""
         spectral_tilt = self.breathiness_slider.GetValue()
 
         # Step 1: Queue ALL frames first
+        generator = ipa.generateSubFramesAndTiming
+
         frame_count = 0
-        for frame, duration, fade in ipa.generateFramesAndTiming(
+        for frame, duration, fade in generator(
             ipa_text,
             speed=speed,
             basePitch=pitch,

@@ -758,72 +758,72 @@ def applyPitchPath(phonemeList,startIndex,endIndex,basePitch,inflection,startPit
 
 intonationParamTable={
 	'.':{
-		'preHeadStart':46,
-		'preHeadEnd':57,
+		'preHeadStart':48,
+		'preHeadEnd':54,
 		'headExtendFrom':4,
-		'headStart':80,
+		'headStart':68,
 		'headEnd':50,
 		'headSteps':[100,75,50,25,0,63,38,13,0],
-		'headStressEndDelta':-16,
-		'headUnstressedRunStartDelta':-8,
-		'headUnstressedRunEndDelta':-5,
-		'nucleus0Start':64,
-		'nucleus0End':8,
-		'nucleusStart':70,
-		'nucleusEnd':18,
-		'tailStart':24,
-		'tailEnd':8,
+		'headStressEndDelta':-10,
+		'headUnstressedRunStartDelta':-5,
+		'headUnstressedRunEndDelta':-3,
+		'nucleus0Start':58,
+		'nucleus0End':30,
+		'nucleusStart':62,
+		'nucleusEnd':32,
+		'tailStart':38,
+		'tailEnd':30,
 	},
 	',':{
-		'preHeadStart':46,
-		'preHeadEnd':57,
+		'preHeadStart':48,
+		'preHeadEnd':54,
 		'headExtendFrom':4,
-		'headStart':80,
-		'headEnd':60,
+		'headStart':68,
+		'headEnd':56,
 		'headSteps':[100,75,50,25,0,63,38,13,0],
-		'headStressEndDelta':-16,
-		'headUnstressedRunStartDelta':-8,
-		'headUnstressedRunEndDelta':-5,
-		'nucleus0Start':34,
-		'nucleus0End':52,
-		'nucleusStart':78,
-		'nucleusEnd':34,
-		'tailStart':34,
-		'tailEnd':52,
+		'headStressEndDelta':-10,
+		'headUnstressedRunStartDelta':-5,
+		'headUnstressedRunEndDelta':-3,
+		'nucleus0Start':40,
+		'nucleus0End':51,
+		'nucleusStart':67,
+		'nucleusEnd':40,
+		'tailStart':40,
+		'tailEnd':51,
 	},
 	'?':{
-		'preHeadStart':45,
-		'preHeadEnd':56,
+		'preHeadStart':47,
+		'preHeadEnd':54,
 		'headExtendFrom':3,
-		'headStart':75,
-		'headEnd':43,
+		'headStart':65,
+		'headEnd':46,
 		'headSteps':[100,75,50,20,60,35,11,0],
-		'headStressEndDelta':-16,
-		'headUnstressedRunStartDelta':-7,
+		'headStressEndDelta':-10,
+		'headUnstressedRunStartDelta':-4,
 		'headUnstressedRunEndDelta':0,
-		'nucleus0Start':34,
-		'nucleus0End':68,
-		'nucleusStart':86,
-		'nucleusEnd':21,
-		'tailStart':34,
-		'tailEnd':68,
+		'nucleus0Start':40,
+		'nucleus0End':61,
+		'nucleusStart':72,
+		'nucleusEnd':33,
+		'tailStart':40,
+		'tailEnd':61,
 	},
 	'!':{
-		'preHeadStart':46,
-		'preHeadEnd':57,
+		'preHeadStart':48,
+		'preHeadEnd':54,
 		'headExtendFrom':3,
-		'headStart':90,
+		'headStart':74,
 		'headEnd':50,
 		'headSteps':[100,75,50,16,82,50,32,16],
-		'headStressEndDelta':-16,
-		'headUnstressedRunStartDelta':-9,
+		'headStressEndDelta':-10,
+		'headUnstressedRunStartDelta':-5,
 		'headUnstressedRunEndDelta':0,
-		'nucleus0Start':92,
-		'nucleus0End':4,
-		'nucleusStart':92,
-		'nucleusEnd':80,
-		'tailStart':76,
-		'tailEnd':4,
+		'nucleus0Start':72,
+		'nucleus0End':24,
+		'nucleusStart':72,
+		'nucleusEnd':68,
+		'tailStart':66,
+		'tailEnd':24,
 	}
 }
 
@@ -930,6 +930,53 @@ def _blend_diphthong_voice_quality(phonemeList):
 				for c in components:
 					c[param] = avg
 
+def _annotate_cross_phoneme_blending(phonemeList):
+	"""Annotate phonemes with onset/offset values from neighbors for smooth blending.
+
+	For each param in _BLEND_PARAMS, sets _onset_{param} and _offset_{param}
+	based on the previous/next phoneme's value, enabling smooth transitions
+	in the sub-frame generator.
+	"""
+	for i, phoneme in enumerate(phonemeList):
+		if phoneme.get('_silence'):
+			continue
+		for param in _BLEND_PARAMS:
+			target = phoneme.get(param)
+			if target is None:
+				target = KLSYN88_DEFAULTS.get(param)
+			if target is None:
+				continue
+
+			# Guard: don't blend lfRd toward/from 0 (voiceless)
+			# This prevents voicing from bleeding into voiceless consonants
+			if param == 'lfRd' and target == 0:
+				continue
+
+			# Onset: blend from previous phoneme's value
+			if i > 0:
+				prev = phonemeList[i - 1]
+				if not prev.get('_silence'):
+					prev_val = prev.get(param, KLSYN88_DEFAULTS.get(param))
+					if prev_val is not None and prev_val != target:
+						# Guard: don't blend from lfRd=0 (voiceless)
+						if not (param == 'lfRd' and prev_val == 0):
+							# Don't overwrite locus-equation-derived values
+							key = f'_onset_{param}'
+							if key not in phoneme:
+								phoneme[key] = prev_val
+
+			# Offset: blend toward next phoneme's value
+			if i < len(phonemeList) - 1:
+				nxt = phonemeList[i + 1]
+				if not nxt.get('_silence'):
+					next_val = nxt.get(param, KLSYN88_DEFAULTS.get(param))
+					if next_val is not None and next_val != target:
+						if not (param == 'lfRd' and next_val == 0):
+							key = f'_offset_{param}'
+							if key not in phoneme:
+								phoneme[key] = next_val
+
+
 def applyFormantScaling(frame, scale_factor):
 	"""
 	Scale all formant frequencies and bandwidths by a factor.
@@ -1014,10 +1061,112 @@ def applyToneMarks(phonemeList, basePitch):
 			phoneme['midVoicePitch'] = 0
 			phoneme['endVoicePitch'] = newPitch
 
-def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, clauseType=None,
-                           formantScale=1.0, spectralTilt=None, voiceTurbulence=None, flutter=None):
+def _lerp(a, b, t):
+	"""Linear interpolation between a and b at position t (0-1)."""
+	return a + (b - a) * t
+
+
+def _compute_pitch_at_time(start, end, mid, t):
+	"""Compute pitch at normalized time t within a phoneme.
+
+	Handles linear (mid=0) and 3-point contour (mid>0) interpolation.
 	"""
-	Generate synthesis frames from IPA text.
+	if mid > 0:
+		if t < 0.5:
+			return _lerp(start, mid, t * 2)
+		else:
+			return _lerp(mid, end, (t - 0.5) * 2)
+	else:
+		return _lerp(start, end, t)
+
+
+# Formant params subject to coarticulation trajectory (locus equations)
+_COARTICULATED_PARAMS = {'cf2', 'cf3'}
+
+# Parameters that blend smoothly between neighboring phonemes at onset/offset
+_BLEND_PARAMS = {'cb1', 'cb2', 'cb3', 'lfRd', 'spectralTilt', 'flutter',
+                 'cf1', 'deltaF1', 'deltaB1'}
+
+# All params with per-sub-frame interpolation (coarticulation + blending)
+_INTERPOLATED_PARAMS = _COARTICULATED_PARAMS | _BLEND_PARAMS
+
+
+def _compute_param_at_time(phoneme, param, t):
+	"""Compute parameter value at normalized time t with cross-phoneme blending.
+
+	For params with _onset_/_offset_ annotations: blends at boundaries.
+	For params without annotations: returns the target value unchanged.
+	"""
+	target = phoneme.get(param)
+	if target is None:
+		return None
+
+	onset_val = phoneme.get(f'_onset_{param}')
+	offset_val = phoneme.get(f'_offset_{param}')
+
+	if onset_val is None and offset_val is None:
+		return target
+
+	# Onset region: first 20% of phoneme
+	onset_end = 0.2
+	# Offset region: last 20% of phoneme
+	offset_start = 0.8
+
+	if onset_val is not None and t < onset_end:
+		blend = t / onset_end
+		return _lerp(onset_val, target, blend)
+	elif offset_val is not None and t > offset_start:
+		blend = (t - offset_start) / (1.0 - offset_start)
+		return _lerp(target, offset_val, blend)
+	else:
+		return target
+
+
+def _preparePhonemeList(ipaText, speed, basePitch, inflection, clauseType):
+	"""Phoneme preparation pipeline: timing, coarticulation, blending, pitch.
+
+	Returns the prepared phonemeList (modified in place with times, pitches,
+	coarticulation, cross-phoneme blending, etc.) or None if empty.
+	"""
+	phonemeList = IPAToPhonemes(ipaText)
+	if len(phonemeList) == 0:
+		return None
+	correctHPhonemes(phonemeList)
+	calculatePhonemeTimes(phonemeList, speed)
+	transitions.apply_coarticulation(phonemeList, speed)
+	_blend_diphthong_voice_quality(phonemeList)
+	_annotate_cross_phoneme_blending(phonemeList)
+	calculatePhonemePitches(phonemeList, speed, basePitch, inflection, clauseType)
+	applyToneMarks(phonemeList, basePitch)
+	# Ensure voiced pitch continuity across prosodic region boundaries
+	lastEndPitch = None
+	for phoneme in phonemeList:
+		if phoneme.get('_tone'):
+			lastEndPitch = phoneme.get('endVoicePitch')
+			continue
+		if lastEndPitch is not None and phoneme.get('_isVoiced'):
+			phoneme['voicePitch'] = lastEndPitch
+		if phoneme.get('_isVoiced'):
+			lastEndPitch = phoneme.get('endVoicePitch', phoneme.get('voicePitch'))
+	return phonemeList
+
+
+def generateSubFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, clauseType=None,
+                               formantScale=1.0, spectralTilt=None, voiceTurbulence=None,
+                               flutter=None, subFrameMs=5.0):
+	"""Generate dense sub-frames from IPA text.
+
+	Subdivides each phoneme into short sub-frames (~5ms) with pre-computed
+	parameter values, moving interpolation responsibility from C++ to Python.
+
+	Each sub-frame has:
+	- Pitch: linearly interpolated from phoneme start/mid/end pitch
+	- Formants: coarticulation trajectory (onset->target->offset) computed per sub-frame
+	- Voice quality: cross-phoneme blending for lfRd, spectralTilt, flutter, bandwidths
+	- Other params: constant within phoneme (step at boundary)
+
+	The C++ engine only needs to linearly interpolate between adjacent sub-frames.
+	At 5ms intervals, the existing smoothstep is nearly linear anyway.
 
 	Args:
 		ipaText: IPA string to synthesize
@@ -1025,63 +1174,70 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 		basePitch: Fundamental frequency in Hz (default 100)
 		inflection: Pitch variation amount 0-1 (default 0.5)
 		clauseType: Punctuation for intonation ('.', ',', '?', '!')
-		formantScale: Factor to multiply formant frequencies (1.0=male, 1.17=female, 1.35=child)
-		spectralTilt: Override spectral tilt in dB (higher=breathier)
+		formantScale: Factor to multiply formant frequencies
+		spectralTilt: Override spectral tilt in dB
 		voiceTurbulence: Override voice turbulence amplitude 0-1
 		flutter: Override flutter amount for pitch jitter
+		subFrameMs: Sub-frame duration in milliseconds (default 5.0)
 	"""
-	phonemeList=IPAToPhonemes(ipaText)
-	if len(phonemeList)==0:
+	phonemeList = _preparePhonemeList(ipaText, speed, basePitch, inflection, clauseType)
+	if phonemeList is None:
 		return
-	correctHPhonemes(phonemeList)
-	calculatePhonemeTimes(phonemeList,speed)
-	transitions.apply_coarticulation(phonemeList, speed)  # Apply CV coarticulation
-	_blend_diphthong_voice_quality(phonemeList)  # Blend voice quality for smoother diphthong glides
-	calculatePhonemePitches(phonemeList,speed,basePitch,inflection,clauseType)
-	applyToneMarks(phonemeList, basePitch)  # Apply tone marks after standard intonation
+
 	for phoneme in phonemeList:
-		frameDuration=phoneme.pop('_duration')
-		fadeDuration=phoneme.pop('_fadeDuration')
+		frameDuration = phoneme.get('_duration', 0)
+		fadeDuration = phoneme.get('_fadeDuration', 0)
+
+		# Silence: pass through unchanged
 		if phoneme.get('_silence') and not phoneme.get('_preStopGap'):
-			yield None,frameDuration,fadeDuration
-		else:
-			# Extract onset/offset values (pop removes them so applyPhonemeToFrame won't see them)
-			onset_cf2 = phoneme.pop('_onset_cf2', None)
-			onset_cf3 = phoneme.pop('_onset_cf3', None)
-			offset_cf2 = phoneme.pop('_offset_cf2', None)
-			offset_cf3 = phoneme.pop('_offset_cf3', None)
+			yield None, frameDuration, fadeDuration
+			continue
 
-			if onset_cf2 is not None:
-				# Create onset waypoint frame (copy of vowel with locus-derived formants)
-				onset_frame = speechPlayer.Frame()
-				onset_frame.preFormantGain = 1.0
-				onset_frame.outputGain = 1.0
-				applyPhonemeToFrame(onset_frame, phoneme)
-				applyFormantScaling(onset_frame, formantScale)
-				if spectralTilt is not None:
-					onset_frame.spectralTilt = spectralTilt
-				if voiceTurbulence is not None:
-					onset_frame.voiceTurbulenceAmplitude = voiceTurbulence
-				if flutter is not None:
-					onset_frame.flutter = flutter
-				# Override formants with locus-derived onset values (scaled for voice type)
-				onset_frame.cf2 = onset_cf2 * formantScale
-				if onset_cf3 is not None:
-					onset_frame.cf3 = onset_cf3 * formantScale
-				# Yield onset waypoint: 1ms duration, 70% of original fade
-				yield onset_frame, 1.0, fadeDuration * 0.7
-				# Remaining 30% for onset->target
-				fadeDuration = fadeDuration * 0.3
+		# Get pitch contour for this phoneme
+		startPitch = phoneme.get('voicePitch', 0)
+		endPitch = phoneme.get('endVoicePitch', startPitch)
+		midPitch = phoneme.get('midVoicePitch', 0)
 
-			frame=speechPlayer.Frame()
-			frame.preFormantGain=1.0
-			frame.outputGain=1.0
-			applyPhonemeToFrame(frame,phoneme)
+		# Calculate number of sub-frames
+		numSubFrames = max(1, round(frameDuration / subFrameMs))
+		actualSubFrameMs = frameDuration / numSubFrames
 
-			# Apply voice type modifications
+		# Build base param dict (everything except pitch and private keys)
+		baseParams = {}
+		for k, v in phoneme.items():
+			if k.startswith('_'):
+				continue
+			if k in ('voicePitch', 'endVoicePitch', 'midVoicePitch'):
+				continue
+			baseParams[k] = v
+
+		for j in range(numSubFrames):
+			# Normalized time within this phoneme (0.0 to ~1.0)
+			t = j / max(1, numSubFrames)
+
+			# Start with base params (all non-pitch, non-private params)
+			subframeParams = baseParams.copy()
+
+			# Compute pitch at this time point
+			pitch = _compute_pitch_at_time(startPitch, endPitch, midPitch, t)
+			subframeParams['voicePitch'] = pitch
+			subframeParams['endVoicePitch'] = pitch  # No C++ pitch increment
+			subframeParams['midVoicePitch'] = 0
+
+			# Compute interpolated parameter values (coarticulation + blending)
+			for param in _INTERPOLATED_PARAMS:
+				val = _compute_param_at_time(phoneme, param, t)
+				if val is not None:
+					subframeParams[param] = val
+
+			# Build the Frame object
+			frame = speechPlayer.Frame()
+			frame.preFormantGain = 1.0
+			frame.outputGain = 1.0
+			applyPhonemeToFrame(frame, subframeParams)
 			applyFormantScaling(frame, formantScale)
 
-			# Override voice quality parameters if specified
+			# Apply voice quality overrides
 			if spectralTilt is not None:
 				frame.spectralTilt = spectralTilt
 			if voiceTurbulence is not None:
@@ -1089,24 +1245,12 @@ def generateFramesAndTiming(ipaText, speed=1, basePitch=100, inflection=0.5, cla
 			if flutter is not None:
 				frame.flutter = flutter
 
-			yield frame,frameDuration,fadeDuration
+			# First sub-frame of phoneme uses the original fade duration
+			# (transition from previous phoneme). Subsequent sub-frames fade
+			# over the sub-frame duration (continuous interpolation).
+			if j == 0:
+				fade = fadeDuration
+			else:
+				fade = actualSubFrameMs
 
-			if offset_cf2 is not None:
-				# Create offset waypoint frame (copy of vowel with locus-derived formants)
-				offset_frame = speechPlayer.Frame()
-				offset_frame.preFormantGain = 1.0
-				offset_frame.outputGain = 1.0
-				applyPhonemeToFrame(offset_frame, phoneme)
-				applyFormantScaling(offset_frame, formantScale)
-				if spectralTilt is not None:
-					offset_frame.spectralTilt = spectralTilt
-				if voiceTurbulence is not None:
-					offset_frame.voiceTurbulenceAmplitude = voiceTurbulence
-				if flutter is not None:
-					offset_frame.flutter = flutter
-				# Override formants with locus-derived offset values
-				offset_frame.cf2 = offset_cf2 * formantScale
-				if offset_cf3 is not None:
-					offset_frame.cf3 = offset_cf3 * formantScale
-				# Yield offset waypoint: 1ms hold, 30ms fade (VC transition)
-				yield offset_frame, 1.0, 30.0
+			yield frame, actualSubFrameMs, fade

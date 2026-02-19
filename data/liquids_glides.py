@@ -514,7 +514,13 @@ LIQUIDS_GLIDES = {
 		'pa5': 0.5,
 		'pa6': 0.516666666667,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,  # Tap — brief ballistic contact, not sustained frication
+		'noiseFilterFreq': 3000,
+		'noiseFilterBw': 3000,
+		'burstAmplitude': 0.5,      # Primary acoustic cue for taps
+		'burstDuration': 0.15,
+		'burstFilterFreq': 4000,    # Alveolar place
+		'burstFilterBw': 3000,
 		# Voice quality
 		'spectralTilt': 4,
 		'flutter': 0.15,
@@ -573,7 +579,13 @@ LIQUIDS_GLIDES = {
 		'pa5': 0.5,
 		'pa6': 0.516666666667,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,  # Tap — brief ballistic contact, not sustained frication
+		'noiseFilterFreq': 3000,
+		'noiseFilterBw': 3000,
+		'burstAmplitude': 0.5,      # Primary acoustic cue for taps
+		'burstDuration': 0.15,
+		'burstFilterFreq': 3000,    # Retroflex place — lower than alveolar
+		'burstFilterBw': 2500,
 		'spectralTilt': 4,
 		'flutter': 0.15,
 		'lfRd': 1.0,
@@ -630,7 +642,13 @@ LIQUIDS_GLIDES = {
 		'pa5': 0.5,
 		'pa6': 0.516666666667,
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
+		'fricationAmplitude': 0.3,  # Tap — brief ballistic contact, not sustained frication
+		'noiseFilterFreq': 2000,    # Labiodental — lower center
+		'noiseFilterBw': 3000,
+		'burstAmplitude': 0.4,      # Primary acoustic cue for taps
+		'burstDuration': 0.15,
+		'burstFilterFreq': 1200,    # Labiodental place
+		'burstFilterBw': 2000,
 		# Voice quality
 		'spectralTilt': 4,
 		'flutter': 0.15,

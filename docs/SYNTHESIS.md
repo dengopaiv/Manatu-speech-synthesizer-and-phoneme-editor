@@ -9,9 +9,9 @@ Manatu synthesizes speech by generating glottal pulses and filtering them throug
 ```
 IPA Text → Phoneme Parsing → Coarticulation → Pitch Contours → Frames
                                                                   ↓
-Audio ← Soft Limit ← Mix ← Parallel Path ←── Noise/Burst
-                      ↑
-              Cascade Path ← Tracheal ← Spectral Tilt ← Glottal Pulse
+Audio ← PeakLimiter ← Mix ← Parallel Path ←── Noise/Burst
+                       ↑
+             Cascade Path ← HF Shelf (+6 dB @ 3 kHz) ← Tracheal ← Spectral Tilt ← DC Block ← Glottal Pulse (4x oversampled + PolyBLEP + halfband decimation)
 ```
 
 ---
@@ -31,10 +31,7 @@ Audio ← Soft Limit ← Mix ← Parallel Path ←── Noise/Burst
 
 ## 1. Glottal Source
 
-Two models available, selected via `lfRd` parameter:
-
-### LF Model (lfRd > 0)
-Liljencrants-Fant model using Rd parameter (0.3-2.7):
+LF model (Liljencrants-Fant) using Rd parameter:
 - **Rd=0.3**: Tense voice (sharp pulse, short open quotient)
 - **Rd=1.0**: Modal voice (natural, balanced)
 - **Rd=2.7**: Breathy voice (soft pulse, extended return phase)
@@ -46,31 +43,33 @@ Derives Rk, Rg, Ra from Rd using Fant 1985 polynomial fits.
 2. Falling (tp to te): Cosinusoidal fall
 3. Return (te to 1.0): Exponential decay
 
-*Location: `speechWaveGenerator.cpp:265-303`*
+**Anti-aliasing:** 4x oversampled with PolyBLEP at glottal closure and excitation boundaries, decimated through two cascaded 7-tap halfband FIR stages (4x→2x→1x, >60 dB stopband attenuation). At 96 kHz output, the LF model runs at 384 kHz — PolyBLEP corrections are extremely precise. DC block filter (20 Hz cutoff) removes glottal source DC offset.
+
+*Location: `speechWaveGenerator.cpp` — LF model + 4x oversampling in VoiceGenerator, polyBLEP(), HalfbandDecimator, DCBlockFilter*
 
 **Note:** When `lfRd = 0`, no glottal voicing is generated (used for voiceless consonants).
 
 ---
 
-## 2. Voice Quality (KLSYN88)
+## 2. Voice Quality
 
 | Parameter | Range | Effect |
 |-----------|-------|--------|
-| `spectralTilt` | 0-41 dB | High-frequency attenuation (breathy) |
-| `flutter` | 0-1 | Pitch jitter via 3 LFOs at 12.7/7.1/4.7 Hz |
+| `spectralTilt` | 0-41 dB | HF attenuation via 2-stage lowpass (12 dB/oct), 5 kHz reference |
+| `flutter` | 0-1 | Stochastic jitter/shimmer depth (cycle-synchronous) |
 | `diplophonia` | 0-1 | Period alternation (creaky voice) |
 
 ### Spectral Tilt Filter
-First-order lowpass attenuating high frequencies for breathy voice.
-*Location: `speechWaveGenerator.cpp:139-172`*
+Two cascaded 1st-order lowpass stages (12 dB/oct total). Reference frequency 5 kHz: at `spectralTilt=N` dB, the filter attenuates by N dB at 5 kHz. Typical values: voiceless fricatives 2-3, voiced fricatives 4, nasals 4, pharyngeals 10-14.
+*Location: `speechWaveGenerator.cpp` — SpectralTiltFilter class*
 
-### Flutter Generator
-Sum of three sine waves creating natural pitch micro-variations (±2% at full).
-*Location: `speechWaveGenerator.cpp:177-201`*
+### Jitter/Shimmer Generator
+Stochastic pitch and amplitude perturbation applied cycle-synchronously. Replaces deterministic 3-LFO flutter with random walk for more natural voice quality.
+*Location: `speechWaveGenerator.cpp:338-364`*
 
 ### Sinusoidal Voicing
-Pure sine wave for voicebars in voiced fricatives.
-*Location: `speechWaveGenerator.cpp:340-344`*
+Pure sine wave for voicebars in voiced fricatives. Controlled by `sinusoidalVoicingAmplitude`.
+*Location: `speechWaveGenerator.cpp:586-592`*
 
 ---
 
@@ -86,18 +85,26 @@ Series connection: F6 → F5 → F4 → F3 → F2 → F1
 **Pitch-Synchronous F1 Modulation:**
 During glottal open phase, F1 and B1 increase by `deltaF1`/`deltaB1`, modeling subglottal coupling.
 
-*Location: `speechWaveGenerator.cpp:469-502`*
+**Cascade Ducking:**
+When frication amplitude is high, cascade gain is reduced to prevent double-voicing artifacts.
+
+**HF Shelf Compensation:**
+First-order HPF shelf (`y = x + boost * HPF(x)`) applied to cascade output only. Corner: 3000 Hz, boost: +6 dB. Compensates for the cascade chain's structural HF loss (~57 dB at 8 kHz through 6 series allPole resonators). Transparent at DC, does not affect parallel path.
+
+*Location: `speechWaveGenerator.cpp` (cascade, ducking, HF shelf)*
 
 ### Parallel Path (Secondary)
 Parallel connection with individual amplitude control (pa1-pa6):
 - Used for fricatives where noise needs per-formant shaping
 - `parallelBypass` blends unfiltered signal through
+- `parallelVoiceMix` routes voice through parallel path (for laterals)
+- **Parallel anti-resonator** (`parallelAntiFreq`/`parallelAntiBw`) creates spectral zeros for lateral fricatives
 
-*Location: `speechWaveGenerator.cpp:552-572`*
+*Location: `speechWaveGenerator.cpp:798-835`*
 
 ### Resonator Implementation
 
-**Zero Delay Feedback (ZDF) Resonators** - State-of-the-art implementation based on Zavalishin (2012).
+**Zero Delay Feedback (ZDF) Resonators** - Based on Zavalishin (2012).
 
 The synthesis engine uses modern ZDF topology for all formant resonators, replacing traditional IIR filters with inherently stable, smooth-modulating designs.
 
@@ -129,7 +136,7 @@ s2 = v2 + g*v1                 // Update integrator 2
 
 **4th-order variant**: Cascades two ZDF sections with 0.80 bandwidth adjustment for equivalent Q.
 
-*Location: `speechWaveGenerator.cpp:459-601`*
+*Location: `speechWaveGenerator.cpp:146-253` (ZDF 2nd-order), `603-632` (4th-order)*
 
 ---
 
@@ -145,51 +152,58 @@ Models subglottal coupling for breathy voice:
 
 Bypassed when frequency = 0 (backward compatible).
 
-*Location: `speechWaveGenerator.cpp:432-467`*
+*Location: `speechWaveGenerator.cpp:634-669`*
 
 ---
 
 ## 5. Noise Generation
 
 ### Colored Noise (Fricatives)
-Bandpass-filtered noise for place-specific spectra:
+Bandpass-filtered noise for place-specific spectra using 4th-order ZDF filtering:
 
-| Fricative | Center Freq | Character |
-|-----------|-------------|-----------|
-| /s/, /z/ | ~5500 Hz | Bright, high |
-| /ʃ/, /ʒ/ | ~3500 Hz | Mid-high |
-| /f/, /v/ | 0 (white) | Diffuse |
+| Fricative | Center Freq | Bandwidth | Character |
+|-----------|-------------|-----------|-----------|
+| /s/, /z/ | 8000 Hz | 2487 Hz | Bright alveolar sibilant |
+| /ʃ/, /ʒ/ | 2800 Hz | 1800 Hz | Mid postalveolar |
+| /ɕ/, /ʑ/ | 3600 Hz | 2000 Hz | Alveolo-palatal (between /ʃ/ and /ç/) |
+| /ç/, /ʝ/ | 6100/4500 Hz | 2000 Hz | Palatal (higher than postalveolar) |
+| /θ/, /ð/ | 7600 Hz | 3025 Hz | Dental (high, broad) |
+| /f/, /v/ | 0 (pink) | 1000 Hz | Diffuse labiodental |
 
-*Location: `speechWaveGenerator.cpp:79-137`*
+*Location: `speechWaveGenerator.cpp:255-299`*
 
 ### Burst Generator
-Plosive transients with quadratic decay envelope:
+Self-sustaining plosive transients with quadratic decay envelope:
 - `burstAmplitude`: 0-1 intensity
 - `burstDuration`: 0-1 (maps to 5-20ms)
+- `burstNoiseColor`: 0=white, 1=pink (for bilabial/uvular bursts)
 - Triggers on amplitude edge detection
+- Onset transient duration scales with burst filter frequency
+- Place-specific bandpass filtering for spectral shaping
 
-*Location: `speechWaveGenerator.cpp:504-550`*
+*Location: `speechWaveGenerator.cpp:726-796`*
 
 ### White Noise
-xorshift128+ PRNG with gentle smoothing (0.7/0.3 mix).
+xorshift128+ PRNG with gentle smoothing (0.7/0.3 mix). Includes pink noise generator via first-order IIR filter.
 
-*Location: `speechWaveGenerator.cpp:35-75`*
+*Location: `speechWaveGenerator.cpp:70-126`*
 
 ---
 
 ## 6. Frame System
 
 ### Frame Structure
-70 parameters per frame including:
+~80 parameters per frame including:
 - Voicing (pitch, amplitude, aspiration)
-- Voice quality (KLSYN88 parameters)
-- Cascade formants (cf1-cf6, cb1-cb6, nasal)
-- Parallel formants (pf1-pf6, pb1-pb6, pa1-pa6)
-- Fricative noise (amplitude, filter freq/bw)
-- Burst (amplitude, duration)
-- Control (gains, bypass)
+- Voice quality (spectralTilt, flutter, diplophonia)
+- Cascade formants (cf1-cf6, cb1-cb6, nasal pole/zero)
+- Parallel formants (pf1-pf6, pb1-pb6, pa1-pa6, anti-resonator)
+- Fricative noise (amplitude, filter freq/bw, colored noise)
+- Burst (amplitude, duration, noise color, filter)
+- Tracheal resonances (poles, zeros)
+- Control (gains, bypass, voice mix, cascade ducking)
 
-*Location: `frame.h:22-72`*
+*Location: `frame.h`*
 
 ### Interpolation
 S-curve (Hermite smoothstep) for smooth parameter transitions:
@@ -238,6 +252,11 @@ Formula: `F2_onset = F2_locus + 0.75 * (F2_vowel - F2_locus)`
 | Nasal → Vowel | 35 ms |
 | Vowel → Vowel | 60 ms |
 
+### CV/VC Waypoints
+Coarticulation applies bidirectionally:
+- **CV**: Vowel formants start at consonant-influenced onset
+- **VC**: Vowel formants shift toward following consonant's locus at end
+
 *Location: `transitions.py:47-150`*
 
 ---
@@ -267,7 +286,7 @@ for phoneme in phonemes:
 samples = sp.synthesize(count)
 ```
 
-*Location: `ipa.py:699-746`*
+*Location: `ipa.py`*
 
 ---
 
@@ -308,12 +327,22 @@ samples = sp.synthesize(count)
 
 | Feature | Classic | Manatu |
 |---------|---------|----------------|
-| Glottal model | OQ/SQ only | LF model + legacy |
-| Resonator order | 2nd-order | 4th-order for F1-F3 |
+| Glottal model | OQ/SQ/TL polynomial | LF model with Rd (Fant 1985), 4x oversampled + halfband decimation |
+| Anti-aliasing | None | PolyBLEP at glottal closure + excitation, applied at 4x rate |
+| Resonator topology | 2nd-order IIR biquads | ZDF SVF (Zavalishin 2012) |
+| F1-F3 order | 2nd-order | 4th-order (24 dB/oct) |
+| Flutter | 3 fixed-freq LFOs | Stochastic jitter/shimmer |
+| Tilt filter | 1st-order, 3 kHz ref | 2 cascaded stages (12 dB/oct), 5 kHz ref |
+| Noise | White noise, LCG PRNG | xorshift128+, bandpass-filtered colored noise |
 | Pitch contours | Linear | 3-point (tonal languages) |
 | Interpolation | Linear | Hermite smoothstep |
-| Noise PRNG | LCG | xorshift128+ |
-| Output limiting | Hard clip | tanh soft limiter |
+| Output limiting | Hard clip | PeakLimiter (transparent below -3 dB, fast release in silence) |
+| DC removal | None | 1st-order DC block filter |
+| Bursts | Simple noise × decay | Self-sustaining, place-specific bandpass, onset transient scaling |
+| Parallel path | Formant resonators only | + anti-resonator, voice mix, bypass |
+| Cascade HF | No compensation | +6 dB shelf above 3 kHz (compensates allPole chain rolloff) |
+
+See `docs/MODIFICATIONS.md` for a detailed catalog of all deviations from KLSYN88.
 
 ---
 
@@ -321,10 +350,9 @@ samples = sp.synthesize(count)
 
 | Issue | Impact | Potential Fix |
 |-------|--------|---------------|
-| No parallel anti-resonators | Fricative spectral nulls not modeled | Add zero path |
 | Static bandwidths | Less natural formant width | Frequency-dependent BW |
 | Simplified nasal coupling | Velopharyngeal approximation | Dynamic velic model |
-| Some vowel instability | Requires hand-tuning | Parameter optimization |
+| F1 cutback not modeled | Stop-to-vowel transitions less natural | Per-formant interpolation timing |
 
 ---
 
@@ -336,4 +364,4 @@ samples = sp.synthesize(count)
 - Fant 1985: LF model parameter derivation
 - Agrawal & Stevens 1992: Retroflex consonant parameters
 - Zavalishin 2012: "The Art of VA Filter Design" (Zero Delay Feedback topology)
-- Välimäki & Huovilainen 2006: "Oscillator and Filter Algorithms for Virtual Analog Synthesis" (PolyBLEP anti-aliasing)
+- Valimaki & Huovilainen 2006: "Oscillator and Filter Algorithms for Virtual Analog Synthesis" (PolyBLEP anti-aliasing)

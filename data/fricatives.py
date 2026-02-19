@@ -117,8 +117,7 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0.45,  # Moderate bypass — preserve cascade resonance to avoid nasal quality
 		'fricationAmplitude': 0.60,  # Voiced non-sibilant — boosted slightly for reduced bypass
-		# KLSYN88: Slight breathiness for voiced fricative
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		# Labiodental non-sibilant: pink noise for diffuse flat spectrum
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
@@ -242,8 +241,7 @@ FRICATIVES = {
 		'pa6': 1.0,   # Mirror /s/ — full F6 amplitude
 		'parallelBypass': 0.4,  # Mirror /s/ — direct noise bypass for HF presence
 		'fricationAmplitude': 0.75,  # Voiced weaker than voiceless /s/ — editor-tuned
-		# KLSYN88: Slight breathiness for voiced fricative
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'sinusoidalVoicingAmplitude': 0.35,  # Explicit voicebar — editor-tuned
 		# Alveolar sibilant: mirror /s/ spectral shape
 		'noiseFilterFreq': 8000,
@@ -369,9 +367,8 @@ FRICATIVES = {
 		'pa5': 0.5,   # Mirror /ʃ/ — reduced HF
 		'pa6': 0.35,  # Mirror /ʃ/ — sharp rolloff
 		'parallelBypass': 0,
-		'fricationAmplitude': 1,
-		# KLSYN88: Slight breathiness for voiced fricative
-		'spectralTilt': 7,
+		'fricationAmplitude': 0.75,  # Voiced — reduced from voiceless /ʃ/ (match /z/ pattern)
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		# Postalveolar: mirror /ʃ/ spectral shape
 		'noiseFilterFreq': 2800,
 		'noiseFilterBw': 1800,
@@ -495,7 +492,7 @@ FRICATIVES = {
 		'fricationAmplitude': 0.7,
 		'noiseFilterFreq': 3170,
 		'noiseFilterBw': 1500,
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'flutter': 0.15,
 		'lfRd': 1.0,
 		'diplophonia': 0,
@@ -612,8 +609,7 @@ FRICATIVES = {
 		'pa6': 1.0,   # Mirror /θ/ — enable F6 resonance
 		'parallelBypass': 0.65,  # Mirror /θ/ — less bypass, more resonance shaping
 		'fricationAmplitude': 0.6,  # Voiced — proportional (0.4/0.65 × 1.0 ≈ 0.6)
-		# KLSYN88: Slight breathiness for voiced fricative
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'sinusoidalVoicingAmplitude': 0.35,  # Explicit voicebar — editor-tuned
 		# Dental fricative: mirror /θ/ — filtered HF peak
 		'noiseFilterFreq': 7600,
@@ -761,7 +757,7 @@ FRICATIVES = {
 		'pa6': 0,
 		'parallelBypass': 0.98,
 		'fricationAmplitude': 0.35,  # Voiced, weaker
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'noiseFilterFreq': 1500,
 		'noiseFilterBw': 4000,
 		'flutter': 0.25,
@@ -878,7 +874,7 @@ FRICATIVES = {
 		'pa6': 0.35,
 		'parallelBypass': 0.4,
 		'fricationAmplitude': 0.6,
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'noiseFilterFreq': 4500,
 		'noiseFilterBw': 2000,
 		'flutter': 0.25,
@@ -1002,9 +998,8 @@ FRICATIVES = {
 		'pa5': 0.55,
 		'pa6': 0.35,
 		'parallelBypass': 0.15,
-		'fricationAmplitude': 1.0,  # Sibilant
-		# KLSYN88: Slight breathiness for voiced fricative
-		'spectralTilt': 7,
+		'fricationAmplitude': 0.75,  # Voiced sibilant — reduced from voiceless /ɕ/ (match /z/ pattern)
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		# Noise: mirror ɕ spectral shape
 		'noiseFilterFreq': 3600,
 		'noiseFilterBw': 2000,
@@ -1128,7 +1123,7 @@ FRICATIVES = {
 		'pa6': 0.04,
 		'parallelBypass': 0.5,
 		'fricationAmplitude': 0,
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		'flutter': 0.25,
@@ -1251,7 +1246,7 @@ FRICATIVES = {
 		'pa6': 0.04,
 		'parallelBypass': 0.5,
 		'fricationAmplitude': 0,
-		'spectralTilt': 7,
+		'spectralTilt': 4,  # Voiced fricative — 1 dB darker than voiceless (which use 2-3)
 		'noiseFilterFreq': 0,
 		'noiseFilterBw': 1000,
 		'trillRate': 20,

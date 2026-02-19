@@ -36,7 +36,7 @@ except ImportError:
 class AudioManager:
     """Manages all audio playback: single frames, diphthongs, sequences, and live preview."""
 
-    def __init__(self, frame, sample_rate=44100):
+    def __init__(self, frame, sample_rate=96000):
         self._frame = frame
         self.sample_rate = sample_rate
         self.is_playing = False

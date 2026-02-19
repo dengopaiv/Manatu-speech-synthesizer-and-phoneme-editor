@@ -46,7 +46,7 @@ Audio ← Soft Limit ← Mix ← Parallel Formants ←── Noise/Burst
 | Component | Files | Purpose |
 |-----------|-------|---------|
 | Synthesis Engine | `src/speechWaveGenerator.cpp` | Glottal source, ZDF resonators, noise generation |
-| Frame System | `src/frame.cpp`, `src/frame.h` | Parameter interpolation (Hermite smoothstep), pitch contours |
+| Frame System | `src/frame.cpp`, `src/frame.h` | Parameter interpolation (Perlin smootherstep), pitch contours |
 | DLL Interface | `src/speechPlayer.cpp` | Public API exported from speechPlayer.dll |
 | Python Wrapper | `speechPlayer.py` | ctypes bindings mapping C structs to Python |
 | IPA Processing | `ipa.py` | Phoneme parsing, duration/timing, coarticulation, pitch contours |
@@ -74,7 +74,7 @@ The `lfRd` parameter controls glottal pulse shape (Liljencrants-Fant model):
 
 ### Frame Interpolation
 
-Frames use Hermite smoothstep `t²(3-2t)` for smooth transitions between phonemes. Exceptions that step instantly: `burstAmplitude`, `burstDuration`, `preFormantGain`.
+Frames use Perlin quintic smootherstep `t³(6t²-15t+10)` for smooth transitions between phonemes. Exceptions that step instantly: `burstAmplitude`, `burstDuration`, `fricationAmplitude`, `noiseFilterFreq`, `noiseFilterBw`, `parallelAntiFreq`, `trillRate`, `trillDepth`, `burstFilterFreq`, `burstFilterBw`, `burstNoiseColor`.
 
 ## Phoneme Data Structure
 
@@ -97,5 +97,5 @@ Defaults defined in `ipa.py` as `KLSYN88_DEFAULTS`. Coarticulation uses F2 locus
 ## Development Tools
 
 - `phoneme_editor.py` — Interactive phoneme parameter tuning with live audio
-- `conlang_gui.py` / `conlang_gui_wx.py` — GUI synthesizer for testing
+- `conlang_gui_wx.py` — GUI synthesizer for testing
 - `ipa_keyboard.py` — IPA character input helper

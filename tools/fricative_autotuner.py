@@ -34,7 +34,7 @@ import speechPlayer
 import ipa
 from data import data as phoneme_data
 
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 96000
 
 # ── Fricative classification ────────────────────────────────────────
 

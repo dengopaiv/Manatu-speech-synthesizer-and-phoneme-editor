@@ -30,11 +30,11 @@ import struct
 import speechPlayer
 import ipa
 
-# Create a synthesizer at 44.1 kHz
-sp = speechPlayer.SpeechPlayer(44100)
+# Create a synthesizer at 96 kHz
+sp = speechPlayer.SpeechPlayer(96000)
 
 # Generate frames from IPA text
-for frame, duration, fade in ipa.generateFramesAndTiming(
+for frame, duration, fade in ipa.generateSubFramesAndTiming(
     "ˈhɛloʊ",          # IPA for "hello"
     speed=1,             # Normal speed
     basePitch=120,       # F0 in Hz
@@ -55,7 +55,7 @@ while True:
 with wave.open("hello.wav", "w") as wf:
     wf.setnchannels(1)
     wf.setsampwidth(2)
-    wf.setframerate(44100)
+    wf.setframerate(96000)
     wf.writeframes(struct.pack(f"<{len(samples)}h", *samples))
 ```
 

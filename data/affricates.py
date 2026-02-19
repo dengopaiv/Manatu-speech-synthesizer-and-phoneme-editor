@@ -24,6 +24,8 @@ AFFRICATES = {
 				'_phaseFade': 3,
 				'burstAmplitude': 0.8,
 				'burstDuration': 0.3,
+				'burstFilterFreq': 2500,
+				'burstFilterBw': 2000,
 				'fricationAmplitude': 0,
 			},
 			{   # Phase 2: Sustained /ʃ/ frication
@@ -31,7 +33,7 @@ AFFRICATES = {
 				'_phaseFade': 8,
 				'burstAmplitude': 0,
 				'fricationAmplitude': 1,
-				'noiseFilterFreq': 3200,
+				'noiseFilterFreq': 2800,  # Match standalone /ʃ/
 				'noiseFilterBw': 1500,
 			},
 		],
@@ -89,6 +91,8 @@ AFFRICATES = {
 				'_phaseFade': 3,
 				'burstAmplitude': 0.8,
 				'burstDuration': 0.3,
+				'burstFilterFreq': 2500,
+				'burstFilterBw': 2000,
 				'fricationAmplitude': 0,
 			},
 			{   # Phase 2: Sustained /ʒ/ frication
@@ -96,7 +100,7 @@ AFFRICATES = {
 				'_phaseFade': 8,
 				'burstAmplitude': 0,
 				'fricationAmplitude': 1,
-				'noiseFilterFreq': 3200,
+				'noiseFilterFreq': 2800,  # Match standalone /ʃ/
 				'noiseFilterBw': 1500,
 			},
 		],
@@ -432,6 +436,8 @@ AFFRICATES = {
 				'_phaseFade': 3,
 				'burstAmplitude': 0.85,  # +0.05 from base t͡ʃ
 				'burstDuration': 0.3,
+				'burstFilterFreq': 2500,
+				'burstFilterBw': 2000,
 				'fricationAmplitude': 0,
 			},
 			{   # Phase 2: Sustained /ʃ/ frication (same as base)
@@ -439,7 +445,7 @@ AFFRICATES = {
 				'_phaseFade': 8,
 				'burstAmplitude': 0,
 				'fricationAmplitude': 1,
-				'noiseFilterFreq': 3200,
+				'noiseFilterFreq': 2800,  # Match standalone /ʃ/
 				'noiseFilterBw': 1500,
 			},
 		],

@@ -38,9 +38,9 @@ VOWELS_BACK = {
 		'cb1': 90,   # Widened from 60 — 4th-order F1 needs cb1≥80 for close vowels
 		'cb2': 139,   # Q=6.26 (narrowed ×0.80 for clarity)
 		'cb3': 368,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 825,  # Q=4.0 (was 1100)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 660,   # Q=5.0 (cf4/5.0 = 3300/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -54,17 +54,17 @@ VOWELS_BACK = {
 		'pb1': 90,   # Match cb1
 		'pb2': 139,   # Match cb2
 		'pb3': 368,  # Match cb3
-		'pb4': 825,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 660,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.8,  # Parallel F4 primary HF source
+		'pa5': 0.6,  # Parallel F5 primary HF source
+		'pa6': 0.4,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0,
+		'parallelVoiceMix': 0.5,  # Raised for parallel HF
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -100,9 +100,9 @@ VOWELS_BACK = {
 		'cb1': 80,   # 4th-order F1 needs cb1≥80 for close vowels
 		'cb2': 168,  # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb3': 368,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 875,  # Q=4.0 (was 1167)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 700,   # Q=5.0 (cf4/5.0 = 3500/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -116,17 +116,17 @@ VOWELS_BACK = {
 		'pb1': 80,   # Match cb1
 		'pb2': 168,  # Match cb2
 		'pb3': 368,  # Match cb3
-		'pb4': 875,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 700,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.7,  # Parallel F4 primary HF source
+		'pa5': 0.5,  # Parallel F5 primary HF source
+		'pa6': 0.3,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0,
+		'parallelVoiceMix': 0.5,  # Raised for parallel HF
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -164,9 +164,9 @@ VOWELS_BACK = {
 		'cb1': 64,   # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb2': 218,   # Q=4.0 (skip — intentionally wide for back vowel F2)
 		'cb3': 384,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 825,  # Q=4.0 (was 1100)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 660,   # Q=5.0 (cf4/5.0 = 3300/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -180,17 +180,17 @@ VOWELS_BACK = {
 		'pb1': 64,   # Match cb1
 		'pb2': 218,   # Match cb2
 		'pb3': 384,  # Match cb3
-		'pb4': 825,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 660,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.7,  # Parallel F4 primary HF source
+		'pa5': 0.5,  # Parallel F5 primary HF source
+		'pa6': 0.3,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0,
+		'parallelVoiceMix': 0.5,  # Raised for parallel HF
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -210,9 +210,9 @@ VOWELS_BACK = {
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality - optimized with LF model for open vowel
-		'spectralTilt': 3,  # Cutoff ~4675 Hz (was 4)
+		'spectralTilt': 2,  # Open-mid — fc ~6260 Hz (brighter; was 3, ~4675 Hz)
 		'flutter': 0.12,
-		'lfRd': 2.2,  # Semi-open — less breathy for HF presence (was 2.7)
+		'lfRd': 1.6,  # Open-mid — less breathy (was 2.2)
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 240,  # Scaled ×0.80 (was 300)
@@ -228,9 +228,9 @@ VOWELS_BACK = {
 		'cb1': 96,   # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb2': 220,  # Q=4.0 (skip — intentionally wide for back vowel F2)
 		'cb3': 408,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 775,  # Q=4.0 (was 1033)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 620,   # Q=5.0 (cf4/5.0 = 3100/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -244,17 +244,17 @@ VOWELS_BACK = {
 		'pb1': 96,   # Match cb1
 		'pb2': 220,  # Match cb2
 		'pb3': 408,  # Match cb3
-		'pb4': 775,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 620,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.5,  # Parallel F4 primary HF source
+		'pa5': 0.4,  # Parallel F5 primary HF source
+		'pa6': 0.25,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0,
+		'parallelVoiceMix': 0.5,  # Raised for parallel HF
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -274,9 +274,9 @@ VOWELS_BACK = {
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.04,  # Open vowel — strongest HF fill
 		# Voice quality - optimized with LF model for open vowel
-		'spectralTilt': 3,  # Cutoff ~4675 Hz (was 6)
+		'spectralTilt': 2,  # Open — fc ~6260 Hz (brighter; was 3, ~4675 Hz)
 		'flutter': 0.12,
-		'lfRd': 2.0,  # More modal voice for open vowel HF presence (was 2.7)
+		'lfRd': 1.5,  # Open — less breathy (was 2.0)
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 280,  # Scaled ×0.80 (was 350)
@@ -292,9 +292,9 @@ VOWELS_BACK = {
 		'cb1': 118,   # Q=6.27 (narrowed ×0.80 for clarity)
 		'cb2': 288,  # Q=4.0 (skip — intentionally wide for back vowel F2)
 		'cb3': 408,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 750,  # Q=4.0 (was 1000)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 600,   # Q=5.0 (cf4/5.0 = 3000/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -308,15 +308,15 @@ VOWELS_BACK = {
 		'pb1': 118,   # Match cb1
 		'pb2': 288,  # Match cb2
 		'pb3': 408,  # Match cb3
-		'pb4': 750,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 600,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0.35,   # Auto-tuned F3 reinforcement (capped for F1 LPC accuracy)
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.5,  # Parallel F4 primary HF source
+		'pa5': 0.4,  # Parallel F5 primary HF source
+		'pa6': 0.25,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
 		'parallelVoiceMix': 0.35,  # Auto-tuned voice mix for parallel F2/F3
 		# Tracheal formants
@@ -338,9 +338,9 @@ VOWELS_BACK = {
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.04,  # Open vowel — strongest HF fill
 		# Voice quality - optimized with LF model for open vowel
-		'spectralTilt': 3,  # Cutoff ~4675 Hz (was 5)
+		'spectralTilt': 2,  # Open — fc ~6260 Hz (brighter; was 3, ~4675 Hz)
 		'flutter': 0.12,
-		'lfRd': 2.0,  # More modal voice for open vowel HF presence (was 2.7)
+		'lfRd': 1.5,  # Open — less breathy (was 2.0)
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 256,  # Scaled ×0.80 (was 320)
@@ -356,9 +356,9 @@ VOWELS_BACK = {
 		'cb1': 99,   # Q=6.26 (narrowed ×0.80 for clarity)
 		'cb2': 275,  # Q=4.0 (skip — intentionally wide for back vowel F2)
 		'cb3': 403,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 750,  # Q=4.0 (was 1000)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 600,   # Q=5.0 (cf4/5.0 = 3000/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -372,17 +372,17 @@ VOWELS_BACK = {
 		'pb1': 99,   # Match cb1
 		'pb2': 275,  # Match cb2
 		'pb3': 403,  # Match cb3
-		'pb4': 750,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 600,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0,
 		'pa3': 0,
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.5,  # Parallel F4 primary HF source
+		'pa5': 0.4,  # Parallel F5 primary HF source
+		'pa6': 0.25,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
-		'parallelVoiceMix': 0,
+		'parallelVoiceMix': 0.5,  # Raised for parallel HF
 		# Tracheal formants
 		'ftpFreq1': 0,
 		'ftpBw1': 100,
@@ -418,9 +418,9 @@ VOWELS_BACK = {
 		'cb1': 90,   # Widened from 60 — 4th-order F1 needs cb1≥80 for close vowels
 		'cb2': 192,  # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb3': 336,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 875,  # Q=4.0 (was 1167)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 700,   # Q=5.0 (cf4/5.0 = 3500/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -434,15 +434,15 @@ VOWELS_BACK = {
 		'pb1': 90,   # Match cb1
 		'pb2': 192,  # Match cb2
 		'pb3': 336,  # Match cb3
-		'pb4': 875,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 700,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0.37,   # Halved from 0.73 — back unrounded, moderate reinforcement
 		'pa3': 0.18,   # Halved from 0.36
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.8,  # Parallel F4 primary HF source
+		'pa5': 0.6,  # Parallel F5 primary HF source
+		'pa6': 0.4,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
 		'parallelVoiceMix': 0.37,  # Halved from 0.73
 		# Tracheal formants
@@ -482,9 +482,9 @@ VOWELS_BACK = {
 		'cb1': 80,   # 4th-order F1 needs cb1≥80 for close-mid vowels
 		'cb2': 192,  # Q=6.25 (narrowed ×0.80 for clarity)
 		'cb3': 408,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 825,  # Q=4.0 (was 1100)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 660,   # Q=5.0 (cf4/5.0 = 3300/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -498,15 +498,15 @@ VOWELS_BACK = {
 		'pb1': 80,   # Match cb1
 		'pb2': 192,  # Match cb2
 		'pb3': 408,  # Match cb3
-		'pb4': 825,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 660,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0.39,   # Halved from 0.77 — back unrounded, moderate reinforcement
 		'pa3': 0.21,   # Halved from 0.41
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.7,  # Parallel F4 primary HF source
+		'pa5': 0.5,  # Parallel F5 primary HF source
+		'pa6': 0.3,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
 		'parallelVoiceMix': 0.39,  # Halved from 0.77
 		# Tracheal formants
@@ -528,9 +528,9 @@ VOWELS_BACK = {
 		'fricationAmplitude': 0,
 		'voiceTurbulenceAmplitude': 0.03,  # Open-mid vowel — moderate HF fill
 		# Voice quality - optimized with LF model for open vowel
-		'spectralTilt': 3,  # Cutoff ~4675 Hz (was 5)
+		'spectralTilt': 2,  # Open-mid — fc ~6260 Hz (brighter; was 3, ~4675 Hz)
 		'flutter': 0.12,
-		'lfRd': 2.3,  # Open-mid — slightly less breathy (was 2.7)
+		'lfRd': 1.7,  # Open-mid — less breathy (was 2.3)
 		'diplophonia': 0,
 		'deltaF1': 0,
 		'deltaB1': 224,  # Scaled ×0.80 (was 280)
@@ -546,9 +546,9 @@ VOWELS_BACK = {
 		'cb1': 99,   # Q=6.26 (narrowed ×0.80 for clarity)
 		'cb2': 195,  # Q=6.26 (narrowed ×0.80 for clarity)
 		'cb3': 408,  # Q=6.25 (narrowed ×0.80 for clarity)
-		'cb4': 775,  # Q=4.0 (was 1033)
-		'cb5': 938,  # Q=4.0 (was 1250)
-		'cb6': 1225,  # Q=4.0 (was 1633)
+		'cb4': 620,   # Q=5.0 (cf4/5.0 = 3100/5.0)
+		'cb5': 750,   # Q=5.0 (cf5/5.0 = 3750/5.0)
+		'cb6': 980,   # Q=5.0 (cf6/5.0 = 4900/5.0)
 		'cbNP': 100,
 		'cbN0': 100,
 		'caNP': 0,
@@ -562,15 +562,15 @@ VOWELS_BACK = {
 		'pb1': 99,   # Match cb1
 		'pb2': 195,  # Match cb2
 		'pb3': 408,  # Match cb3
-		'pb4': 775,  # Match cb4
-		'pb5': 938,  # Match cb5
-		'pb6': 1225,  # Match cb6
+		'pb4': 620,   # Match cb4
+		'pb5': 750,   # Match cb5
+		'pb6': 980,   # Match cb6
 		'pa1': 0,
 		'pa2': 0.21,   # Halved from 0.42 — back unrounded, moderate reinforcement
 		'pa3': 0.21,   # Halved from 0.42
-		'pa4': 0,
-		'pa5': 0,
-		'pa6': 0,
+		'pa4': 0.5,  # Parallel F4 primary HF source
+		'pa5': 0.4,  # Parallel F5 primary HF source
+		'pa6': 0.25,  # Parallel F6 primary HF source
 		'parallelBypass': 0,
 		'parallelVoiceMix': 0.21,  # Halved from 0.42
 		# Tracheal formants

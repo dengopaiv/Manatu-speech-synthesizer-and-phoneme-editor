@@ -15,18 +15,17 @@
 import re
 import threading
 import math
-from collections import OrderedDict
 import ctypes
 import weakref
 from . import speechPlayer
 from . import ipa
 import config
 import nvwave
-import speech
+from speech.commands import IndexCommand, PitchCommand
 from logHandler import log
 from synthDrivers import _espeak
 from synthDriverHandler import SynthDriver, VoiceInfo, synthIndexReached, synthDoneSpeaking
-from driverHandler import NumericDriverSetting
+from autoSettingsUtils.driverSetting import NumericDriverSetting
 
 
 class AudioThread(threading.Thread):
@@ -42,7 +41,7 @@ class AudioThread(threading.Thread):
 		self.speechPlayer=speechPlayerObj
 		self.sampleRate=sampleRate
 		self.initializeEvent=threading.Event()
-		super(AudioThread,self).__init__()
+		super().__init__()
 		self.start()
 		self.initializeEvent.wait()
 
@@ -55,7 +54,7 @@ class AudioThread(threading.Thread):
 
 	def run(self):
 		try:
-			self.wavePlayer=nvwave.WavePlayer(channels=1, samplesPerSec=self.sampleRate, bitsPerSample=16, outputDevice=config.conf["speech"]["outputDevice"])
+			self.wavePlayer=nvwave.WavePlayer(channels=1, samplesPerSec=self.sampleRate, bitsPerSample=16, outputDevice=config.conf["audio"]["outputDevice"])
 			self.synthEvent=threading.Event()
 		finally:
 			self.initializeEvent.set()
@@ -81,11 +80,25 @@ class AudioThread(threading.Thread):
 					break
 		self.initializeEvent.set()
 
+def _text_to_ipa(text):
+	"""Convert text to IPA using NVDA's bundled eSpeak."""
+	_espeak.espeakDLL.espeak_TextToPhonemes.restype = ctypes.c_char_p
+	textBuf = ctypes.create_unicode_buffer(text)
+	textPtr = ctypes.c_void_p(ctypes.addressof(textBuf))
+	chunks = []
+	while textPtr:
+		phonemeBuf = _espeak.espeakDLL.espeak_TextToPhonemes(
+			ctypes.byref(textPtr), _espeak.espeakCHARS_WCHAR, 0x36100 + 0x82
+		)
+		if not phonemeBuf:
+			continue
+		chunks.append(phonemeBuf)
+	return b"".join(chunks).decode('utf8')
+
 re_textPause=re.compile(r"(?<=[.?!,:;])\s",re.DOTALL|re.UNICODE)
 
 voices={
 	'Adam':{
-		'cb1_mul':1.3,
 		'pa6_mul':1.3,
 		'fricationAmplitude_mul':0.85,
 	},
@@ -134,14 +147,14 @@ class SynthDriver(SynthDriver):
 			self.supportedSettings=SynthDriver.supportedSettings+tuple(NumericDriverSetting("speechPlayer_%s"%x,"frame.%s"%x,normalStep=1) for x in self._extraParamNames)
 			for x in self._extraParamNames:
 				setattr(self,"speechPlayer_%s"%x,50)
-		self.player=speechPlayer.SpeechPlayer(16000)
+		self.player=speechPlayer.SpeechPlayer(96000)
 		_espeak.initialize()
 		_espeak.setVoiceByLanguage('en')
 		self.pitch=50
 		self.rate=50
 		self.volume=90
-		self.inflection=60
-		self.audioThread=AudioThread(self,self.player,16000)
+		self.inflection=40
+		self.audioThread=AudioThread(self,self.player,96000)
 
 	@classmethod
 	def check(cls):
@@ -153,8 +166,8 @@ class SynthDriver(SynthDriver):
 	supportedSettings=(SynthDriver.VoiceSetting(),SynthDriver.RateSetting(),SynthDriver.PitchSetting(),SynthDriver.VolumeSetting(),SynthDriver.InflectionSetting())
 
 	supportedCommands = {
-		speech.IndexCommand,
-		speech.PitchCommand,
+		IndexCommand,
+		PitchCommand,
 	}
 
 	supportedNotifications = {synthIndexReached,synthDoneSpeaking}
@@ -181,9 +194,9 @@ class SynthDriver(SynthDriver):
 			index+=1
 		endPause=20
 		for item in speakList:
-			if isinstance(item,speech.PitchCommand):
+			if isinstance(item,PitchCommand):
 				pitchOffset=item.offset
-			elif isinstance(item,speech.IndexCommand):
+			elif isinstance(item,IndexCommand):
 				userIndex=item.index
 			elif isinstance(item,str):
 				textList=re_textPause.split(item)
@@ -203,14 +216,11 @@ class SynthDriver(SynthDriver):
 						endPause=100
 						clauseType=None
 					endPause/=self._curRate
-					textBuf=ctypes.create_unicode_buffer(chunk)
-					textPtr=ctypes.c_void_p(ctypes.addressof(textBuf))
-					chunks=[]
-					while textPtr:
-						phonemeBuf=_espeak.espeakDLL.espeak_TextToPhonemes(ctypes.byref(textPtr),_espeak.espeakCHARS_WCHAR,0x36100+0x82)
-						if not phonemeBuf: continue
-						chunks.append(ctypes.string_at(phonemeBuf))
-					chunk=b"".join(chunks).decode('utf8') 
+					try:
+						chunk=_text_to_ipa(chunk)
+					except Exception:
+						log.error("eSpeak text-to-IPA failed", exc_info=True)
+						continue
 					chunk=chunk.replace('ə͡l','ʊ͡l')
 					chunk=chunk.replace('a͡ɪ','ɑ͡ɪ')
 					chunk=chunk.replace('e͡ɪ','e͡i')
@@ -219,7 +229,7 @@ class SynthDriver(SynthDriver):
 					if not chunk: continue
 					pitch=self._curPitch+pitchOffset
 					basePitch=25+(21.25*(pitch/12.5))
-					for args in ipa.generateFramesAndTiming(chunk,speed=self._curRate,basePitch=basePitch,inflection=self._curInflection,clauseType=clauseType):
+					for args in ipa.generateSubFramesAndTiming(chunk,speed=self._curRate,basePitch=basePitch,inflection=self._curInflection,clauseType=clauseType):
 						frame=args[0]
 						if frame:
 							applyVoiceToFrame(frame,self._curVoice)
@@ -279,7 +289,7 @@ class SynthDriver(SynthDriver):
 				setattr(self,"speechPlayer_%s"%paramName,50)
 
 	def _getAvailableVoices(self):
-		d=OrderedDict()
+		d={}
 		for name in sorted(voices):
 			d[name]=VoiceInfo(name,name)
 		return d

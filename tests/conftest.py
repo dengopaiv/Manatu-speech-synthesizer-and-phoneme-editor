@@ -22,7 +22,7 @@ from data import data as phoneme_data
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 96000
 
 
 def save_wav(filename, samples, sample_rate=SAMPLE_RATE):
@@ -31,7 +31,7 @@ def save_wav(filename, samples, sample_rate=SAMPLE_RATE):
     Args:
         filename: WAV filename (saved under tests/output/)
         samples: List of int16 sample values
-        sample_rate: Sample rate (default 44100)
+        sample_rate: Sample rate (default 96000)
 
     Returns:
         Full filepath of saved WAV.

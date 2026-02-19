@@ -39,7 +39,7 @@ from tools.spectral_analysis import (
     estimate_spectral_centroid, is_voiced, analyze_segment,
 )
 
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 96000
 
 # Tier 1 tolerance: synthesized formants must be within this fraction of target
 FORMANT_TOLERANCE = 0.15  # 15%
@@ -97,8 +97,8 @@ def synthesize_phoneme(ipa_char, duration_ms=400, pitch=120):
     """
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
-    # Use generateFramesAndTiming for the full pipeline with KLSYN88_DEFAULTS
-    frames = list(ipa.generateFramesAndTiming(ipa_char, speed=1, basePitch=pitch, inflection=0))
+    # Use generateSubFramesAndTiming for the full pipeline with KLSYN88_DEFAULTS
+    frames = list(ipa.generateSubFramesAndTiming(ipa_char, speed=1, basePitch=pitch, inflection=0))
 
     if not frames:
         return []
@@ -132,7 +132,7 @@ def synthesize_cv_pair(consonant, vowel, pitch=120):
     text = consonant + vowel
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
 
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(text, speed=1, basePitch=pitch, inflection=0):
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(text, speed=1, basePitch=pitch, inflection=0):
         sp.queueFrame(frame, min_dur, fade_dur)
 
     samples = []

@@ -73,6 +73,7 @@ class Frame(Structure):
 		'burstFilterFreq',    # Burst pre-filter center freq Hz (0=unfiltered)
 		'burstFilterBw',      # Burst pre-filter bandwidth Hz
 		'burstNoiseColor',    # Burst noise: 0=white, 1=pink (-3dB/oct)
+		'sourceBrightness',   # Glottal source brightness: 0=auto, 2.0=natural, higher=brighter
 	]]
 
 dllPath=os.path.join(os.path.dirname(__file__),'speechPlayer.dll')
@@ -109,6 +110,8 @@ class SpeechPlayer(object):
 
 	def queueFrame(self,frame,minFrameDuration,fadeDuration,userIndex=-1,purgeQueue=False):
 		frame=byref(frame) if frame else None
+		if userIndex is None:
+			userIndex=-1
 		self._dll.speechPlayer_queueFrame(self._speechHandle,frame,int(minFrameDuration*(self.sampleRate/1000.0)),int(fadeDuration*(self.sampleRate/1000.0)),userIndex,purgeQueue)
 
 	def synthesize(self,numSamples):

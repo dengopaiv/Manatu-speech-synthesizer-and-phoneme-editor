@@ -44,6 +44,7 @@ class FrameManagerImpl: public FrameManager {
 		sampleCounter++;
 		if(newFrameRequest) {
 			if(sampleCounter>(newFrameRequest->numFadeSamples)) {
+				oldFrameRequest->frame.voicePitch = curFrame.voicePitch;
 				delete oldFrameRequest;
 				oldFrameRequest=newFrameRequest;
 				newFrameRequest=NULL;
@@ -79,11 +80,8 @@ class FrameManagerImpl: public FrameManager {
 					memcpy(&(oldFrameRequest->frame),&(newFrameRequest->frame),sizeof(speechPlayer_frame_t));
 					oldFrameRequest->frame.preFormantGain=0;
 				}
-				if(newFrameRequest) {
-					if(newFrameRequest->userIndex!=-1) lastUserIndex=newFrameRequest->userIndex;
-					sampleCounter=0;
-					newFrameRequest->frame.voicePitch+=(newFrameRequest->voicePitchInc*newFrameRequest->numFadeSamples);
-				}
+				if(newFrameRequest->userIndex!=-1) lastUserIndex=newFrameRequest->userIndex;
+				sampleCounter=0;
 			} else {
 				curFrameIsNULL=true;
 			}

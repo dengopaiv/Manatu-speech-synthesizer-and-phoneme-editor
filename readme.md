@@ -67,7 +67,7 @@ Current inventory: 34 vowels, 22 diphthongs, 68 consonants. See [IPA Coverage](d
 
 ### Conlang GUI
 
-`conlang_gui.py` / `conlang_gui_wx.py` — Desktop synthesizer for testing IPA input. The wxPython version provides full screen reader accessibility.
+`conlang_gui_wx.py` — Desktop synthesizer for testing IPA input with full screen reader accessibility.
 
 ### IPA Keyboard
 

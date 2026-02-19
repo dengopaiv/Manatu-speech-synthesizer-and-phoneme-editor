@@ -34,7 +34,7 @@ import ipa
 from data import data as phoneme_data, PHONEME_CATEGORIES
 from tools.spectral_analysis import _get_lpc_coefficients
 
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 96000
 
 # ── Vowel height classification ──────────────────────────────────────
 

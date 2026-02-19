@@ -173,7 +173,7 @@ FORMANT_TOLERANCE = 0.15  # 15% tolerance for synthesis accuracy
 def _synthesize_ipa_vowel(ipa_char, duration_ms=400, pitch=120):
     """Synthesize a vowel using the full ipa.py pipeline with phoneme data."""
     sp = speechPlayer.SpeechPlayer(SAMPLE_RATE)
-    for frame, min_dur, fade_dur in ipa.generateFramesAndTiming(
+    for frame, min_dur, fade_dur in ipa.generateSubFramesAndTiming(
         ipa_char, speed=1, basePitch=pitch, inflection=0
     ):
         sp.queueFrame(frame, max(min_dur, duration_ms), fade_dur)

@@ -6,7 +6,6 @@
   "isVowel": false,
   "isVoiced": true,
   "parameters": {
-    "glottalOpenQuotient": 0.5,
     "voiceAmplitude": 1.0,
     "voiceTurbulenceAmplitude": 0.02,
     "aspirationAmplitude": 0.0,
@@ -56,8 +55,6 @@
     "parallelAntiBw": 300.0,
     "spectralTilt": 7.0,
     "flutter": 0.25,
-    "openQuotientShape": 0.5,
-    "speedQuotient": 1.0,
     "diplophonia": 0.0,
     "lfRd": 1.0,
     "deltaF1": 23.0,

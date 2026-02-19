@@ -62,7 +62,12 @@
       "Bash(gh pr edit:*)",
       "Bash(gh pr merge:*)",
       "Bash(awk:*)",
-      "Bash(more:*)"
+      "Bash(more:*)",
+      "WebFetch(domain:download.nvaccess.org)",
+      "WebFetch(domain:www.webbie.org.uk)",
+      "WebFetch(domain:gist.githubusercontent.com)",
+      "WebFetch(domain:arxiv.org)",
+      "Bash(iconv:*)"
     ]
   }
 }

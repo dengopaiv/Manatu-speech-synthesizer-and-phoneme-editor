@@ -80,6 +80,7 @@ typedef struct {
 	speechPlayer_frameParam_t burstFilterFreq; // Burst noise pre-filter center freq Hz (0=unfiltered white)
 	speechPlayer_frameParam_t burstFilterBw; // Burst noise pre-filter bandwidth Hz
 	speechPlayer_frameParam_t burstNoiseColor; // Burst noise spectrum: 0=white (flat), 1=pink (-3dB/oct)
+	speechPlayer_frameParam_t sourceBrightness; // Reserved — not currently used by synthesis engine (kept for ABI stability)
 } speechPlayer_frame_t;
 
 const int speechPlayer_frame_numParams=sizeof(speechPlayer_frame_t)/sizeof(speechPlayer_frameParam_t);
